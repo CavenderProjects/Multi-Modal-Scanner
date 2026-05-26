@@ -8,13 +8,38 @@
 
 Security assessments generate noise. Regulated environments generate liability. This skill bridges both.
 
-It augments the **triage and documentation phase** of penetration test and vulnerability assessment workflows by:
+It provides **four assessment workflows** covering the full spectrum of security analysis:
 
-- **Classifying findings** by severity and regulatory exposure: HIPAA, PCI-DSS, NYDFS, GDPR, CPRA, SOX, NIST CSF
-- **Evaluating false-positive risk** based on system context, business criticality, and compensating controls
-- **Generating chain-of-custody-aware documentation** suitable for regulated-environment audit trails
-- **Translating technical findings** into risk language for business stakeholders, compliance audiences, and executive reporting
-- **Flagging remediation vs. risk-acceptance decisions** based on regulatory requirements and business constraints
+- **Website Vulnerability Assessment** — Evaluates web applications against OWASP Top 10 2021 and 63 controls across 13 families, producing interactive dark-theme reports with severity-filtered findings, expandable remediation cards, and exportable artifacts
+- **Skill Vulnerability Assessment** — Applies the same rigorous analysis to Claude Code skills and AI-integrated tooling, identifying security risks specific to AI-augmented workflows
+- **Source Code Review** — Static analysis of codebases against 51 controls across 12 families covering security flaws, complexity risks, and development practice gaps
+- **API Vulnerability Assessment** — Tests APIs against OWASP API Security Top 10 (2023) and 53 controls across 17 families, covering authentication, authorization, rate limiting, data exposure, and more
+
+All four workflows produce **interactive HTML reports** with severity toggles, expandable finding cards, radio-button mitigation selection, code artifacts, CIA Triad analysis, and a Review & Export modal for generating markdown summaries.
+
+---
+
+## Compliance Framework Coverage
+
+Every finding is cross-referenced against **12+ compliance and regulatory frameworks**:
+
+| Framework | Coverage |
+|-----------|----------|
+| OWASP Top 10 2021 | Website, Skill, Code Review |
+| OWASP API Security Top 10 (2023) | API |
+| NIST SP 800-53 Rev 5 | All workflows |
+| ISO/IEC 27001:2022 | All workflows |
+| CMMC 2.0 | All workflows |
+| DoD SRG | All workflows |
+| EU AI Act | All workflows |
+| EU DORA | All workflows |
+| FedRAMP 20x | All workflows |
+| HIPAA Security Rule | All workflows |
+| PCI-DSS v4.0 | All workflows |
+| SEC/FINRA | All workflows |
+| SOC 2 Type II | All workflows |
+
+Reports include a **multi-select framework filter** allowing users to narrow findings to the frameworks relevant to their regulatory environment.
 
 ---
 
@@ -43,23 +68,29 @@ Many findings in production regulated environments **cannot be remediated in iso
 
 ---
 
-## Skill Structure
+## Repository Structure
 
 ```
 pen-test-triage/
-├── SKILL.md                          # Claude Code skill instructions (the core prompt)
-├── README.md                         # This file
-├── templates/
-│   ├── finding-triage-template.md    # Structured triage output format
-│   ├── chain-of-custody-log.md       # Audit-trail documentation template
-│   └── risk-acceptance-memo.md       # Risk acceptance record for regulated environments
-├── examples/
-│   ├── sample-web-app-triage.md      # Example: web application vulnerability triage
-│   ├── sample-network-triage.md      # Example: network infrastructure finding
-│   └── sample-hipaa-context.md       # Example: HIPAA-regulated environment classification
-└── docs/
-    ├── regulatory-mapping.md         # Finding severity → regulatory exposure mapping
-    └── usage-guide.md               # How to use the skill effectively
+├── README.md
+├── pen-tester/
+│   ├── SKILL.md                                    # Core skill definition (4 workflows)
+│   ├── assets/
+│   │   ├── report-template.html                    # Website & Skill report template
+│   │   ├── api-report-template.html                # API vulnerability report template
+│   │   └── code-review-report-template.html        # Source code review report template
+│   └── references/
+│       ├── controls-library.md                     # 63 controls, 13 families (Website/Skill)
+│       ├── code-review-controls.md                 # 51 controls, 12 families (Code Review)
+│       └── api-controls-library.md                 # 53 controls, 17 families (API)
+├── sample-reports/
+│   ├── Sample Website Vulnerability Report.html
+│   ├── Sample Skill Vulnerability Report.html
+│   ├── Sample Code Review Report.html
+│   └── Sample API Vulnerability Report.html
+└── test-targets/
+    ├── sample-website/                             # Test target for website assessments
+    └── vulnerable-skill/                           # Test target for skill assessments
 ```
 
 ---
@@ -77,44 +108,38 @@ pen-test-triage/
 git clone https://github.com/CavenderProjects/pen-test-triage.git
 
 # Copy the skill into your Claude Code skills directory
-cp -r pen-test-triage/SKILL.md ~/.claude/skills/pen-test-triage/
-
-# Or on Windows (PowerShell):
-Copy-Item -Recurse pen-test-triage\SKILL.md "$env:APPDATA\Claude\skills\pen-test-triage\"
+cp -r pen-test-triage/pen-tester ~/.claude/skills/pen-tester/
 ```
 
-### Invoking the Skill
+### Target Type Detection
 
-In Claude Code, trigger the skill with:
+The skill automatically detects the assessment type based on what you provide:
 
-```
-/pen-test-triage
-```
-
-Then provide:
-1. The raw finding text (from scanner output, manual test notes, or a prior report)
-2. System context (what the system does, who uses it, what data it handles)
-3. Regulatory environment (HIPAA, PCI, NYDFS, etc., or "general corporate")
-4. Business constraint context (any known constraints on remediation)
+| Target | Workflow | Controls |
+|--------|----------|----------|
+| URL or web application | Website Vulnerability Assessment | 63 controls, 13 families |
+| Claude Code skill (SKILL.md) | Skill Vulnerability Assessment | 63 controls, 13 families |
+| Source code / repository | Source Code Review | 51 controls, 12 families |
+| API endpoint or spec | API Vulnerability Assessment | 53 controls, 17 families |
 
 ### Example Input
 
 ```
-Finding: Outdated TLS version (TLS 1.0) detected on payment processing endpoint.
-System: Legacy order management system integrated with payment gateway. Cannot be
-        updated until contract renewal in Q3 2027.
-Regulatory environment: PCI-DSS 4.0, SOX-adjacent financial controls
-Business constraint: Vendor dependency; unilateral update not possible
+Assess this API for security vulnerabilities: https://api.example.com/v2
+Regulatory environment: HIPAA, PCI-DSS v4.0, SOC 2 Type II
 ```
 
-### Example Output Structure
+### Report Features
 
-The skill produces a structured triage record including:
-- **Confirmed/False Positive determination** with reasoning
-- **Severity classification** (Critical/High/Medium/Low) with regulatory exposure context
-- **Remediation options** ranked by feasibility given stated constraints
-- **Risk acceptance documentation** if remediation is not feasible
-- **Audit-ready language** for compliance reporting
+Every report includes:
+- **Severity toggle filters** (Critical / High / Medium / Low / Info)
+- **Family and framework filter dropdowns** with multi-select
+- **CIA Triad impact analysis** per finding
+- **Expandable finding cards** with detailed descriptions, evidence, and remediation options
+- **Radio-button mitigation selection** for choosing remediation approaches
+- **Code artifacts** with copy/export functionality
+- **Review & Export modal** for generating markdown assessment summaries
+- **Dark theme** optimized for extended security review sessions
 
 ---
 
@@ -157,7 +182,7 @@ This skill emerged from a practical problem encountered repeatedly across regula
 
 ## Contributing
 
-Contributions welcome, especially from practitioners working in regulated environments with specific HIPAA, NYDFS, PCI, or EU AI Act context to add. Open an issue or submit a PR.
+Contributions welcome, especially from practitioners working in regulated environments with specific HIPAA, NYDFS, PCI, EU AI Act, or other framework-specific context to add. Open an issue or submit a PR.
 
 ---
 

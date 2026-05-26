@@ -27,6 +27,15 @@ Controls are mapped against the following frameworks. AI-specific frameworks (ma
 | ISO-42001 ★ | ISO/IEC 42001 | 2023 | AI management systems |
 | SAIF ★ | Google Secure AI Framework | 1.0 (2023) | AI security design principles (6 elements) |
 | CSA-AI ★ | CSA AI Controls Matrix | 1.0 (2024) | Cloud-hosted AI security controls |
+| CMMC | CMMC 2.0 | Level 2 (2023) | DoD cybersecurity maturity — 110 practices from NIST 800-171 |
+| DoD-SRG | DoD Cloud Computing SRG | v1r4 (2024) | Department of Defense cloud security requirements |
+| EU-AI | EU AI Act | Reg (EU) 2024/1689 | Risk-based regulation for AI systems |
+| EU-DORA | EU DORA | Reg (EU) 2022/2554 | Digital operational resilience for financial entities |
+| FedRAMP | FedRAMP | Rev 5 Baselines (2024) | Federal cloud security — NIST 800-53 baselines |
+| HIPAA | HIPAA Security Rule | 45 CFR §164 | Healthcare data protection requirements |
+| PCI-DSS | PCI-DSS | v4.0.1 (2024) | Payment card industry data security standard |
+| SEC-FINRA | SEC/FINRA | Reg S-P, Cyber Rule (2023) | Securities industry cybersecurity requirements |
+| SOC2 | SOC 2 Type II | TSC 2022 | AICPA Trust Services Criteria |
 
 ### OWASP Top 10 for LLM Applications 2025 — Reference
 - LLM01: Prompt Injection
@@ -79,6 +88,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A01:2021
 - **NIST-800**: IA-2
 - **ISO-27001**: A.9.4.2
+- **CMMC**: IA.L2-3.5.1, IA.L2-3.5.2
+- **DoD-SRG**: SRG-APP-000148, SRG-APP-000149
+- **FedRAMP**: IA-2 (Low)
+- **HIPAA**: §164.312(d) — Person or Entity Authentication
+- **PCI-DSS**: Req 8.3 — Strong authentication for access
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Authentication mechanisms
+- **EU-AI**: Art. 15(4) — Cybersecurity (authentication)
 - **Statement**: All sensitive resources and operations require authentication before access is granted. Unauthenticated requests to protected resources must be denied with a 401/403 response.
 - **Severity if Non-Compliant**: CRITICAL
 - **Test**: Attempt to access protected pages/endpoints without authentication. Check for responses that reveal protected content.
@@ -89,6 +107,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A07:2021
 - **NIST-800**: IA-2(1)
 - **ISO-27001**: A.9.4.2
+- **CMMC**: IA.L2-3.5.3
+- **DoD-SRG**: SRG-APP-000149
+- **FedRAMP**: IA-2(1) (Moderate)
+- **HIPAA**: §164.312(d) — Person or Entity Authentication
+- **PCI-DSS**: Req 8.4 — MFA implementation
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Strong authentication
+- **EU-AI**: Art. 15(4) — Cybersecurity (authentication)
 - **Statement**: The system supports multi-factor authentication (MFA) for privileged accounts and optionally for all accounts.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Review authentication flow. Verify whether a second factor is offered or required.
@@ -99,6 +126,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A07:2021
 - **NIST-800**: AC-7
 - **ISO-27001**: A.9.4.2
+- **CMMC**: AC.L2-3.1.8
+- **DoD-SRG**: SRG-APP-000065
+- **FedRAMP**: AC-7 (Low)
+- **HIPAA**: §164.312(a)(1) — Access Control
+- **PCI-DSS**: Req 8.3.4 — Lock-out after invalid attempts
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Access control policies
+- **EU-AI**: Art. 15(4) — Cybersecurity (access control)
 - **Statement**: Authentication endpoints implement rate limiting, account lockout, or CAPTCHA after repeated failed attempts (typically 5–10 failures).
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Attempt multiple rapid failed logins. Observe whether lockout, delay, or CAPTCHA is triggered.
@@ -109,6 +145,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: SC-8
 - **ISO-27001**: A.10.1.1
+- **CMMC**: SC.L2-3.13.8
+- **DoD-SRG**: SRG-APP-000219, SRG-APP-000224
+- **FedRAMP**: SC-8 (Moderate)
+- **HIPAA**: §164.312(e)(1) — Transmission Security
+- **PCI-DSS**: Req 4.2.1 — Strong cryptography for transmission
+- **SOC2**: CC6.7 — Encryption in transit
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(d) — Cryptographic controls
+- **EU-AI**: Art. 15(4) — Cybersecurity (data in transit)
 - **Statement**: Credentials (passwords, tokens) are never transmitted in URL parameters, HTTP headers in clear text, or over unencrypted connections.
 - **Severity if Non-Compliant**: CRITICAL
 - **Test**: Inspect login requests. Check for credentials in URLs, GET params, or non-HTTPS connections.
@@ -119,6 +164,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A07:2021
 - **NIST-800**: IA-5
 - **ISO-27001**: A.9.4.3
+- **CMMC**: IA.L2-3.5.7, IA.L2-3.5.8, IA.L2-3.5.9
+- **DoD-SRG**: SRG-APP-000164, SRG-APP-000165
+- **FedRAMP**: IA-5 (Low)
+- **HIPAA**: §164.312(d) — Person or Entity Authentication
+- **PCI-DSS**: Req 8.3.6 — Password complexity requirements
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Authentication mechanisms
+- **EU-AI**: Art. 15(4) — Cybersecurity (credential security)
 - **Statement**: The system enforces minimum password complexity: length ≥ 12 chars, mix of character types, and rejection of commonly used passwords.
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Attempt to set weak/short passwords. Verify complexity enforcement.
@@ -129,6 +183,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A07:2021
 - **NIST-800**: IA-5(1)
 - **ISO-27001**: A.9.2.4
+- **CMMC**: IA.L2-3.5.7
+- **DoD-SRG**: SRG-APP-000166, SRG-APP-000167
+- **FedRAMP**: IA-5(1) (Low)
+- **HIPAA**: §164.312(d) — Person or Entity Authentication
+- **PCI-DSS**: Req 8.3.6 — Password complexity requirements
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Authentication mechanisms
+- **EU-AI**: Art. 15(4) — Cybersecurity (credential security)
 - **Statement**: No default credentials (admin/admin, admin/password, etc.) are active in the system.
 - **Severity if Non-Compliant**: CRITICAL
 - **Test**: Attempt login with common default credential pairs.
@@ -143,6 +206,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A01:2021
 - **NIST-800**: AC-3
 - **ISO-27001**: A.9.4.1
+- **CMMC**: AC.L2-3.1.1, AC.L2-3.1.2
+- **DoD-SRG**: SRG-APP-000033, SRG-APP-000340
+- **FedRAMP**: AC-3 (Moderate)
+- **HIPAA**: §164.312(a)(1) — Access Control
+- **PCI-DSS**: Req 7.2 — Restrict access by need-to-know
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Access control policies
+- **EU-AI**: Art. 15(4) — Cybersecurity (access control)
 - **Statement**: Access to resources is controlled by defined roles. Users can only access resources and operations permitted by their assigned role.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Log in as a lower-privilege user. Attempt to access higher-privilege functions via URL manipulation or API calls.
@@ -153,6 +225,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A01:2021
 - **NIST-800**: AC-6
 - **ISO-27001**: A.9.1.2
+- **CMMC**: AC.L2-3.1.5, AC.L2-3.1.6
+- **DoD-SRG**: SRG-APP-000062, SRG-APP-000063
+- **FedRAMP**: AC-6 (Moderate)
+- **HIPAA**: §164.312(a)(1) — Access Control
+- **PCI-DSS**: Req 7.2.1 — Least privilege access
+- **SOC2**: CC6.3 — Least privilege access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Least privilege
+- **EU-AI**: Art. 15(4) — Cybersecurity (access restriction)
 - **Statement**: Users cannot escalate to higher privilege levels by modifying requests, tokens, or parameters.
 - **Severity if Non-Compliant**: CRITICAL
 - **Test**: Modify role/privilege parameters in requests. Attempt to access admin functions as a regular user.
@@ -163,6 +244,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A01:2021
 - **NIST-800**: AC-3
 - **ISO-27001**: A.9.1.2
+- **CMMC**: AC.L2-3.1.1, AC.L2-3.1.2
+- **DoD-SRG**: SRG-APP-000033, SRG-APP-000340
+- **FedRAMP**: AC-3 (Moderate)
+- **HIPAA**: §164.312(a)(1) — Access Control
+- **PCI-DSS**: Req 7.2 — Restrict access by need-to-know
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Access control policies
+- **EU-AI**: Art. 15(4) — Cybersecurity (access control)
 - **Statement**: Users cannot access other users' data by modifying resource identifiers (IDOR).
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Access a resource (e.g., /user/123/profile), then try /user/124/profile while authenticated as user 123.
@@ -173,6 +263,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A01:2021
 - **NIST-800**: AC-3
 - **ISO-27001**: A.9.4.1
+- **CMMC**: AC.L2-3.1.1, AC.L2-3.1.2
+- **DoD-SRG**: SRG-APP-000033, SRG-APP-000340
+- **FedRAMP**: AC-3 (Moderate)
+- **HIPAA**: §164.312(a)(1) — Access Control
+- **PCI-DSS**: Req 7.2 — Restrict access by need-to-know
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Access control policies
+- **EU-AI**: Art. 15(4) — Cybersecurity (access control)
 - **Statement**: All API endpoints enforce authorization checks. No endpoint relies solely on obscurity for access control.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Enumerate API endpoints. Test unauthenticated and low-privilege access to each.
@@ -183,6 +282,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A01:2021
 - **NIST-800**: AC-6
 - **ISO-27001**: A.9.2.3
+- **CMMC**: AC.L2-3.1.5, AC.L2-3.1.6
+- **DoD-SRG**: SRG-APP-000062, SRG-APP-000063
+- **FedRAMP**: AC-6 (Moderate)
+- **HIPAA**: §164.312(a)(1) — Access Control
+- **PCI-DSS**: Req 7.2.1 — Least privilege access
+- **SOC2**: CC6.3 — Least privilege access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Least privilege
+- **EU-AI**: Art. 15(4) — Cybersecurity (access restriction)
 - **Statement**: The system and its components operate with minimum permissions required for their function.
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Review permissions granted to service accounts, database users, and API clients.
@@ -197,6 +305,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: SC-8
 - **ISO-27001**: A.10.1.1
+- **CMMC**: SC.L2-3.13.8
+- **DoD-SRG**: SRG-APP-000219, SRG-APP-000224
+- **FedRAMP**: SC-8 (Moderate)
+- **HIPAA**: §164.312(e)(1) — Transmission Security
+- **PCI-DSS**: Req 4.2.1 — Strong cryptography for transmission
+- **SOC2**: CC6.7 — Encryption in transit
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(d) — Cryptographic controls
+- **EU-AI**: Art. 15(4) — Cybersecurity (data in transit)
 - **Statement**: All communications use TLS 1.2 or higher. HTTP requests are redirected to HTTPS.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Access the site via HTTP. Verify redirect to HTTPS. Check TLS version in use.
@@ -207,6 +324,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: SC-8(1)
 - **ISO-27001**: A.10.1.1
+- **CMMC**: SC.L2-3.13.8
+- **DoD-SRG**: SRG-APP-000224
+- **FedRAMP**: SC-8(1) (Moderate)
+- **HIPAA**: §164.312(e)(2)(ii) — Encryption
+- **PCI-DSS**: Req 4.2.1 — Strong cryptography for transmission
+- **SOC2**: CC6.7 — Encryption in transit
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(d) — Cryptographic controls
+- **EU-AI**: Art. 15(4) — Cybersecurity (encryption)
 - **Statement**: Only strong cipher suites are enabled. Weak ciphers (RC4, DES, 3DES, export-grade) and deprecated protocols (SSLv2, SSLv3, TLS 1.0, TLS 1.1) are disabled.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Use SSL Labs or similar to enumerate supported cipher suites and protocols.
@@ -217,6 +343,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: SC-28
 - **ISO-27001**: A.10.1.1
+- **CMMC**: SC.L2-3.13.16
+- **DoD-SRG**: SRG-APP-000231, SRG-APP-000428
+- **FedRAMP**: SC-28 (Moderate)
+- **HIPAA**: §164.312(a)(2)(iv) — Encryption and Decryption
+- **PCI-DSS**: Req 3.5 — Protect stored account data
+- **SOC2**: CC6.7 — Encryption at rest
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(d) — Data protection at rest
+- **EU-AI**: Art. 15(4) — Cybersecurity (data at rest)
 - **Statement**: Sensitive data (PII, credentials, financial data) is encrypted at rest using AES-128 or stronger.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Review data storage configuration. Verify database encryption settings.
@@ -227,6 +362,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: IA-5(7)
 - **ISO-27001**: A.10.1.2
+- **CMMC**: IA.L2-3.5.10
+- **DoD-SRG**: SRG-APP-000171
+- **FedRAMP**: IA-5(7) (Moderate)
+- **HIPAA**: §164.312(d) — Person or Entity Authentication
+- **PCI-DSS**: Req 8.3.2 — No embedded credentials
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Credential management
+- **EU-AI**: Art. 15(4) — Cybersecurity
 - **Statement**: No API keys, passwords, tokens, or cryptographic secrets are hardcoded in source code, client-side JavaScript, or configuration files served to clients.
 - **Severity if Non-Compliant**: CRITICAL
 - **Test**: Review client-side source code and JavaScript for secrets patterns. Check git history if accessible.
@@ -237,6 +381,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: SC-17
 - **ISO-27001**: A.10.1.1
+- **CMMC**: SC.L2-3.13.10
+- **DoD-SRG**: SRG-APP-000231
+- **FedRAMP**: SC-17 (Moderate)
+- **HIPAA**: §164.312(e)(2)(ii) — Encryption
+- **PCI-DSS**: Req 3.6 — Cryptographic key management
+- **SOC2**: CC6.7 — Encryption in transit
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(d) — Cryptographic key management
+- **EU-AI**: Art. 15(4) — Cybersecurity (key management)
 - **Statement**: TLS certificates are valid, not expired, issued by a trusted CA, and match the domain.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Inspect the TLS certificate details. Check expiry, CA chain, and domain match.
@@ -247,6 +400,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: IA-5(1)
 - **ISO-27001**: A.10.1.1
+- **CMMC**: IA.L2-3.5.7
+- **DoD-SRG**: SRG-APP-000166, SRG-APP-000167
+- **FedRAMP**: IA-5(1) (Low)
+- **HIPAA**: §164.312(d) — Person or Entity Authentication
+- **PCI-DSS**: Req 8.3.6 — Password complexity requirements
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Authentication mechanisms
+- **EU-AI**: Art. 15(4) — Cybersecurity (credential security)
 - **Statement**: Passwords are stored using a strong adaptive hashing algorithm (bcrypt, scrypt, Argon2, PBKDF2). MD5 and SHA-1 are not used for passwords.
 - **Severity if Non-Compliant**: CRITICAL
 - **Test**: Where accessible, review password storage mechanism. Test for password recovery flows that reveal plaintext.
@@ -261,6 +423,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A03:2021
 - **NIST-800**: SI-10
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SI.L2-3.14.2
+- **DoD-SRG**: SRG-APP-000251
+- **FedRAMP**: SI-10 (Moderate)
+- **HIPAA**: §164.312(c)(1) — Integrity
+- **PCI-DSS**: Req 6.2.4 — Input validation
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(a) — ICT systems integrity
+- **EU-AI**: Art. 10(3) — Data governance (validation)
 - **Statement**: All user-supplied input is sanitized/encoded before being rendered in HTML. Output encoding prevents execution of injected scripts.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Inject `<script>alert(1)</script>` and similar payloads into input fields, URL params, and headers. Check if rendered unencoded.
@@ -271,6 +442,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A03:2021
 - **NIST-800**: SI-10
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SI.L2-3.14.2
+- **DoD-SRG**: SRG-APP-000251
+- **FedRAMP**: SI-10 (Moderate)
+- **HIPAA**: §164.312(c)(1) — Integrity
+- **PCI-DSS**: Req 6.2.4 — Input validation
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(a) — ICT systems integrity
+- **EU-AI**: Art. 10(3) — Data governance (validation)
 - **Statement**: All database queries use parameterized queries or prepared statements. String concatenation to build SQL queries is not used.
 - **Severity if Non-Compliant**: CRITICAL
 - **Test**: Inject SQL characters (`'`, `"`, `--`, `OR 1=1`) into input fields and URL parameters.
@@ -281,6 +461,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A01:2021
 - **NIST-800**: SI-10
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SI.L2-3.14.2
+- **DoD-SRG**: SRG-APP-000251
+- **FedRAMP**: SI-10 (Moderate)
+- **HIPAA**: §164.312(c)(1) — Integrity
+- **PCI-DSS**: Req 6.2.4 — Input validation
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(a) — ICT systems integrity
+- **EU-AI**: Art. 10(3) — Data governance (validation)
 - **Statement**: State-changing requests include anti-CSRF tokens or use SameSite cookie attributes to prevent cross-site request forgery.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Inspect forms for CSRF tokens. Check cookie SameSite attributes. Attempt to forge a state-changing request from a different origin.
@@ -291,6 +480,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A04:2021
 - **NIST-800**: SI-3
 - **ISO-27001**: A.12.2.1
+- **CMMC**: SI.L2-3.14.2
+- **DoD-SRG**: SRG-APP-000277
+- **FedRAMP**: SI-3 (Low)
+- **HIPAA**: §164.308(a)(5)(ii)(B) — Protection from Malicious Software
+- **PCI-DSS**: Req 5.2 — Anti-malware solutions
+- **SOC2**: CC6.8 — Prevent unauthorized software
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(3) — Malicious software protection
+- **EU-AI**: Art. 15(4) — Cybersecurity (malware protection)
 - **Statement**: File uploads validate file type (by magic bytes, not just extension), enforce size limits, and store files outside the web root or in an isolated container.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Attempt to upload files with mismatched extensions (.php renamed to .jpg). Check where files are stored and if they're web-accessible.
@@ -301,6 +499,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A03:2021
 - **NIST-800**: SI-10
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SI.L2-3.14.2
+- **DoD-SRG**: SRG-APP-000251
+- **FedRAMP**: SI-10 (Moderate)
+- **HIPAA**: §164.312(c)(1) — Integrity
+- **PCI-DSS**: Req 6.2.4 — Input validation
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(a) — ICT systems integrity
+- **EU-AI**: Art. 10(3) — Data governance (validation)
 - **Statement**: Input is never passed to system commands. If OS-level operations are needed, they use safe APIs that prevent shell injection.
 - **Severity if Non-Compliant**: CRITICAL
 - **Test**: Inject shell metacharacters (`; ls`, `| id`, `` `whoami` ``) into input fields that might be used in system calls.
@@ -311,6 +518,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A05:2021
 - **NIST-800**: SI-10
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SI.L2-3.14.2
+- **DoD-SRG**: SRG-APP-000251
+- **FedRAMP**: SI-10 (Moderate)
+- **HIPAA**: §164.312(c)(1) — Integrity
+- **PCI-DSS**: Req 6.2.4 — Input validation
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(a) — ICT systems integrity
+- **EU-AI**: Art. 10(3) — Data governance (validation)
 - **Statement**: XML parsers have external entity processing disabled. XXE attacks cannot be used to read local files or make SSRF requests.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Submit XML payloads containing external entity references. Check for file content in responses.
@@ -321,6 +537,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A01:2021
 - **NIST-800**: SI-10
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SI.L2-3.14.2
+- **DoD-SRG**: SRG-APP-000251
+- **FedRAMP**: SI-10 (Moderate)
+- **HIPAA**: §164.312(c)(1) — Integrity
+- **PCI-DSS**: Req 6.2.4 — Input validation
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(a) — ICT systems integrity
+- **EU-AI**: Art. 10(3) — Data governance (validation)
 - **Statement**: File path inputs are validated and canonicalized. Path traversal sequences (`../`) cannot be used to access files outside the intended directory.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Inject path traversal sequences into file/resource parameters.
@@ -335,6 +560,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A07:2021
 - **NIST-800**: IA-8
 - **ISO-27001**: A.9.4.2
+- **CMMC**: IA.L2-3.5.1
+- **DoD-SRG**: SRG-APP-000177
+- **FedRAMP**: IA-8 (Low)
+- **HIPAA**: §164.312(d) — Person or Entity Authentication
+- **PCI-DSS**: Req 8.3 — Strong authentication for access
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-ID §248.201 — Identity Theft Prevention
+- **EU-DORA**: Art. 9(4)(c) — Authentication mechanisms
+- **EU-AI**: Art. 15(4) — Cybersecurity
 - **Statement**: Session tokens are cryptographically random, sufficiently long (≥ 128 bits), and unpredictable. Sequential or guessable tokens are not used.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Collect multiple session tokens and analyze for patterns. Check token entropy.
@@ -345,6 +579,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A07:2021
 - **NIST-800**: AC-12
 - **ISO-27001**: A.9.4.2
+- **CMMC**: AC.L2-3.1.11
+- **DoD-SRG**: SRG-APP-000295
+- **FedRAMP**: AC-12 (Moderate)
+- **HIPAA**: §164.312(a)(2)(iii) — Automatic Logoff
+- **PCI-DSS**: Req 8.2.8 — Session timeout
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Access control policies
+- **EU-AI**: Art. 15(4) — Cybersecurity
 - **Statement**: Session tokens are invalidated server-side upon logout. Old tokens cannot be reused after logout.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Copy session token. Log out. Attempt to use the copied token for authenticated requests.
@@ -355,6 +598,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A07:2021
 - **NIST-800**: AC-11
 - **ISO-27001**: A.9.4.2
+- **CMMC**: AC.L2-3.1.10
+- **DoD-SRG**: SRG-APP-000295
+- **FedRAMP**: AC-11 (Moderate)
+- **HIPAA**: §164.312(a)(2)(iii) — Automatic Logoff
+- **PCI-DSS**: Req 8.2.8 — Session timeout
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Access control policies
+- **EU-AI**: Art. 15(4) — Cybersecurity
 - **Statement**: Sessions expire after a period of inactivity (typically 15–30 minutes for sensitive applications, up to 24 hours for others).
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Create a session. Leave it idle beyond the stated timeout. Attempt to use it.
@@ -365,6 +617,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A07:2021
 - **NIST-800**: SC-18
 - **ISO-27001**: A.9.4.2
+- **CMMC**: SC.L2-3.13.12
+- **DoD-SRG**: SRG-APP-000209
+- **FedRAMP**: SC-18 (Moderate)
+- **HIPAA**: §164.312(e)(1) — Transmission Security
+- **PCI-DSS**: Req 6.4.3 — Payment page script management
+- **SOC2**: CC6.8 — Prevent unauthorized software
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(b) — Network security management
+- **EU-AI**: Art. 15(4) — Cybersecurity
 - **Statement**: Session cookies have the `Secure` flag (preventing transmission over HTTP) and `HttpOnly` flag (preventing JavaScript access).
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Inspect Set-Cookie headers. Verify Secure and HttpOnly flags are present on session cookies.
@@ -375,6 +636,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A07:2021
 - **NIST-800**: IA-8
 - **ISO-27001**: A.9.4.2
+- **CMMC**: IA.L2-3.5.1
+- **DoD-SRG**: SRG-APP-000177
+- **FedRAMP**: IA-8 (Low)
+- **HIPAA**: §164.312(d) — Person or Entity Authentication
+- **PCI-DSS**: Req 8.3 — Strong authentication for access
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-ID §248.201 — Identity Theft Prevention
+- **EU-DORA**: Art. 9(4)(c) — Authentication mechanisms
+- **EU-AI**: Art. 15(4) — Cybersecurity
 - **Statement**: A new session ID is issued upon authentication. Pre-authentication session IDs are invalidated after login.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Note session ID before login. Log in. Verify session ID changes post-authentication.
@@ -389,6 +659,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A05:2021
 - **NIST-800**: SI-10
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SI.L2-3.14.2
+- **DoD-SRG**: SRG-APP-000251
+- **FedRAMP**: SI-10 (Moderate)
+- **HIPAA**: §164.312(c)(1) — Integrity
+- **PCI-DSS**: Req 6.2.4 — Input validation
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(a) — ICT systems integrity
+- **EU-AI**: Art. 10(3) — Data governance (validation)
 - **Statement**: A Content-Security-Policy header is present and restricts script, style, and resource sources. `unsafe-inline` and `unsafe-eval` are avoided.
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Check response headers for CSP. Evaluate policy restrictiveness.
@@ -399,6 +678,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: SC-8
 - **ISO-27001**: A.10.1.1
+- **CMMC**: SC.L2-3.13.8
+- **DoD-SRG**: SRG-APP-000219, SRG-APP-000224
+- **FedRAMP**: SC-8 (Moderate)
+- **HIPAA**: §164.312(e)(1) — Transmission Security
+- **PCI-DSS**: Req 4.2.1 — Strong cryptography for transmission
+- **SOC2**: CC6.7 — Encryption in transit
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(d) — Cryptographic controls
+- **EU-AI**: Art. 15(4) — Cybersecurity (data in transit)
 - **Statement**: HSTS header is present with max-age ≥ 31536000 (1 year) to prevent protocol downgrade attacks.
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Check for `Strict-Transport-Security` header in HTTPS responses.
@@ -409,6 +697,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A05:2021
 - **NIST-800**: SI-3
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SI.L2-3.14.2
+- **DoD-SRG**: SRG-APP-000277
+- **FedRAMP**: SI-3 (Low)
+- **HIPAA**: §164.308(a)(5)(ii)(B) — Protection from Malicious Software
+- **PCI-DSS**: Req 5.2 — Anti-malware solutions
+- **SOC2**: CC6.8 — Prevent unauthorized software
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(3) — Malicious software protection
+- **EU-AI**: Art. 15(4) — Cybersecurity (malware protection)
 - **Statement**: `X-Content-Type-Options: nosniff` header is present to prevent MIME type sniffing.
 - **Severity if Non-Compliant**: LOW
 - **Test**: Check response headers for `X-Content-Type-Options`.
@@ -419,6 +716,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A05:2021
 - **NIST-800**: SC-18
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SC.L2-3.13.12
+- **DoD-SRG**: SRG-APP-000209
+- **FedRAMP**: SC-18 (Moderate)
+- **HIPAA**: §164.312(e)(1) — Transmission Security
+- **PCI-DSS**: Req 6.4.3 — Payment page script management
+- **SOC2**: CC6.8 — Prevent unauthorized software
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(b) — Network security management
+- **EU-AI**: Art. 15(4) — Cybersecurity
 - **Statement**: `X-Frame-Options: DENY` or `SAMEORIGIN` header, or CSP `frame-ancestors` directive, is present to prevent clickjacking.
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Check response headers for X-Frame-Options or CSP frame-ancestors.
@@ -429,6 +735,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A05:2021
 - **NIST-800**: AC-22
 - **ISO-27001**: A.13.2.3
+- **CMMC**: AC.L2-3.1.22
+- **DoD-SRG**: SRG-APP-000340
+- **FedRAMP**: AC-22 (Moderate)
+- **HIPAA**: §164.312(a)(1) — Access Control
+- **PCI-DSS**: Req 7.2 — Restrict access by need-to-know
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Access control policies
+- **EU-AI**: Art. 15(4) — Cybersecurity
 - **Statement**: `Referrer-Policy` header is present to control information leakage through the Referer header. At minimum `no-referrer-when-downgrade`.
 - **Severity if Non-Compliant**: LOW
 - **Test**: Check response headers for `Referrer-Policy`.
@@ -439,6 +754,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A05:2021
 - **NIST-800**: SC-18
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SC.L2-3.13.12
+- **DoD-SRG**: SRG-APP-000209
+- **FedRAMP**: SC-18 (Moderate)
+- **HIPAA**: §164.312(e)(1) — Transmission Security
+- **PCI-DSS**: Req 6.4.3 — Payment page script management
+- **SOC2**: CC6.8 — Prevent unauthorized software
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(b) — Network security management
+- **EU-AI**: Art. 15(4) — Cybersecurity
 - **Statement**: `Permissions-Policy` header restricts access to browser APIs (camera, microphone, geolocation) that the application does not require.
 - **Severity if Non-Compliant**: LOW
 - **Test**: Check response headers for `Permissions-Policy`.
@@ -449,6 +773,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A05:2021
 - **NIST-800**: CM-7
 - **ISO-27001**: A.14.2.5
+- **CMMC**: CM.L2-3.4.6, CM.L2-3.4.7
+- **DoD-SRG**: SRG-APP-000141, SRG-APP-000142
+- **FedRAMP**: CM-7 (Low)
+- **HIPAA**: §164.308(a)(8) — Evaluation
+- **PCI-DSS**: Req 2.2.4 — Disable unnecessary services
+- **SOC2**: CC6.8 — Prevent unauthorized software
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(e) — Configuration management
+- **EU-AI**: Art. 15(3) — Robustness (minimization)
 - **Statement**: `Server` and `X-Powered-By` headers do not reveal software versions to prevent targeted attacks.
 - **Severity if Non-Compliant**: INFORMATIONAL
 - **Test**: Check response headers for Server and X-Powered-By version disclosure.
@@ -463,6 +796,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A05:2021
 - **NIST-800**: SI-11
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SI.L2-3.14.1
+- **DoD-SRG**: SRG-APP-000266
+- **FedRAMP**: SI-11 (Moderate)
+- **HIPAA**: §164.312(c)(1) — Integrity
+- **PCI-DSS**: Req 6.2.6 — Error handling
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(a) — ICT systems integrity
+- **EU-AI**: Art. 13(1) — Transparency (error handling)
 - **Statement**: Error messages shown to users do not reveal internal system details (stack traces, SQL errors, file paths, software versions).
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Trigger errors (invalid input, 404, 500). Check error response content.
@@ -473,6 +815,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A09:2021
 - **NIST-800**: AU-3
 - **ISO-27001**: A.12.4.1
+- **CMMC**: AU.L2-3.3.1, AU.L2-3.3.2
+- **DoD-SRG**: SRG-APP-000095, SRG-APP-000096
+- **FedRAMP**: AU-3 (Low)
+- **HIPAA**: §164.312(b) — Audit Controls
+- **PCI-DSS**: Req 10.2.1 — Log entry detail
+- **SOC2**: CC7.2 — System monitoring
+- **SEC-FINRA**: SEC Cyber Rule §229.106 — Incident Disclosure
+- **EU-DORA**: Art. 10(1) — Detection of anomalous activities
+- **EU-AI**: Art. 12(1) — Record-keeping (logging)
 - **Statement**: Detailed error information is logged internally for debugging without being exposed to end users.
 - **Severity if Non-Compliant**: LOW
 - **Test**: Review error responses vs. expected logging behavior. Check if logging infrastructure exists.
@@ -483,6 +834,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A04:2021
 - **NIST-800**: SI-17
 - **ISO-27001**: A.17.2.1
+- **CMMC**: SI.L2-3.14.1
+- **DoD-SRG**: SRG-APP-000516
+- **FedRAMP**: SI-17 (Moderate)
+- **HIPAA**: §164.312(c)(1) — Integrity
+- **PCI-DSS**: Req 6.2.4 — Input validation
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(a) — ICT systems integrity
+- **EU-AI**: Art. 10(3) — Data governance (validation)
 - **Statement**: The application handles unexpected errors gracefully and remains available. Errors in one component do not cascade to cause system-wide unavailability.
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Submit malformed requests. Verify application recovers gracefully.
@@ -497,6 +857,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: IA-5(7)
 - **ISO-27001**: A.10.1.2
+- **CMMC**: IA.L2-3.5.10
+- **DoD-SRG**: SRG-APP-000171
+- **FedRAMP**: IA-5(7) (Moderate)
+- **HIPAA**: §164.312(d) — Person or Entity Authentication
+- **PCI-DSS**: Req 8.3.2 — No embedded credentials
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Credential management
+- **EU-AI**: Art. 15(4) — Cybersecurity
 - **OWASP-LLM**: LLM02 (Sensitive Information Disclosure — hardcoded secrets in skill source or system prompts exposed via output or leakage), LLM07 (System Prompt Leakage — system prompts containing hardcoded credentials are a critical risk in LLM contexts)
 - **Statement**: API keys, database credentials, private keys, and tokens are not present in client-side source code, JavaScript files, or public repositories.
 - **Severity if Non-Compliant**: CRITICAL
@@ -508,6 +877,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: SC-28
 - **ISO-27001**: A.13.2.3
+- **CMMC**: SC.L2-3.13.16
+- **DoD-SRG**: SRG-APP-000231, SRG-APP-000428
+- **FedRAMP**: SC-28 (Moderate)
+- **HIPAA**: §164.312(a)(2)(iv) — Encryption and Decryption
+- **PCI-DSS**: Req 3.5 — Protect stored account data
+- **SOC2**: CC6.7 — Encryption at rest
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(d) — Data protection at rest
+- **EU-AI**: Art. 15(4) — Cybersecurity (data at rest)
 - **Statement**: HTTP responses do not include sensitive tokens, internal credentials, or session management data beyond what is necessary for operation.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Inspect HTTP response bodies and headers for credential patterns.
@@ -518,6 +896,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: IA-5
 - **ISO-27001**: A.10.1.2
+- **CMMC**: IA.L2-3.5.7, IA.L2-3.5.8, IA.L2-3.5.9
+- **DoD-SRG**: SRG-APP-000164, SRG-APP-000165
+- **FedRAMP**: IA-5 (Low)
+- **HIPAA**: §164.312(d) — Person or Entity Authentication
+- **PCI-DSS**: Req 8.3.6 — Password complexity requirements
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Authentication mechanisms
+- **EU-AI**: Art. 15(4) — Cybersecurity (credential security)
 - **Statement**: Secrets are stored in environment variables, a secrets manager, or vault — not in configuration files checked into version control.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Check for `.env`, `config.json`, or similar files served by the web server.
@@ -532,6 +919,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A09:2021
 - **NIST-800**: AU-2
 - **ISO-27001**: A.12.4.1
+- **CMMC**: AU.L2-3.3.1
+- **DoD-SRG**: SRG-APP-000089, SRG-APP-000091
+- **FedRAMP**: AU-2 (Low)
+- **HIPAA**: §164.312(b) — Audit Controls
+- **PCI-DSS**: Req 10.2 — Audit log implementation
+- **SOC2**: CC7.2 — System monitoring
+- **SEC-FINRA**: SEC Cyber Rule §229.106 — Incident Disclosure
+- **EU-DORA**: Art. 10(1) — Detection of anomalous activities
+- **EU-AI**: Art. 12(1) — Record-keeping (logging)
 - **Statement**: All authentication events (successful login, failed login, logout, account lockout) are logged with timestamp, user ID, and source IP.
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Perform authentication actions. Verify logging infrastructure exists and captures these events.
@@ -542,6 +938,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A09:2021
 - **NIST-800**: AU-2
 - **ISO-27001**: A.12.4.1
+- **CMMC**: AU.L2-3.3.1
+- **DoD-SRG**: SRG-APP-000089, SRG-APP-000091
+- **FedRAMP**: AU-2 (Low)
+- **HIPAA**: §164.312(b) — Audit Controls
+- **PCI-DSS**: Req 10.2 — Audit log implementation
+- **SOC2**: CC7.2 — System monitoring
+- **SEC-FINRA**: SEC Cyber Rule §229.106 — Incident Disclosure
+- **EU-DORA**: Art. 10(1) — Detection of anomalous activities
+- **EU-AI**: Art. 12(1) — Record-keeping (logging)
 - **Statement**: All privileged or high-impact actions (admin operations, data export, user management) are logged.
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Perform privileged operations. Verify they are logged.
@@ -552,6 +957,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A09:2021
 - **NIST-800**: AU-9
 - **ISO-27001**: A.12.4.2
+- **CMMC**: AU.L2-3.3.8
+- **DoD-SRG**: SRG-APP-000118, SRG-APP-000119
+- **FedRAMP**: AU-9 (Low)
+- **HIPAA**: §164.312(b) — Audit Controls
+- **PCI-DSS**: Req 10.3 — Protect audit logs
+- **SOC2**: CC7.2 — System monitoring
+- **SEC-FINRA**: FINRA Rule 4370 — Business Continuity
+- **EU-DORA**: Art. 10(1) — Log integrity
+- **EU-AI**: Art. 12(1) — Record-keeping (log integrity)
 - **Statement**: Logs are stored in a tamper-evident manner. Users and application processes cannot modify or delete log entries.
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Verify logging storage is separate from application storage. Check for log modification controls.
@@ -566,6 +980,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: PM-25
 - **ISO-27001**: A.8.2.1
+- **CMMC**: RA.L2-3.11.1
+- **DoD-SRG**: SRG-APP-000516
+- **FedRAMP**: PM-25 (Moderate)
+- **HIPAA**: §164.308(a)(1)(ii)(A) — Risk Analysis
+- **PCI-DSS**: Req 12.3.1 — Targeted risk analysis
+- **SOC2**: CC3.1 — Risk assessment
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 6(1) — ICT risk management framework
+- **EU-AI**: Art. 9(2) — Risk identification and analysis
 - **Statement**: Only the minimum necessary PII is collected and stored. Data that is not required for the stated purpose is not retained.
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Review registration/profile forms. Identify what PII is collected and whether all fields are necessary.
@@ -576,6 +999,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: SC-28
 - **ISO-27001**: A.8.2.3
+- **CMMC**: SC.L2-3.13.16
+- **DoD-SRG**: SRG-APP-000231, SRG-APP-000428
+- **FedRAMP**: SC-28 (Moderate)
+- **HIPAA**: §164.312(a)(2)(iv) — Encryption and Decryption
+- **PCI-DSS**: Req 3.5 — Protect stored account data
+- **SOC2**: CC6.7 — Encryption at rest
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(d) — Data protection at rest
+- **EU-AI**: Art. 15(4) — Cybersecurity (data at rest)
 - **Statement**: Sensitive data (credit card numbers, SSNs, passwords) is masked in UI displays and logs. Only partial data is shown where full display is not required.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Look for full display of sensitive data in UI, responses, or error messages.
@@ -586,6 +1018,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: SC-8
 - **ISO-27001**: A.10.1.1
+- **CMMC**: SC.L2-3.13.8
+- **DoD-SRG**: SRG-APP-000219, SRG-APP-000224
+- **FedRAMP**: SC-8 (Moderate)
+- **HIPAA**: §164.312(e)(1) — Transmission Security
+- **PCI-DSS**: Req 4.2.1 — Strong cryptography for transmission
+- **SOC2**: CC6.7 — Encryption in transit
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(d) — Cryptographic controls
+- **EU-AI**: Art. 15(4) — Cybersecurity (data in transit)
 - **Statement**: All data in transit is protected by TLS. No sensitive data is transmitted in clear text.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Intercept traffic. Verify all data flows use TLS.
@@ -596,6 +1037,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: SC-28
 - **ISO-27001**: A.13.2.1
+- **CMMC**: SC.L2-3.13.16
+- **DoD-SRG**: SRG-APP-000231, SRG-APP-000428
+- **FedRAMP**: SC-28 (Moderate)
+- **HIPAA**: §164.312(a)(2)(iv) — Encryption and Decryption
+- **PCI-DSS**: Req 3.5 — Protect stored account data
+- **SOC2**: CC6.7 — Encryption at rest
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(d) — Data protection at rest
+- **EU-AI**: Art. 15(4) — Cybersecurity (data at rest)
 - **Statement**: Responses containing sensitive data include appropriate cache-control headers (`Cache-Control: no-store, no-cache`) to prevent caching by proxies or browsers.
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Check Cache-Control headers on responses containing sensitive/authenticated content.
@@ -610,6 +1060,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A03:2021
 - **NIST-800**: SI-10
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SI.L2-3.14.2
+- **DoD-SRG**: SRG-APP-000251
+- **FedRAMP**: SI-10 (Moderate)
+- **HIPAA**: §164.312(c)(1) — Integrity
+- **PCI-DSS**: Req 6.2.4 — Input validation
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(a) — ICT systems integrity
+- **EU-AI**: Art. 10(3) — Data governance (validation)
 - **OWASP-LLM**: LLM05 (Improper Output Handling — unsanitised inputs propagate to tool calls), LLM01 (Prompt Injection via malformed input)
 - **NIST-AI**: MEASURE 2.5 (AI system testing for unexpected inputs), MANAGE 1.3 (Risk response for identified input-handling gaps)
 - **ISO-42001**: A.6.2.5 (AI system security), A.6.2.4 (AI system risk treatment)
@@ -625,6 +1084,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A03:2021
 - **NIST-800**: SI-10
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SI.L2-3.14.2
+- **DoD-SRG**: SRG-APP-000251
+- **FedRAMP**: SI-10 (Moderate)
+- **HIPAA**: §164.312(c)(1) — Integrity
+- **PCI-DSS**: Req 6.2.4 — Input validation
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(a) — ICT systems integrity
+- **EU-AI**: Art. 10(3) — Data governance (validation)
 - **OWASP-LLM**: LLM01 (Prompt Injection — direct and indirect), LLM07 (System Prompt Leakage — injections may reveal system context)
 - **NIST-AI**: MAP 5.2 (Practices for identifying and mitigating adversarial inputs), MEASURE 2.5 (Test for robustness against adversarial prompts), MANAGE 1.3 (Documented response to injection incidents)
 - **ISO-42001**: A.6.2.4 (AI system risk treatment — adversarial input is a primary AI risk), A.6.2.5 (AI system security)
@@ -640,6 +1108,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A01:2021
 - **NIST-800**: AC-6
 - **ISO-27001**: A.9.2.3
+- **CMMC**: AC.L2-3.1.5, AC.L2-3.1.6
+- **DoD-SRG**: SRG-APP-000062, SRG-APP-000063
+- **FedRAMP**: AC-6 (Moderate)
+- **HIPAA**: §164.312(a)(1) — Access Control
+- **PCI-DSS**: Req 7.2.1 — Least privilege access
+- **SOC2**: CC6.3 — Least privilege access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Least privilege
+- **EU-AI**: Art. 15(4) — Cybersecurity (access restriction)
 - **OWASP-LLM**: LLM06 (Excessive Agency — skill has more tool access than its declared purpose requires)
 - **NIST-AI**: GOVERN 6.1 (Policies for third-party and tool access aligned with risk appetite), MAP 1.5 (Organisational risk tolerance applied to tool scope)
 - **ISO-42001**: A.6.2.1 (AI system design objectives — scope and capability boundaries defined), A.6.1.2 (AI risk assessment includes over-permissioned tool access)
@@ -655,6 +1132,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A02:2021
 - **NIST-800**: SC-28
 - **ISO-27001**: A.8.2.3
+- **CMMC**: SC.L2-3.13.16
+- **DoD-SRG**: SRG-APP-000231, SRG-APP-000428
+- **FedRAMP**: SC-28 (Moderate)
+- **HIPAA**: §164.312(a)(2)(iv) — Encryption and Decryption
+- **PCI-DSS**: Req 3.5 — Protect stored account data
+- **SOC2**: CC6.7 — Encryption at rest
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(d) — Data protection at rest
+- **EU-AI**: Art. 15(4) — Cybersecurity (data at rest)
 - **OWASP-LLM**: LLM02 (Sensitive Information Disclosure — skill outputs PII or credentials from tool results), LLM05 (Improper Output Handling — tool result data passed to output without filtering)
 - **NIST-AI**: MEASURE 2.6 (Evaluate whether AI outputs meet intended objectives without over-disclosure), MANAGE 2.2 (Mechanisms to prevent unintended sensitive data release)
 - **ISO-42001**: A.6.2.6 (AI system privacy — personal data minimisation in outputs), A.6.2.5 (AI system security — output control as a security boundary)
@@ -670,6 +1156,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A08:2021
 - **NIST-800**: SA-9
 - **ISO-27001**: A.15.2.1
+- **CMMC**: SA.L2-3.13.1
+- **DoD-SRG**: SRG-APP-000516
+- **FedRAMP**: SA-9 (Low)
+- **HIPAA**: §164.308(b)(1) — Business Associate Contracts
+- **PCI-DSS**: Req 12.8 — Third-party service providers
+- **SOC2**: CC9.2 — Vendor management
+- **SEC-FINRA**: FINRA Rule 3110 — Supervisory Systems
+- **EU-DORA**: Art. 28(1)(a) — Third-party ICT risk
+- **EU-AI**: Art. 25 — Responsibilities along the AI value chain
 - **OWASP-LLM**: LLM01 (Indirect Prompt Injection — instructions embedded in fetched external content), LLM03 (Supply Chain Vulnerabilities — external data sources may be compromised or adversarial)
 - **NIST-AI**: MAP 3.5 (Third-party and external data risks identified and documented), MEASURE 2.5 (Test resistance to adversarial content in external data), MANAGE 1.3 (Response procedures for external data compromise)
 - **ISO-42001**: A.8.4 (Third-party AI relationships — external data providers treated as supply chain risk), A.6.2.4 (AI system risk treatment includes external data trust boundaries)
@@ -685,6 +1180,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A05:2021
 - **NIST-800**: SI-11
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SI.L2-3.14.1
+- **DoD-SRG**: SRG-APP-000266
+- **FedRAMP**: SI-11 (Moderate)
+- **HIPAA**: §164.312(c)(1) — Integrity
+- **PCI-DSS**: Req 6.2.6 — Error handling
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(a) — ICT systems integrity
+- **EU-AI**: Art. 13(1) — Transparency (error handling)
 - **OWASP-LLM**: LLM07 (System Prompt Leakage — error states may expose system prompt or internal tool configuration), LLM02 (Sensitive Information Disclosure — error messages may reveal credentials or internal paths)
 - **NIST-AI**: MEASURE 2.6 (Evaluate AI outputs under error conditions), MANAGE 1.3 (Documented error response procedures that prevent disclosure)
 - **ISO-42001**: A.6.2.5 (AI system security — error handling is part of the security boundary), A.6.2.1 (AI system design must account for failure modes)
@@ -700,6 +1204,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A01:2021
 - **NIST-800**: AC-3
 - **ISO-27001**: A.9.1.1
+- **CMMC**: AC.L2-3.1.1, AC.L2-3.1.2
+- **DoD-SRG**: SRG-APP-000033, SRG-APP-000340
+- **FedRAMP**: AC-3 (Moderate)
+- **HIPAA**: §164.312(a)(1) — Access Control
+- **PCI-DSS**: Req 7.2 — Restrict access by need-to-know
+- **SOC2**: CC6.1 — Logical and physical access
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(c) — Access control policies
+- **EU-AI**: Art. 15(4) — Cybersecurity (access control)
 - **OWASP-LLM**: LLM06 (Excessive Agency — skill autonomously takes actions beyond its declared scope), LLM04 (Data and Model Poisoning — out-of-scope actions may alter downstream state in unintended ways)
 - **NIST-AI**: GOVERN 1.3 (Transparency and accountability — actions must be traceable to declared scope), MAP 1.1 (Organisational context defines acceptable AI system scope)
 - **ISO-42001**: A.6.2.1 (AI system objectives — scope is formally defined and must be enforced), A.6.1.2 (AI risk assessment includes out-of-scope action as a risk category)
@@ -719,6 +1232,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A06:2021
 - **NIST-800**: SI-2
 - **ISO-27001**: A.12.6.1
+- **CMMC**: SI.L2-3.14.1
+- **DoD-SRG**: SRG-APP-000456
+- **FedRAMP**: SI-2 (Low)
+- **HIPAA**: §164.308(a)(5)(ii)(B) — Protection from Malicious Software
+- **PCI-DSS**: Req 6.3.3 — Patch management
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(e) — Patch management
+- **EU-AI**: Art. 15(3) — Robustness (vulnerability management)
 - **OWASP-LLM**: LLM03 (Supply Chain Vulnerabilities — AI skills and agentic systems that depend on third-party libraries inherit their CVEs)
 - **Statement**: Third-party components and libraries do not have known critical or high CVEs. Dependencies are kept up to date.
 - **Severity if Non-Compliant**: HIGH
@@ -730,6 +1252,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A08:2021
 - **NIST-800**: SI-7
 - **ISO-27001**: A.10.1.1
+- **CMMC**: SI.L2-3.14.4
+- **DoD-SRG**: SRG-APP-000357
+- **FedRAMP**: SI-7 (Moderate)
+- **HIPAA**: §164.312(c)(1) — Integrity
+- **PCI-DSS**: Req 11.5 — File integrity monitoring
+- **SOC2**: CC7.1 — Vulnerability management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(a) — ICT systems integrity
+- **EU-AI**: Art. 15(3) — Robustness (integrity)
 - **Statement**: External scripts and stylesheets loaded from CDNs include Subresource Integrity (SRI) hashes to detect tampering.
 - **Severity if Non-Compliant**: MEDIUM
 - **Test**: Inspect `<script>` and `<link>` tags for `integrity` attributes on external resources.
@@ -740,6 +1271,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A08:2021
 - **NIST-800**: SR-3
 - **ISO-27001**: A.15.2.1
+- **CMMC**: SR.L2-3.17.1
+- **DoD-SRG**: SRG-APP-000516
+- **FedRAMP**: SR-3 (Moderate)
+- **HIPAA**: §164.308(b)(1) — Business Associate Contracts
+- **PCI-DSS**: Req 6.3.2 — Software supply chain security
+- **SOC2**: CC9.2 — Vendor management
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 28(1)(a) — Third-party ICT risk
+- **EU-AI**: Art. 25 — Supply chain responsibilities
 - **OWASP-LLM**: LLM03 (Supply Chain Vulnerabilities — compromised dependencies can introduce adversarial model behaviour or data poisoning)
 - **CSA-AI**: AIS-04 (AI Supply Chain and Procurement — applies when the target is an AI skill or agentic system)
 - **Statement**: Third-party dependencies are sourced from trusted registries and verified against expected hashes. Package lock files are used.
@@ -756,6 +1296,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A04:2021
 - **NIST-800**: SC-5
 - **ISO-27001**: A.17.2.1
+- **CMMC**: SC.L2-3.13.1
+- **DoD-SRG**: SRG-APP-000246
+- **FedRAMP**: SC-5 (Low)
+- **HIPAA**: §164.308(a)(7) — Contingency Plan
+- **PCI-DSS**: Req 11.5 — Network intrusion detection
+- **SOC2**: A1.2 — Environmental protections
+- **SEC-FINRA**: FINRA Rule 4370 — Business Continuity
+- **EU-DORA**: Art. 9(2) — Continuity and availability
+- **EU-AI**: Art. 15(3) — Robustness (availability)
 - **OWASP-LLM**: LLM10 (Unbounded Consumption — AI/agentic systems without rate limiting are vulnerable to resource exhaustion attacks that exploit expensive model inference)
 - **Statement**: API endpoints and authentication endpoints implement rate limiting to prevent abuse, scraping, and denial-of-service.
 - **Severity if Non-Compliant**: MEDIUM
@@ -767,6 +1316,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **N/A OWASP**: A05:2021
 - **NIST-800**: IR-6
 - **ISO-27001**: A.16.1.2
+- **CMMC**: IR.L2-3.6.2
+- **DoD-SRG**: SRG-APP-000516
+- **FedRAMP**: IR-6 (Low)
+- **HIPAA**: §164.308(a)(6)(ii) — Response and Reporting
+- **PCI-DSS**: Req 12.10.5 — Incident alerts and monitoring
+- **SOC2**: CC7.4 — Incident response
+- **SEC-FINRA**: SEC Cyber Rule §249.331 — Form 8-K Reporting
+- **EU-DORA**: Art. 19(1) — Major incident reporting
+- **EU-AI**: Art. 62 — Reporting of serious incidents
 - **Statement**: A `/.well-known/security.txt` file is present with contact information for responsible disclosure.
 - **Severity if Non-Compliant**: INFORMATIONAL
 - **Test**: Request `/.well-known/security.txt` and `security.txt`.
@@ -777,6 +1335,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A05:2021
 - **NIST-800**: CM-7
 - **ISO-27001**: A.14.2.5
+- **CMMC**: CM.L2-3.4.6, CM.L2-3.4.7
+- **DoD-SRG**: SRG-APP-000141, SRG-APP-000142
+- **FedRAMP**: CM-7 (Low)
+- **HIPAA**: §164.308(a)(8) — Evaluation
+- **PCI-DSS**: Req 2.2.4 — Disable unnecessary services
+- **SOC2**: CC6.8 — Prevent unauthorized software
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(e) — Configuration management
+- **EU-AI**: Art. 15(3) — Robustness (minimization)
 - **Statement**: `robots.txt` does not reveal sensitive paths or internal endpoints that should not be crawled.
 - **Severity if Non-Compliant**: LOW
 - **Test**: Review `robots.txt` for sensitive path disclosures.
@@ -787,6 +1354,15 @@ Functions: **GOVERN** (risk culture & accountability), **MAP** (risk context & c
 - **OWASP**: A01:2021
 - **NIST-800**: SC-18
 - **ISO-27001**: A.14.2.5
+- **CMMC**: SC.L2-3.13.12
+- **DoD-SRG**: SRG-APP-000209
+- **FedRAMP**: SC-18 (Moderate)
+- **HIPAA**: §164.312(e)(1) — Transmission Security
+- **PCI-DSS**: Req 6.4.3 — Payment page script management
+- **SOC2**: CC6.8 — Prevent unauthorized software
+- **SEC-FINRA**: Reg S-P §248.30(a) — Safeguards Rule
+- **EU-DORA**: Art. 9(4)(b) — Network security management
+- **EU-AI**: Art. 15(4) — Cybersecurity
 - **Statement**: CORS headers do not allow all origins (`Access-Control-Allow-Origin: *`) for authenticated endpoints. CORS policy is restrictive and matches the intended consumer origins.
 - **Severity if Non-Compliant**: HIGH
 - **Test**: Check CORS headers. Verify that wildcard origins are not allowed on sensitive endpoints.
