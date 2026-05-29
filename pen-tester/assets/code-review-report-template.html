@@ -11,6 +11,7 @@
     --crit:#ef4444; --high:#f97316; --med:#eab308; --low:#3b82f6; --info:#64748b;
     --ok:#22c55e; --border:#334155; --code:#0b1220;
     --sec:#8b5cf6; --cpx:#06b6d4; --dev:#f59e0b;
+    --reach-direct:#f43f5e; --reach-hop:#a855f7; --reach-multi:#14b8a6; --reach-internal:#6366f1;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
@@ -35,6 +36,11 @@
   .pill.dom-sec{border-color:var(--sec);color:#c4b5fd}
   .pill.dom-cpx{border-color:var(--cpx);color:#a5f3fc}
   .pill.dom-dev{border-color:var(--dev);color:#fde68a}
+  .stats-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;margin-left:24px;font-weight:600;align-self:center}
+  .pill.reach-direct{border-color:var(--reach-direct);color:#fda4af}
+  .pill.reach-hop{border-color:var(--reach-hop);color:#d8b4fe}
+  .pill.reach-multi{border-color:var(--reach-multi);color:#99f6e4}
+  .pill.reach-internal{border-color:var(--reach-internal);color:#a5b4fc}
 
   .btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--ink);cursor:pointer;font-size:13px}
   .btn:hover{background:var(--panel2)}
@@ -60,6 +66,11 @@
   .sev.MEDIUM{background:var(--med);color:#111}
   .sev.LOW{background:var(--low);color:#fff}
   .sev.INFORMATIONAL{background:var(--info);color:#fff}
+  .reach{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.05em}
+  .reach.DIRECT{background:var(--reach-direct);color:#fff}
+  .reach.ONE_HOP{background:var(--reach-hop);color:#fff}
+  .reach.MULTI_STEP{background:var(--reach-multi);color:#fff}
+  .reach.INTERNAL{background:var(--reach-internal);color:#fff}
   .domain-tag{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600}
   .domain-tag.SEC{background:var(--sec);color:#fff}
   .domain-tag.CPX{background:var(--cpx);color:#111}
@@ -69,6 +80,20 @@
   .fw-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .fw-tag{font-size:10px;color:var(--muted);background:var(--panel2);border:1px solid var(--border);padding:2px 8px;border-radius:4px;transition:opacity 0.2s}
   .fw-tag.fw-dim{opacity:0.25}
+
+  /* CVSS Score */
+  .cvss-block{display:flex;align-items:center;gap:14px;margin:10px 0;padding:10px 14px;background:var(--panel2);border-radius:8px;border:1px solid var(--border)}
+  .cvss-score{font-size:22px;font-weight:800;min-width:48px;text-align:center;line-height:1}
+  .cvss-score.cvss-crit{color:var(--crit)}
+  .cvss-score.cvss-high{color:var(--high)}
+  .cvss-score.cvss-med{color:var(--med)}
+  .cvss-score.cvss-low{color:var(--low)}
+  .cvss-score.cvss-none{color:var(--info)}
+  .cvss-detail{flex:1;font-size:12px;color:var(--muted)}
+  .cvss-detail b{color:var(--ink)}
+  .cvss-vector{font-family:ui-monospace,monospace;font-size:11px;color:var(--accent);word-break:break-all}
+  .cvss-bar{width:120px;height:8px;background:var(--panel);border-radius:4px;overflow:hidden}
+  .cvss-bar-fill{height:100%;border-radius:4px}
 
   /* Multi-select framework dropdown */
   .ms-wrap{position:relative;display:inline-block}
@@ -167,7 +192,7 @@
       <button class="btn primary" id="reviewBtn">Review &amp; Export (<span id="selCount">0</span>/{{NON_COMPLIANT_COUNT}})</button>
     </div>
   </div>
-  <!-- Severity toggle pills -->
+  <!-- Severity toggle pills + Reachability toggle pills -->
   <div class="stats">
     <span class="pill crit toggle" data-sev="CRITICAL">🔴 {{CRIT_COUNT}} Critical</span>
     <span class="pill high toggle" data-sev="HIGH">🟠 {{HIGH_COUNT}} High</span>
@@ -175,6 +200,11 @@
     <span class="pill low toggle" data-sev="LOW">🔵 {{LOW_COUNT}} Low</span>
     <span class="pill info-sev toggle" data-sev="INFORMATIONAL">⚪ {{INFO_COUNT}} Informational</span>
     <span class="pill ok" id="progressPill">0 selected</span>
+    <span class="stats-label">Reachability</span>
+    <span class="pill reach-direct toggle" data-reach="DIRECT">🎯 Direct</span>
+    <span class="pill reach-hop toggle" data-reach="ONE_HOP">↗️ One Hop</span>
+    <span class="pill reach-multi toggle" data-reach="MULTI_STEP">🔀 Multi-Step</span>
+    <span class="pill reach-internal toggle" data-reach="INTERNAL">🏠 Internal</span>
   </div>
   <!-- Domain toggle pills -->
   <div class="stats">
@@ -191,6 +221,9 @@
 <div class="filters">
   <label>Severity
     <select id="fSev"><option value="">All</option><option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option><option>INFORMATIONAL</option></select>
+  </label>
+  <label>Reachability
+    <select id="fReach"><option value="">All</option><option value="DIRECT">Direct</option><option value="ONE_HOP">One Hop</option><option value="MULTI_STEP">Multi-Step</option><option value="INTERNAL">Internal</option></select>
   </label>
   <label>Domain
     <select id="fDom"><option value="">All</option><option value="SEC">Secure Code</option><option value="CPX">Complexity</option><option value="DEV">Dev Practices</option></select>
@@ -362,6 +395,7 @@ LEGEND.forEach(l => {
 const state = {
   selections: {},
   sevFilters: new Set(['CRITICAL','HIGH','MEDIUM','LOW','INFORMATIONAL']),
+  reachFilters: new Set(['DIRECT','ONE_HOP','MULTI_STEP','INTERNAL']),
   domFilters: new Set(['SEC','CPX','DEV'])
 };
 
@@ -373,6 +407,16 @@ document.querySelectorAll('.pill.toggle[data-sev]').forEach(pill => {
     const sev = pill.dataset.sev;
     if (state.sevFilters.has(sev)) { state.sevFilters.delete(sev); pill.classList.add('off'); }
     else { state.sevFilters.add(sev); pill.classList.remove('off'); }
+    render();
+  });
+});
+
+/* Reachability pill toggle handlers */
+document.querySelectorAll('.pill.toggle[data-reach]').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const r = pill.dataset.reach;
+    if (state.reachFilters.has(r)) { state.reachFilters.delete(r); pill.classList.add('off'); }
+    else { state.reachFilters.add(r); pill.classList.remove('off'); }
     render();
   });
 });
@@ -389,6 +433,7 @@ document.querySelectorAll('.pill.toggle[data-dom]').forEach(pill => {
 
 function render() {
   const sev = document.getElementById('fSev').value;
+  const reach = document.getElementById('fReach').value;
   const dom = document.getElementById('fDom').value;
   const fam = document.getElementById('fFam').value;
   const lang = document.getElementById('fLang').value;
@@ -400,6 +445,8 @@ function render() {
     /* Severity filters — pill toggles + dropdown */
     if (sev && c.severity !== sev) continue;
     if (!sev && !state.sevFilters.has(c.severity)) continue;
+    if (reach && c.reachability !== reach) continue;
+    if (!reach && !state.reachFilters.has(c.reachability)) continue;
     /* Domain filters — pill toggles + dropdown */
     if (dom && c.domain !== dom) continue;
     if (!dom && !state.domFilters.has(c.domain)) continue;
@@ -441,6 +488,7 @@ function cardFor(c) {
         <span class="ctrl-name">${esc(c.name)}</span>
         <span class="source-marks">${c.sources}</span>
         <span class="sev ${c.severity}">${c.severity}</span>
+        <span class="reach ${c.reachability}">${c.reachability.replace(/_/g,' ')}</span>
         <span class="domain-tag ${domainClass}">${domainClass}</span>
         ${c.languages.map(l => `<span class="lang-tag">${esc(l)}</span>`).join('')}
         ${selectedIdx != null ? `<span class="selected-badge">✓ ${esc(selectedLabel)}</span>` : ''}
@@ -452,10 +500,21 @@ function cardFor(c) {
         <div><b>Domain:</b> ${esc(c.domain)}</div>
         <div><b>Family:</b> ${esc(c.family)}</div>
         <div><b>CIA:</b> ${ciaStr}</div>
+        <div><b>Reachability:</b> ${c.reachability.replace(/_/g,' ')}</div>
         ${c.cwe ? `<div><b>CWE:</b> ${esc(c.cwe)}</div>` : ''}
         <div><b>Sources:</b> ${c.sources}</div>
         <div><b>Languages:</b> ${c.languages.join(', ')}</div>
       </div>
+      ${c.cvss ? `<div class="cvss-block">
+        <div class="cvss-score ${c.cvss.score>=9?'cvss-crit':c.cvss.score>=7?'cvss-high':c.cvss.score>=4?'cvss-med':c.cvss.score>0?'cvss-low':'cvss-none'}">${c.cvss.score.toFixed(1)}</div>
+        <div class="cvss-detail">
+          <div><b>CVSS v3.1</b> — ${c.cvss.score>=9?'Critical':c.cvss.score>=7?'High':c.cvss.score>=4?'Medium':c.cvss.score>0?'Low':'None'}</div>
+          <div class="cvss-vector">${esc(c.cvss.vector)}</div>
+        </div>
+        <div>
+          <div class="cvss-bar"><div class="cvss-bar-fill" style="width:${c.cvss.score*10}%;background:${c.cvss.score>=9?'var(--crit)':c.cvss.score>=7?'var(--high)':c.cvss.score>=4?'var(--med)':c.cvss.score>0?'var(--low)':'var(--info)'}"></div></div>
+        </div>
+      </div>` : ''}
       <div class="section-title">What was found</div>
       <div class="finding">${esc(c.finding)}${c.filePath ? `<div class="source-ref">📄 ${esc(c.filePath)}${c.lineNum ? `, line ${c.lineNum}` : ''}</div>` : ''}</div>
       ${c.codeExcerpt ? `<div class="section-title">Code excerpt</div><div class="code-excerpt">${esc(c.codeExcerpt)}</div>` : ''}
@@ -557,7 +616,7 @@ document.getElementById('reviewBtn').addEventListener('click', () => {
   document.getElementById('mCount').textContent = selected.length + ' of ' + CONTROLS.length + ' findings have a chosen mitigation';
   document.getElementById('mBody').innerHTML = selected.map(({c,m}) => `
     <div style="border-bottom:1px solid var(--border);padding:8px 0">
-      <div><b>${esc(c.id)}</b> — ${esc(c.name)} <span class="source-marks">${c.sources}</span> <span class="sev ${c.severity}">${c.severity}</span> <span class="domain-tag ${c.domain}">${c.domain}</span></div>
+      <div><b>${esc(c.id)}</b> — ${esc(c.name)} <span class="source-marks">${c.sources}</span> <span class="sev ${c.severity}">${c.severity}</span> <span class="domain-tag ${c.domain}">${c.domain}</span>${c.cvss ? ` <span style="color:var(--muted);font-size:11px">CVSS ${c.cvss.score.toFixed(1)}</span>` : ''}</div>
       <div class="mit-summary"><b>Chosen:</b> ${esc(m.label)}</div>
       <div class="mit-summary">${esc(m.summary)}</div>
       <div class="mit-summary" style="color:var(--accent)">${esc(m.artifact.file)} · ${esc(m.artifact.lang)}</div>
@@ -580,6 +639,7 @@ function bundleMarkdown() {
     md += `- **Severity:** ${c.severity}\n- **Domain:** ${c.domain}\n- **Family:** ${c.family}\n`;
     if (c.cia && c.cia.length) md += `- **CIA:** ${c.cia.join(', ')}\n`;
     if (c.cwe) md += `- **CWE:** ${c.cwe}\n`;
+    if (c.cvss) md += `- **CVSS v3.1:** ${c.cvss.score.toFixed(1)} (${c.cvss.vector})\n`;
     md += `- **Languages:** ${c.languages.join(', ')}\n\n`;
     md += `**What was found:** ${c.finding}\n`;
     if (c.filePath) md += `**Location:** ${c.filePath}${c.lineNum ? `:${c.lineNum}` : ''}\n`;
@@ -594,7 +654,7 @@ function bundleMarkdown() {
 function bundleJSON() {
   const selected = CONTROLS.filter(c => c.id in state.selections).map(c => ({
     id: c.id, name: c.name, domain: c.domain, family: c.family, severity: c.severity,
-    languages: c.languages, cia: c.cia, cwe: c.cwe, sources: c.sources,
+    languages: c.languages, cia: c.cia, cwe: c.cwe, cvss: c.cvss, sources: c.sources,
     finding: c.finding, filePath: c.filePath, lineNum: c.lineNum,
     chosen: c.mitigations[state.selections[c.id]],
   }));

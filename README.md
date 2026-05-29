@@ -8,14 +8,15 @@
 
 Security assessments generate noise. Regulated environments generate liability. This skill bridges both.
 
-It provides **four assessment workflows** covering the full spectrum of security analysis:
+It provides **five assessment workflows** covering the full spectrum of security analysis:
 
-- **Website Vulnerability Assessment** — Evaluates web applications against OWASP Top 10 2021 and 63 controls across 13 families, producing interactive dark-theme reports with severity-filtered findings, expandable remediation cards, and exportable artifacts
+- **Website Vulnerability Assessment** — Evaluates web applications against 63 controls across 13 families, producing interactive dark-theme reports with severity-filtered findings, expandable remediation cards, and exportable artifacts
 - **Skill Vulnerability Assessment** — Applies the same rigorous analysis to Claude Code skills and AI-integrated tooling, identifying security risks specific to AI-augmented workflows
+- **API Vulnerability Assessment** — Tests APIs against OWASP API Security Top 10 and 53 controls across 13 families, covering authentication, authorization, rate limiting, data exposure, and SSRF
 - **Source Code Review** — Static analysis of codebases against 51 controls across 12 families covering security flaws, complexity risks, and development practice gaps
-- **API Vulnerability Assessment** — Tests APIs against OWASP API Security Top 10 (2023) and 53 controls across 17 families, covering authentication, authorization, rate limiting, data exposure, and more
+- **Connected Systems Assessment** — Correlates findings from two or more completed assessments to detect multi-step attack chains spanning connected systems, with CVSS re-scoring and reachability promotion analysis (27 controls across 9 families)
 
-All four workflows produce **interactive HTML reports** with severity toggles, expandable finding cards, radio-button mitigation selection, code artifacts, CIA Triad analysis, and a Review & Export modal for generating markdown summaries.
+All five workflows produce **interactive HTML reports** with CVSS v3.1 scoring, reachability ratings, severity toggles, compliance framework filters, expandable finding cards, radio-button mitigation selection, code artifacts, CIA Triad analysis, and a Review & Export modal for generating markdown/JSON remediation bundles.
 
 ---
 
@@ -25,19 +26,18 @@ Every finding is cross-referenced against **12+ compliance and regulatory framew
 
 | Framework | Coverage |
 |-----------|----------|
-| OWASP Top 10 2021 | Website, Skill, Code Review |
-| OWASP API Security Top 10 (2023) | API |
+| OWASP Top 10 (2025) | All workflows |
 | NIST SP 800-53 Rev 5 | All workflows |
 | ISO/IEC 27001:2022 | All workflows |
-| CMMC 2.0 | All workflows |
-| DoD SRG | All workflows |
-| EU AI Act | All workflows |
-| EU DORA | All workflows |
-| FedRAMP 20x | All workflows |
-| HIPAA Security Rule | All workflows |
-| PCI-DSS v4.0 | All workflows |
-| SEC/FINRA | All workflows |
+| PCI-DSS v4.0.1 | All workflows |
 | SOC 2 Type II | All workflows |
+| HIPAA Security Rule | All workflows |
+| CMMC v2.0 Level 2 | All workflows |
+| DoD Cloud SRG | All workflows |
+| FedRAMP Moderate | All workflows |
+| SEC/FINRA | All workflows |
+| EU DORA | All workflows |
+| EU AI Act | All workflows |
 
 Reports include a **multi-select framework filter** allowing users to narrow findings to the frameworks relevant to their regulatory environment.
 
@@ -74,20 +74,17 @@ Many findings in production regulated environments **cannot be remediated in iso
 pen-test-triage/
 ├── README.md
 ├── pen-tester/
-│   ├── SKILL.md                                    # Core skill definition (4 workflows)
+│   ├── SKILL.md                                    # Core skill definition (5 workflows)
 │   ├── assets/
 │   │   ├── report-template.html                    # Website & Skill report template
 │   │   ├── api-report-template.html                # API vulnerability report template
-│   │   └── code-review-report-template.html        # Source code review report template
+│   │   ├── code-review-report-template.html        # Source code review report template
+│   │   └── cross-system-report-template.html       # Connected systems correlation report
 │   └── references/
 │       ├── controls-library.md                     # 63 controls, 13 families (Website/Skill)
+│       ├── api-controls-library.md                 # 53 controls, 13 families (API)
 │       ├── code-review-controls.md                 # 51 controls, 12 families (Code Review)
-│       └── api-controls-library.md                 # 53 controls, 17 families (API)
-├── sample-reports/
-│   ├── Sample Website Vulnerability Report.html
-│   ├── Sample Skill Vulnerability Report.html
-│   ├── Sample Code Review Report.html
-│   └── Sample API Vulnerability Report.html
+│       └── cross-system-controls.md                # 27 controls, 9 families (Connected Systems)
 └── test-targets/
     ├── sample-website/                             # Test target for website assessments
     └── vulnerable-skill/                           # Test target for skill assessments
@@ -119,8 +116,9 @@ The skill automatically detects the assessment type based on what you provide:
 |--------|----------|----------|
 | URL or web application | Website Vulnerability Assessment | 63 controls, 13 families |
 | Claude Code skill (SKILL.md) | Skill Vulnerability Assessment | 63 controls, 13 families |
+| API endpoint or spec | API Vulnerability Assessment | 53 controls, 13 families |
 | Source code / repository | Source Code Review | 51 controls, 12 families |
-| API endpoint or spec | API Vulnerability Assessment | 53 controls, 17 families |
+| 2+ completed assessments | Connected Systems Assessment | 27 controls, 9 families |
 
 ### Example Input
 
@@ -132,14 +130,21 @@ Regulatory environment: HIPAA, PCI-DSS v4.0, SOC 2 Type II
 ### Report Features
 
 Every report includes:
+- **CVSS v3.1 scoring** with numeric score, severity label, vector string, and progress bar per finding
+- **Reachability ratings** (Direct, One Hop, Multi-Step, Internal) with toggle filters
 - **Severity toggle filters** (Critical / High / Medium / Low / Info)
-- **Family and framework filter dropdowns** with multi-select
+- **12 compliance framework filter** with multi-select dropdown
 - **CIA Triad impact analysis** per finding
 - **Expandable finding cards** with detailed descriptions, evidence, and remediation options
 - **Radio-button mitigation selection** for choosing remediation approaches
-- **Code artifacts** with copy/export functionality
-- **Review & Export modal** for generating markdown assessment summaries
+- **Code artifacts** with preview, copy, and export functionality
+- **Review & Export modal** for generating Markdown or JSON remediation bundles
 - **Dark theme** optimized for extended security review sessions
+
+The Connected Systems report adds:
+- **Chained Vulnerabilities** — multi-step attack chains with step-by-step flow visualization and system badges
+- **Compounded Risk** — re-scored findings with original vs. new CVSS side by side
+- **Collapsible section headings** with live counts that update with filters
 
 ---
 

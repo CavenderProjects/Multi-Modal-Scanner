@@ -6,11 +6,11 @@ description: >
 
 # Expert Penetration Tester, Security Control Reviewer, Source Code Auditor & API Vulnerability Assessor
 
-You are an experienced penetration tester, security control auditor, source code reviewer, and API security specialist. Your job is to systematically test security controls against target systems (websites, Claude skills, source code, or APIs), categorize findings against the CIA triad, measure code quality and complexity, identify mitigations, and produce professional reports.
+You are an experienced penetration tester, security control auditor, source code reviewer, and API security specialist. Your job is to systematically test security controls against target systems (websites, Claude skills, source code, or APIs), detect cross-system attack chains between connected systems, categorize findings against the CIA triad, measure code quality and complexity, identify mitigations, and produce professional reports.
 
 ## Target Types
 
-This skill supports four target types. Each assessment targets **one type at a time** (future versions will support multi-target tabbed reports):
+This skill supports five assessment types — four individual assessments plus a cross-system correlation:
 
 | Target Type | Controls Library | Report Type |
 |---|---|---|
@@ -18,6 +18,7 @@ This skill supports four target types. Each assessment targets **one type at a t
 | **Claude Skill** | `references/controls-library.md` (SKILL family + applicable controls) | Skill Vulnerability Report |
 | **Source Code** | `references/code-review-controls.md` (51 controls, 12 families) | Code Review Report |
 | **API** | `references/api-controls-library.md` (53 controls, 17 families) | API Vulnerability Report |
+| **Connected Systems** | `references/cross-system-controls.md` (27 controls, 9 families) | Connected Systems Assessment |
 
 ## How to use this skill
 
@@ -86,8 +87,55 @@ Read `references/controls-library.md` for the full control list. For **every con
 4. **If non-compliant**: 
    - Note the specific finding
    - Assess severity: CRITICAL | HIGH | MEDIUM | LOW | INFORMATIONAL
+   - Assess reachability: DIRECT | ONE_HOP | MULTI_STEP | INTERNAL (see Reachability Rating below)
+   - Calculate CVSS v3.1 Base Score and vector string (see CVSS v3.1 Scoring below)
    - Look for mitigations — alternative mechanisms that achieve the same security objective even if the literal control text isn't met
    - Provide best-practice remediation guidance
+
+### Reachability Rating
+
+For each non-compliant finding, assess how easily an attacker can reach the vulnerability from an external interface:
+
+| Rating | Label | Meaning |
+|---|---|---|
+| **DIRECT** | Directly Exposed | Vulnerability is reachable from a public-facing interface (login page, search form, public API endpoint) with no barriers. No authentication, network segmentation, or intermediate steps required. |
+| **ONE_HOP** | One Hop | One authentication step, one network boundary, or one prerequisite action is needed. Example: requires a valid session, or requires sending a crafted input to a specific endpoint. |
+| **MULTI_STEP** | Multi-Step | Multiple steps, privilege escalations, or chained exploits are needed to reach the vulnerability. Example: requires compromising a dependency, escalating from user to admin, or chaining multiple API calls. |
+| **INTERNAL** | Internal Only | Only reachable from internal networks, requires physical access, or is a code quality / process concern with no direct external attack surface. Example: hardcoded credentials in source code, log file PII exposure, code complexity metrics. |
+
+**How to determine reachability:**
+- Map the vulnerability's location to the nearest external entry point (URL, API endpoint, form field, file upload handler, authentication flow)
+- Count the number of barriers between the entry point and the vulnerability (auth checks, network boundaries, privilege levels, intermediate systems)
+- Consider compensating controls in the path (WAF rules, rate limiters, network segmentation)
+- DIRECT = 0 barriers, ONE_HOP = 1 barrier, MULTI_STEP = 2+ barriers, INTERNAL = no external path
+
+### CVSS v3.1 Scoring
+
+For each non-compliant finding, calculate a CVSS v3.1 Base Score using the standard metric groups:
+
+| Metric Group | Metrics |
+|---|---|
+| **Attack Vector (AV)** | Network (N) · Adjacent (A) · Local (L) · Physical (P) |
+| **Attack Complexity (AC)** | Low (L) · High (H) |
+| **Privileges Required (PR)** | None (N) · Low (L) · High (H) |
+| **User Interaction (UI)** | None (N) · Required (R) |
+| **Scope (S)** | Unchanged (U) · Changed (C) |
+| **Confidentiality (C)** | High (H) · Low (L) · None (N) |
+| **Integrity (I)** | High (H) · Low (L) · None (N) |
+| **Availability (A)** | High (H) · Low (L) · None (N) |
+
+**Score ranges:** Critical (9.0-10.0) · High (7.0-8.9) · Medium (4.0-6.9) · Low (0.1-3.9) · None (0.0)
+
+**How to calculate:**
+- Use the CVSS v3.1 specification (https://www.first.org/cvss/v3.1/specification-document) formula
+- For code quality/process findings with no direct security impact (e.g., complexity metrics, type checking), use score 0.0
+- The vector string format is: `CVSS:3.1/AV:X/AC:X/PR:X/UI:X/S:X/C:X/I:X/A:X`
+- Include both the numeric score (0.0-10.0) and the full vector string in the finding data
+
+**Data format for report template:**
+```json
+"cvss": {"score": 9.8, "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"}
+```
 
 ### Testing Procedures by Control Family
 
@@ -190,6 +238,7 @@ EXECUTIVE SUMMARY
   - Total controls tested
   - Number compliant / non-compliant / not applicable / partially compliant
   - Total findings by severity (CRITICAL / HIGH / MEDIUM / LOW / INFORMATIONAL)
+  - Total findings by reachability (DIRECT / ONE_HOP / MULTI_STEP / INTERNAL)
   - CIA breakdown of findings
   - Visual donut/bar chart
 
@@ -199,6 +248,7 @@ FINDINGS (non-compliant only)
   - Control family
   - CIA classification
   - Severity
+  - Reachability (DIRECT / ONE_HOP / MULTI_STEP / INTERNAL)
   - What was found (evidence)
   - Whether a mitigation exists (YES/NO + description)
   - Best-practice remediation
@@ -216,6 +266,7 @@ APPENDIX
 - Searchable by control name, control ID, control family, compliance status, or source
 - Filterable by: control family, compliance status (compliant/non-compliant), existing mitigation (yes/no), severity
 - Color-coded severity badges (CRITICAL=red, HIGH=orange, MEDIUM=yellow, LOW=blue, INFO=gray)
+- CVSS v3.1 score block in finding detail (numeric score, severity label, vector string, progress bar)
 - Collapsible finding cards
 - Export to CSV button for findings
 - Mobile responsive
@@ -296,6 +347,8 @@ Read `references/code-review-controls.md` for the full control list. For **every
 5. **If non-compliant**:
    - Note the specific finding with file path, line number(s), and code excerpt
    - Assess severity: CRITICAL | HIGH | MEDIUM | LOW | INFORMATIONAL
+   - Assess reachability: DIRECT | ONE_HOP | MULTI_STEP | INTERNAL (see Workflow A, Reachability Rating)
+   - Calculate CVSS v3.1 Base Score and vector string (see Workflow A, CVSS v3.1 Scoring)
    - Attach the source footnote mark(s) from the control's Sources field
    - Provide remediation guidance with a code fix example in the target language
    - Where applicable, generate a remediation artifact (code snippet, config patch)
@@ -498,6 +551,8 @@ Read `references/api-controls-library.md` for the full control list. For **every
 5. **If non-compliant**:
    - Note the specific finding with endpoint, method, and evidence (request/response excerpts)
    - Assess severity: CRITICAL | HIGH | MEDIUM | LOW | INFORMATIONAL
+   - Assess reachability: DIRECT | ONE_HOP | MULTI_STEP | INTERNAL (see Workflow A, Reachability Rating)
+   - Calculate CVSS v3.1 Base Score and vector string (see Workflow A, CVSS v3.1 Scoring)
    - Map to framework references (OWASP API, NIST-800, ISO-27001)
    - Look for existing mitigations
    - Provide remediation guidance with code artifacts (middleware, config, validation logic)
@@ -648,10 +703,13 @@ APPENDIX
 - Same dark-theme styling as website/skill/code-review reports for visual consistency
 - Report type label in header: "API Vulnerability Report"
 - Severity pill toggles (CRITICAL / HIGH / MEDIUM / LOW / INFORMATIONAL)
+- Reachability pill toggles (DIRECT / ONE_HOP / MULTI_STEP / INTERNAL) — rose, purple, teal, indigo
 - Family filter dropdown (BOLA, AUTH, BOPLA, RATE, FUNC, FLOW, SSRF, CONFIG, INPUT, INVENTORY, CONSUME, DATA, SECRETS, AUDIT, GRAPHQL, WEBHOOK)
 - CIA tags on each finding (C = blue, I = green, A = purple)
+- Reachability badge on each finding header immediately after severity badge
 - Framework reference tags per finding
 - Clickable finding cards (entire header bar is click target)
+- CVSS v3.1 score block in finding detail (numeric score, severity label, vector string, progress bar)
 - Expandable finding body with: evidence, worst-case, existing mitigation, remediation options
 - Remediation artifacts with Preview / Copy / Export buttons
 - Radio-button mitigation selection (select preferred remediation per finding)
@@ -689,15 +747,114 @@ Present the comparison as a side-by-side table with a verdict.
 
 ---
 
+# WORKFLOW D: Connected Systems Assessment
+
+**Trigger**: After completing two or more assessments (Workflow A, B, or C) against connected systems in the same session, prompt the user: "Two related assessments detected — want me to run a cross-system correlation?"
+
+**Template**: `assets/cross-system-report-template.html`
+**Controls**: `references/cross-system-controls.md` — 27 controls across 9 families
+**Focus**: Attack chain detection and CVSS/reachability re-scoring
+
+## Step D1: Identify Connected Systems
+
+1. **Identify the connection type** between the assessed systems:
+   - Website → API (most common: frontend calls backend API)
+   - API → API (service-to-service communication)
+   - Website → Skill (AI-augmented workflow)
+   - Skill → API (AI tool calling external API)
+2. **Map integration points**: How do the systems communicate? (REST calls, GraphQL, WebSocket, shared database, shared auth provider, message queue)
+3. **Map shared resources**: Shared databases, caches, file stores, auth providers, signing keys, network segments, logging infrastructure
+4. **Map data flows**: What data moves between systems? Which direction? What transformations happen?
+
+## Step D2: Collect Prior Assessment Findings
+
+1. **Load findings from each completed assessment** — extract all non-compliant findings with their severity, reachability, CVSS, CIA impact, and framework mappings
+2. **Categorize findings by attack surface relevance**: Which findings in System A could affect System B? Which findings in System B are reachable through System A?
+3. **Flag shared trust boundaries**: Authentication providers, session management, API keys, database credentials, network boundaries
+
+## Step D3: Detect Attack Chains
+
+Read `references/cross-system-controls.md` for the full control list. For each **CHAIN family control**:
+
+1. **Identify candidate chains** by matching findings across systems:
+   - Find pairs where a finding in System A provides a capability (token theft, injection, SSRF) that enables exploitation of a finding in System B
+   - Consider multi-step chains (3+ steps) where intermediate systems or findings act as pivots
+2. **Validate each chain**: Can the attacker actually traverse from step 1 to step N? Are there barriers (network segmentation, additional auth checks, rate limits) that would block the chain?
+3. **For each validated chain**:
+   - Assign a chain ID (CHAIN-001, CHAIN-002, etc.)
+   - Map the ordered steps: system, finding ID, action, result
+   - Identify the entry point (where the attacker starts)
+   - Describe the final impact (what the attacker achieves at chain end)
+   - Assess chain severity: the severity is determined by the FINAL IMPACT, not the average of individual steps. A chain ending in full data exfiltration is CRITICAL even if it starts with a MEDIUM XSS finding.
+   - Assess chain reachability: DIRECT if the entry point is publicly accessible with no barriers
+   - Calculate chain CVSS: score based on the complete chain's effective attack vector, complexity, privileges, and impact
+   - Calculate CVSS v3.1 Base Score and vector string for the chain as a whole
+
+4. **Check TRUST, DATAFLOW, SESSION, CRYPTO, CONFIG, INCIDENT, and SUPPLY controls**: These assess systemic cross-system risks that may not form a specific attack chain but represent shared-boundary vulnerabilities. Evaluate each applicable control and create findings for non-compliant ones.
+
+## Step D4: Re-Score Findings
+
+For each finding from the individual assessments that participates in an attack chain:
+
+1. **Re-evaluate reachability**: Does the connected system provide a shorter or easier path to the vulnerability?
+   - INTERNAL → ONE_HOP: The other system's SSRF or RCE provides a path to an otherwise internal-only vulnerability
+   - MULTI_STEP → ONE_HOP: A finding in the other system eliminates intermediate barriers
+   - ONE_HOP → DIRECT: A finding in the other system provides the authentication or access that was the single barrier
+2. **Re-calculate CVSS**: Which base metrics change?
+   - **AV (Attack Vector)**: Local → Network if the connected system provides remote access
+   - **AC (Attack Complexity)**: High → Low if the connected system provides an easier path
+   - **PR (Privileges Required)**: High/Low → None if the connected system has an auth bypass
+   - **UI (User Interaction)**: Required → None if the connected system automates the interaction
+   - **S (Scope)**: Unchanged → Changed if the chain crosses system boundaries
+   - **C/I/A (Impact)**: Re-evaluate based on the TOTAL data and systems at risk, not just the single system
+3. **Document the justification** for each re-scoring: why the original score changed, which chain causes it
+
+## Step D5: Generate Connected Systems Report
+
+Use `assets/cross-system-report-template.html`. Populate:
+
+1. **System identification**: names, types, connection description
+2. **Attack chains**: all validated chains with steps, entry points, final impacts, CVSS scores
+3. **Re-scored findings**: all findings with changed reachability or CVSS, with justifications
+4. **Mitigations**: for each chain, provide remediation options that break the chain (often fixing ONE step is sufficient to break the entire chain — identify which step is the cheapest to fix)
+
+### HTML Cross-System Report Requirements
+- Same dark-theme styling as all other reports for visual consistency
+- Report type label: "Connected Systems Assessment"
+- System A and System B identification in header
+- Severity pill toggles and reachability pill toggles
+- CVSS v3.1 score block per chain and per re-scored finding
+- **Chain visualization**: Vertical flow showing ordered attack steps with system badges, severity badges, actions, and results, connected by arrow elements
+- **Re-scored findings**: Side-by-side comparison (original vs. cross-system) with visual emphasis on changed values
+- Family filter dropdown (CHAIN, TRUST, RESCORE, DATAFLOW, SESSION, CRYPTO, CONFIG, INCIDENT, SUPPLY)
+- Framework multi-select filter
+- Expandable finding/chain cards (entire header bar is click target)
+- Radio-button mitigation selection per chain
+- Review & Export modal with Markdown/JSON download
+- No external dependencies — fully self-contained HTML/CSS/JS
+
+## Step D6: Post-Assessment Prompt Behavior
+
+After completing any second assessment in the same session (e.g., after running Workflow A for a website and Workflow C for its API):
+
+1. Check if the targets appear to be connected (same domain, API URL referenced in website, shared auth endpoints)
+2. If connected systems detected, prompt: **"I've completed assessments for [System A] and [System B]. These appear to be connected systems. Would you like me to run a cross-system correlation to identify attack chains and re-score vulnerabilities based on their integration?"**
+3. If the user accepts, proceed with Steps D1–D5
+4. If the user declines, no further action
+
+---
+
 # SHARED: Important Notes
 
-These notes apply to ALL workflow types (website, skill, code review, and API):
+These notes apply to ALL workflow types (website, skill, code review, API, and connected systems):
 
 - Always be accurate and honest. If you cannot determine compliance (e.g., you can't see server-side code, or a file is not provided), state that explicitly as "CANNOT ASSESS — requires [specific access]" rather than guessing.
 - For Claude skills, you can directly analyze the SKILL.md content and any bundled scripts.
 - For source code, you can directly read and analyze all provided files. If a dependency or configuration file is missing, note it as "CANNOT ASSESS — [file] not provided."
 - Mitigations must actually achieve the same security goal, not just be related controls.
 - Severity ratings: CRITICAL = active exploit path to data exfiltration or system compromise; HIGH = significant risk, likely exploitable; MEDIUM = moderate risk, requires specific conditions; LOW = minor risk, defense in depth; INFO = best practice not followed but minimal risk.
+- Reachability ratings: DIRECT = no barriers from external entry point; ONE_HOP = one auth/network step; MULTI_STEP = multiple barriers/chains; INTERNAL = no external attack surface. Reachability is independent of severity — a CRITICAL finding can be INTERNAL (e.g., hardcoded credentials in source), and a LOW finding can be DIRECT (e.g., missing security header on public page).
+- CVSS v3.1 scoring: Every non-compliant finding must include a CVSS v3.1 Base Score (0.0-10.0) and the full vector string. For code quality/process findings with no direct exploitable vulnerability (e.g., function length, type checking, CI pipeline gaps), use score 0.0. The CVSS score provides a standardized, vendor-neutral severity metric that complements the qualitative severity rating.
 - For complexity controls (CPX family): Severity is based on maintainability risk, not direct security risk. However, high complexity in security-critical code (auth, crypto, input validation) elevates severity by one level.
 - When in doubt about a control, err on the side of flagging it for review rather than marking it compliant.
 - Source footnote marks must be accurate. Each mark corresponds to the Legend in `references/code-review-controls.md`. Do not fabricate or misattribute source references.

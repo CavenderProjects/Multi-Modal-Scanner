@@ -11,6 +11,7 @@
     --crit:#ef4444; --high:#f97316; --med:#eab308; --low:#3b82f6; --info:#64748b;
     --ok:#22c55e; --border:#334155; --code:#0b1220;
     --cia-c:#60a5fa; --cia-i:#4ade80; --cia-a:#a78bfa;
+    --reach-direct:#f43f5e; --reach-hop:#a855f7; --reach-multi:#14b8a6; --reach-internal:#6366f1;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
@@ -30,6 +31,11 @@
   .pill.low{border-color:var(--low);color:#bfdbfe}
   .pill.info-sev{border-color:var(--info);color:#cbd5e1}
   .pill.ok{border-color:var(--ok);color:#bbf7d0}
+  .stats-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;margin-left:24px;font-weight:600;align-self:center}
+  .pill.reach-direct{border-color:var(--reach-direct);color:#fda4af}
+  .pill.reach-hop{border-color:var(--reach-hop);color:#d8b4fe}
+  .pill.reach-multi{border-color:var(--reach-multi);color:#99f6e4}
+  .pill.reach-internal{border-color:var(--reach-internal);color:#a5b4fc}
 
   .btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--ink);cursor:pointer;font-size:13px}
   .btn:hover{background:var(--panel2)}
@@ -70,6 +76,11 @@
   .sev.MEDIUM{background:var(--med);color:#111}
   .sev.LOW{background:var(--low);color:#fff}
   .sev.INFORMATIONAL{background:var(--info);color:#fff}
+  .reach{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.05em}
+  .reach.DIRECT{background:var(--reach-direct);color:#fff}
+  .reach.ONE_HOP{background:var(--reach-hop);color:#fff}
+  .reach.MULTI_STEP{background:var(--reach-multi);color:#fff}
+  .reach.INTERNAL{background:var(--reach-internal);color:#fff}
   .family-tag{font-size:10px;color:var(--muted);background:var(--panel2);padding:2px 6px;border-radius:3px}
   .cia-tag{font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600}
   .cia-tag.C{background:rgba(96,165,250,0.2);color:var(--cia-c);border:1px solid rgba(96,165,250,0.3)}
@@ -92,6 +103,19 @@
   .fw-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .fw-tag{font-size:10px;color:var(--muted);background:var(--panel2);border:1px solid var(--border);padding:2px 8px;border-radius:4px;transition:opacity 0.2s}
   .fw-tag.fw-dim{opacity:0.25}
+
+  .cvss-block{display:flex;align-items:center;gap:14px;margin:10px 0;padding:10px 14px;background:var(--panel2);border-radius:8px;border:1px solid var(--border)}
+  .cvss-score{font-size:22px;font-weight:800;min-width:48px;text-align:center;line-height:1}
+  .cvss-score.cvss-crit{color:var(--crit)}
+  .cvss-score.cvss-high{color:var(--high)}
+  .cvss-score.cvss-med{color:var(--med)}
+  .cvss-score.cvss-low{color:var(--low)}
+  .cvss-score.cvss-none{color:var(--info)}
+  .cvss-detail{flex:1;font-size:12px;color:var(--muted)}
+  .cvss-detail b{color:var(--ink)}
+  .cvss-vector{font-family:ui-monospace,monospace;font-size:11px;color:var(--accent);word-break:break-all}
+  .cvss-bar{width:120px;height:8px;background:var(--panel);border-radius:4px;overflow:hidden}
+  .cvss-bar-fill{height:100%;border-radius:4px}
 
   .mit-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
   .mit{border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--panel2)}
@@ -140,6 +164,11 @@
     <span class="pill low toggle" data-sev="LOW">🔵 {{LOW_COUNT}} Low</span>
     <span class="pill info-sev toggle" data-sev="INFORMATIONAL">⚪ {{INFO_COUNT}} Informational</span>
     <span class="pill ok" id="progressPill">0 selected</span>
+    <span class="stats-label">Reachability</span>
+    <span class="pill reach-direct toggle" data-reach="DIRECT">🎯 Direct</span>
+    <span class="pill reach-hop toggle" data-reach="ONE_HOP">↗️ One Hop</span>
+    <span class="pill reach-multi toggle" data-reach="MULTI_STEP">🔀 Multi-Step</span>
+    <span class="pill reach-internal toggle" data-reach="INTERNAL">🏠 Internal</span>
   </div>
 </header>
 
@@ -150,6 +179,9 @@
 <div class="filters">
   <label>Severity
     <select id="fSev"><option value="">All</option><option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option><option>INFORMATIONAL</option></select>
+  </label>
+  <label>Reachability
+    <select id="fReach"><option value="">All</option><option value="DIRECT">Direct</option><option value="ONE_HOP">One Hop</option><option value="MULTI_STEP">Multi-Step</option><option value="INTERNAL">Internal</option></select>
   </label>
   <label>Family
     <select id="fFam"><option value="">All</option></select>
@@ -263,7 +295,8 @@ document.getElementById('fwNone').addEventListener('click', () => {
 
 const state = {
   selections: {},
-  sevFilters: new Set(['CRITICAL','HIGH','MEDIUM','LOW','INFORMATIONAL'])
+  sevFilters: new Set(['CRITICAL','HIGH','MEDIUM','LOW','INFORMATIONAL']),
+  reachFilters: new Set(['DIRECT','ONE_HOP','MULTI_STEP','INTERNAL'])
 };
 
 function esc(s){ return String(s).replace(/[&<>]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[c])); }
@@ -278,8 +311,19 @@ document.querySelectorAll('.pill.toggle[data-sev]').forEach(pill => {
   });
 });
 
+/* Reachability pill toggle handlers */
+document.querySelectorAll('.pill.toggle[data-reach]').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const r = pill.dataset.reach;
+    if (state.reachFilters.has(r)) { state.reachFilters.delete(r); pill.classList.add('off'); }
+    else { state.reachFilters.add(r); pill.classList.remove('off'); }
+    render();
+  });
+});
+
 function render() {
   const sev = document.getElementById('fSev').value;
+  const reach = document.getElementById('fReach').value;
   const fam = document.getElementById('fFam').value;
   const cia = document.getElementById('fCia').value;
   const sts = document.getElementById('fStatus').value;
@@ -289,6 +333,8 @@ function render() {
   for (const c of CONTROLS) {
     if (sev && c.severity !== sev) continue;
     if (!sev && !state.sevFilters.has(c.severity)) continue;
+    if (reach && c.reachability !== reach) continue;
+    if (!reach && !state.reachFilters.has(c.reachability)) continue;
     if (fam && c.family !== fam) continue;
     /* Framework filter: if not all selected, finding must map to at least one active framework */
     if (activeFw.size < allFwKeys.length && c.frameworks) {
@@ -324,6 +370,7 @@ function cardFor(c) {
         <span class="ctrl-id">${esc(c.id)}</span>
         <span class="ctrl-name">${esc(c.name)}</span>
         <span class="sev ${c.severity}">${c.severity}</span>
+        <span class="reach ${c.reachability}">${c.reachability.replace(/_/g,' ')}</span>
         <span class="family-tag">${esc(c.family)}</span>
         ${c.cia.map(x => `<span class="cia-tag ${x}">${x === 'C' ? '🔒 Conf' : x === 'I' ? '🔏 Integ' : '🔑 Access'}</span>`).join('')}
         ${c.hasMitigation ? '<span class="mit-badge">🛡️ Mitigated</span>' : ''}
@@ -336,7 +383,18 @@ function cardFor(c) {
         <div><b>Family:</b> ${esc(c.family)}</div>
         <div><b>CIA:</b> ${c.cia.join(', ')}</div>
         <div><b>Severity:</b> ${c.severity}</div>
+        <div><b>Reachability:</b> ${c.reachability.replace(/_/g,' ')}</div>
       </div>
+      ${c.cvss ? `<div class="cvss-block">
+        <div class="cvss-score ${c.cvss.score>=9?'cvss-crit':c.cvss.score>=7?'cvss-high':c.cvss.score>=4?'cvss-med':c.cvss.score>0?'cvss-low':'cvss-none'}">${c.cvss.score.toFixed(1)}</div>
+        <div class="cvss-detail">
+          <div><b>CVSS v3.1</b> — ${c.cvss.score>=9?'Critical':c.cvss.score>=7?'High':c.cvss.score>=4?'Medium':c.cvss.score>0?'Low':'None'}</div>
+          <div class="cvss-vector">${esc(c.cvss.vector)}</div>
+        </div>
+        <div>
+          <div class="cvss-bar"><div class="cvss-bar-fill" style="width:${c.cvss.score*10}%;background:${c.cvss.score>=9?'var(--crit)':c.cvss.score>=7?'var(--high)':c.cvss.score>=4?'var(--med)':c.cvss.score>0?'var(--low)':'var(--info)'}"></div></div>
+        </div>
+      </div>` : ''}
       <div class="section-title">What was found</div>
       <div class="finding">${esc(c.finding)}${c.sourceRef ? `<div class="source-ref">📄 ${esc(c.sourceRef)}</div>` : ''}</div>
       ${c.worstCase ? `<div class="section-title">⚠️ Worst-case if unpatched</div><div class="worst-case"><b>Risk:</b> ${esc(c.worstCase)}</div>` : ''}
@@ -415,6 +473,7 @@ list.addEventListener('change', (e) => {
 });
 
 document.getElementById('fSev').addEventListener('change', render);
+document.getElementById('fReach').addEventListener('change', render);
 document.getElementById('fFam').addEventListener('change', render);
 document.getElementById('fCia').addEventListener('change', render);
 document.getElementById('fStatus').addEventListener('change', render);
@@ -437,7 +496,7 @@ document.getElementById('reviewBtn').addEventListener('click', () => {
   document.getElementById('mCount').textContent = selected.length + ' of ' + CONTROLS.length + ' findings have a chosen mitigation';
   document.getElementById('mBody').innerHTML = selected.map(({c,m}) => `
     <div style="border-bottom:1px solid var(--border);padding:8px 0">
-      <div><b>${esc(c.id)}</b> — ${esc(c.name)} <span class="sev ${c.severity}">${c.severity}</span> <span class="family-tag">${esc(c.family)}</span></div>
+      <div><b>${esc(c.id)}</b> — ${esc(c.name)} <span class="sev ${c.severity}">${c.severity}</span> <span class="reach ${c.reachability}">${c.reachability.replace(/_/g,' ')}</span> <span class="family-tag">${esc(c.family)}</span>${c.cvss ? ` <span style="color:var(--muted);font-size:11px">CVSS ${c.cvss.score.toFixed(1)}</span>` : ''}</div>
       <div class="mit-summary"><b>Chosen:</b> ${esc(m.label)}</div>
       <div class="mit-summary">${esc(m.summary)}</div>
       <div class="mit-summary" style="color:var(--accent)">${esc(m.artifact.file)} · ${esc(m.artifact.lang)}</div>
@@ -452,12 +511,13 @@ function bundleMarkdown() {
   const now = new Date().toISOString();
   let md = `# {{REPORT_TITLE}} — Remediation Bundle\n\nTarget: {{TARGET_NAME}}\nGenerated: ${now}\nFindings with chosen mitigation: ${selected.length} / ${CONTROLS.length}\n\n`;
   md += `> Review each artifact carefully before applying.\n\n`;
-  md += `## Summary\n\n| ID | Name | Severity | Family | CIA | Chosen mitigation |\n|---|---|---|---|---|---|\n`;
-  for (const { c, m } of selected) md += `| ${c.id} | ${c.name} | ${c.severity} | ${c.family} | ${c.cia.join(',')} | ${m.label} |\n`;
+  md += `## Summary\n\n| ID | Name | Severity | Reachability | Family | CIA | Chosen mitigation |\n|---|---|---|---|---|---|---|\n`;
+  for (const { c, m } of selected) md += `| ${c.id} | ${c.name} | ${c.severity} | ${c.reachability.replace(/_/g,' ')} | ${c.family} | ${c.cia.join(',')} | ${m.label} |\n`;
   md += `\n---\n\n## Detailed remediation\n\n`;
   for (const { c, m } of selected) {
     md += `### ${c.id} — ${c.name}\n\n`;
-    md += `- **Severity:** ${c.severity}\n- **Family:** ${c.family}\n- **CIA:** ${c.cia.join(', ')}\n`;
+    md += `- **Severity:** ${c.severity}\n- **Reachability:** ${c.reachability.replace(/_/g,' ')}\n- **Family:** ${c.family}\n- **CIA:** ${c.cia.join(', ')}\n`;
+    if (c.cvss) md += `- **CVSS v3.1:** ${c.cvss.score.toFixed(1)} (${c.cvss.vector})\n`;
     if (c.frameworks) {
       Object.entries(c.frameworks).forEach(([k,v]) => { md += `- **${k.toUpperCase()}:** ${v}\n`; });
     }
@@ -471,8 +531,8 @@ function bundleMarkdown() {
 
 function bundleJSON() {
   const selected = CONTROLS.filter(c => c.id in state.selections).map(c => ({
-    id: c.id, name: c.name, family: c.family, severity: c.severity,
-    cia: c.cia, finding: c.finding,
+    id: c.id, name: c.name, family: c.family, severity: c.severity, reachability: c.reachability,
+    cia: c.cia, cvss: c.cvss, finding: c.finding,
     chosen: c.mitigations[state.selections[c.id]],
   }));
   return JSON.stringify({
