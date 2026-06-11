@@ -140,6 +140,16 @@ main{padding:12px 20px 80px;max-width:1100px;margin:0 auto}
 .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
 
 .no-match{text-align:center;color:var(--muted);padding:50px;font-size:14px}
+/* ── Control requirements details ── */
+.req-details summary{cursor:pointer;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);user-select:none;list-style:none}
+.req-details summary::-webkit-details-marker{display:none}
+.req-details summary:hover{color:var(--ink)}
+.req-details[open] summary{color:var(--ink)}
+/* ── Framework not-relevant label ── */
+.fw-nr-label{flex:1;text-align:center;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);opacity:.75;pointer-events:none;align-self:center}
+.fw-id-badge{font-size:11px;font-weight:600;color:var(--accent);background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.3);border-radius:4px;padding:2px 6px;white-space:nowrap;align-self:center}
+/* ── Framework dropdown ── */
+#fwDrop{background:var(--panel2);color:var(--ink);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;max-width:160px}
 </style>
 </head>
 <body>
@@ -152,6 +162,24 @@ main{padding:12px 20px 80px;max-width:1100px;margin:0 auto}
       <div class="hdr-sub">{{TARGET_NAME}} &nbsp;·&nbsp; {{TOTAL_CONTROLS}} controls &nbsp;·&nbsp; {{FRAMEWORK}} &nbsp;·&nbsp; {{REPORT_DATE}}</div>
     </div>
     <div class="hdr-actions">
+      <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px">
+        Framework
+        <select id="fwDrop">
+          <option value="">— Default view —</option>
+          <option value="OWASP Top 10">OWASP Top 10</option>
+          <option value="NIST SP 800-53">NIST SP 800-53</option>
+          <option value="ISO/IEC 27001">ISO/IEC 27001</option>
+          <option value="PCI-DSS">PCI-DSS</option>
+          <option value="SOC 2">SOC 2</option>
+          <option value="HIPAA">HIPAA</option>
+          <option value="CMMC">CMMC</option>
+          <option value="DoD Cloud SRG">DoD Cloud SRG</option>
+          <option value="FedRAMP">FedRAMP</option>
+          <option value="SEC/FINRA">SEC/FINRA</option>
+          <option value="EU DORA">EU DORA</option>
+          <option value="EU AI Act">EU AI Act</option>
+        </select>
+      </label>
       <button class="btn sm" id="expandAll">Expand all</button>
       <button class="btn sm" id="collapseAll">Collapse all</button>
       <button class="btn primary" id="saveReport">⬇ Save updated report</button>
@@ -307,6 +335,264 @@ function esc(s) {
     c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 }
 
+// ── Evidence formatter — bold [FAIL] / [PASS] ─────────────────────────────
+function fmtEvidence(text) {
+  return esc(text)
+    .replace(/\[FAIL\]/g, '<strong style="color:#ef4444">[FAIL]</strong>')
+    .replace(/\[PASS\]/g, '<strong style="color:#22c55e">[PASS]</strong>');
+}
+
+// ── Language detection — scan evidence file extensions across all controls ─
+const _EXT_LANG = {
+  '.py':'Python','.js':'Js/Ts','.ts':'Js/Ts','.jsx':'Js/Ts','.tsx':'Js/Ts',
+  '.rs':'Rust','.java':'Java','.kt':'Java',
+  '.c':'C/C++','.cpp':'C/C++','.cc':'C/C++','.h':'C/C++',
+  '.cs':'C#','.go':'Go','.php':'Php'
+};
+function detectLanguage() {
+  const counts = {};
+  for (const c of CONTROLS) {
+    const ev = (c.evidence || '') + ' ' + (c.finding || '');
+    for (const [ext, lang] of Object.entries(_EXT_LANG)) {
+      const re = new RegExp('\\' + ext.replace('.','[.]') + '(?=[:,(\\s]|$)', 'gi');
+      const m = ev.match(re);
+      if (m) counts[lang] = (counts[lang] || 0) + m.length;
+    }
+  }
+  const entries = Object.entries(counts);
+  return entries.length ? entries.sort((a,b) => b[1]-a[1])[0][0] : null;
+}
+const DETECTED_LANG = detectLanguage();
+
+// ── Review steps — filter to detected language section ────────────────────
+const _LANG_KEYS = ['Python','Js/Ts','Rust','Java','C/C++','C#','Go','Php'];
+function filterReviewSteps(text, lang) {
+  if (!lang || !text) return text;
+  const lines = text.split('\n');
+  const out = [];
+  let inMine = false, inOther = false;
+  for (const line of lines) {
+    const t = line.trimStart();
+    const hit = _LANG_KEYS.find(k => t.startsWith(k + ':'));
+    if (hit) {
+      if (hit === lang) { inMine = true; inOther = false; out.push(line); }
+      else              { inMine = false; inOther = true; }
+    } else if (inMine)  { out.push(line); }
+    else if (!inOther)  { out.push(line); }
+  }
+  return out.join('\n').trim() || text;
+}
+
+// ── Framework family→ID mapping table ─────────────────────────────────────
+const FW_MAP = {
+  'OWASP Top 10': {
+    'AUTHZ':['A01','Broken Access Control'],'BOLA':['A01','Broken Access Control'],
+    'BOPLA':['A01','Broken Access Control'],'BFLA':['A01','Broken Access Control'],
+    'FUNC':['A01','Broken Access Control'],
+    'CRYPTO':['A02','Cryptographic Failures'],'SEC-CRYPTO':['A02','Cryptographic Failures'],
+    'SECRETS':['A02','Cryptographic Failures'],'SEC-DATA':['A02','Cryptographic Failures'],
+    'DATA':['A02','Cryptographic Failures'],
+    'SEC-INJ':['A03','Injection'],'INPUT':['A03','Injection'],
+    'HEADERS':['A05','Security Misconfiguration'],'CONFIG':['A05','Security Misconfiguration'],
+    'INFRA':['A05','Security Misconfiguration'],
+    'DEV-DEP':['A06','Vulnerable Components'],'COMP':['A06','Vulnerable Components'],
+    'AUTH':['A07','Auth Failures'],'SESSION':['A07','Auth Failures'],
+    'SEC-AUTH':['A07','Auth Failures'],
+    'DEV-BUILD':['A08','Software Integrity'],
+    'AUDIT':['A09','Logging & Monitoring'],'ERROR':['A09','Logging & Monitoring'],
+    'SSRF':['A10','SSRF'],'WEBHOOK':['A10','SSRF'],
+    'GRAPHQL':['A03','Injection'],'RATE':['A09','Security Misconfiguration'],
+    'AGENT':['A05','Security Misconfiguration'],
+  },
+  'NIST SP 800-53': {
+    'AUTH':['IA-2','Identification & Auth'],'SESSION':['IA-2','Session Auth'],
+    'AUTHZ':['AC-3','Access Enforcement'],'BOLA':['AC-3','Access Enforcement'],
+    'BOPLA':['AC-3','Access Enforcement'],'BFLA':['AC-3','Access Enforcement'],
+    'CRYPTO':['SC-28','Cryptographic Protection'],'SEC-CRYPTO':['SC-28','Cryptographic Protection'],
+    'SECRETS':['IA-5','Auth Management'],'DATA':['SC-28','Data Protection'],
+    'SEC-DATA':['SC-28','Data Protection'],
+    'HEADERS':['CM-6','Configuration Settings'],'CONFIG':['CM-6','Configuration Settings'],
+    'INFRA':['CM-7','Least Functionality'],
+    'INPUT':['SI-10','Input Validation'],'SEC-INJ':['SI-10','Input Validation'],
+    'GRAPHQL':['SI-10','Input Validation'],
+    'AUDIT':['AU-2','Event Logging'],'ERROR':['SI-11','Error Handling'],
+    'COMP':['SA-22','Unsupported Components'],'DEV-DEP':['SA-22','Component Management'],
+    'DEV-BUILD':['SA-15','Development Process'],
+    'SSRF':['SC-7','Boundary Protection'],'RATE':['SC-5','DoS Protection'],
+    'SEC-MEM':['SI-16','Memory Protection'],
+    'TRUST':['SC-16','Transmission Attributes'],'LATERAL':['SC-7','Boundary Protection'],
+    'INCIDENT':['IR-4','Incident Handling'],'SUPPLY':['SR-3','Supply Chain Controls'],
+    'PATCH':['SI-2','Flaw Remediation'],'EOL':['SA-22','Unsupported Components'],
+    'SVCCONFIG':['CM-6','Configuration'],'SVCEXPOSE':['CM-7','Least Functionality'],
+    'SOFTINV':['CM-8','System Inventory'],'AGENT':['SI-10','Input Validation'],
+    'WEBHOOK':['SC-7','Boundary Protection'],
+  },
+  'ISO/IEC 27001': {
+    'AUTH':['A.8.5','Secure Authentication'],'SESSION':['A.8.5','Secure Authentication'],
+    'AUTHZ':['A.8.3','Access Control'],'BOLA':['A.8.3','Access Control'],
+    'BOPLA':['A.8.3','Access Control'],'BFLA':['A.8.3','Access Control'],
+    'CRYPTO':['A.8.24','Use of Cryptography'],'SEC-CRYPTO':['A.8.24','Use of Cryptography'],
+    'SECRETS':['A.8.24','Cryptography'],'DATA':['A.8.11','Data Masking'],
+    'SEC-DATA':['A.8.11','Data Protection'],
+    'HEADERS':['A.8.9','Configuration Management'],'CONFIG':['A.8.9','Configuration Management'],
+    'INFRA':['A.8.9','Configuration Management'],
+    'INPUT':['A.8.28','Secure Coding'],'SEC-INJ':['A.8.28','Secure Coding'],
+    'SEC-MEM':['A.8.28','Secure Coding'],'GRAPHQL':['A.8.28','Secure Coding'],
+    'AUDIT':['A.8.15','Logging'],'ERROR':['A.8.28','Error Handling'],
+    'COMP':['A.8.8','Vulnerability Management'],'DEV-DEP':['A.8.8','Vulnerability Management'],
+    'DEV-BUILD':['A.8.25','Secure Dev Lifecycle'],
+    'SSRF':['A.8.21','Network Security'],'RATE':['A.8.21','Network Security'],
+    'TRUST':['A.8.21','Network Security'],'LATERAL':['A.8.21','Network Security'],
+    'INCIDENT':['A.5.26','Incident Response'],'SUPPLY':['A.5.21','Supply Chain Security'],
+    'PATCH':['A.8.8','Vulnerability Management'],'EOL':['A.8.8','Component Lifecycle'],
+    'SVCCONFIG':['A.8.9','Service Hardening'],'SVCEXPOSE':['A.8.21','Network Security'],
+    'AGENT':['A.8.28','Secure Coding'],'WEBHOOK':['A.8.21','Network Security'],
+  },
+  'PCI-DSS': {
+    'AUTH':['Req 8','Identification & Auth'],'SESSION':['Req 8','Authentication'],
+    'AUTHZ':['Req 7','Access Control'],'BOLA':['Req 7','Access Control'],
+    'CRYPTO':['Req 3–4','Cryptography'],'SEC-CRYPTO':['Req 3–4','Cryptography'],
+    'SECRETS':['Req 3','Cryptographic Keys'],'DATA':['Req 3','Stored Data Protection'],
+    'SEC-DATA':['Req 3–4','Data Protection'],
+    'HEADERS':['Req 6','Secure Configurations'],'CONFIG':['Req 6','Secure Configurations'],
+    'INFRA':['Req 2','Baseline Config'],
+    'INPUT':['Req 6.2','Input Validation'],'SEC-INJ':['Req 6.2','Injection Prevention'],
+    'GRAPHQL':['Req 6.2','Input Validation'],
+    'AUDIT':['Req 10','Logging'],'ERROR':['Req 6','Error Handling'],
+    'COMP':['Req 6.3','Vulnerability Mgmt'],'DEV-DEP':['Req 6.3','Component Security'],
+    'DEV-BUILD':['Req 6','Secure Development'],
+    'SSRF':['Req 6','SSRF Prevention'],'RATE':['Req 6','Rate Limiting'],
+    'PATCH':['Req 6.3','Patch Management'],'EOL':['Req 6.3','Component Lifecycle'],
+    'SVCCONFIG':['Req 2','Service Hardening'],'SVCEXPOSE':['Req 1','Network Security'],
+    'SEC-MEM':['Req 6.2','Memory Safety'],'AGENT':['Req 6','Secure Development'],
+    'WEBHOOK':['Req 6','Integration Security'],
+  },
+  'SOC 2': {
+    'AUTH':['CC6.1','Logical Access Controls'],'SESSION':['CC6.1','Session Management'],
+    'AUTHZ':['CC6.3','Authorization'],'BOLA':['CC6.3','Authorization'],
+    'CRYPTO':['CC6.1','Encryption'],'SEC-CRYPTO':['CC6.1','Encryption'],
+    'SECRETS':['CC6.1','Encryption Keys'],'DATA':['C1.1','Data Confidentiality'],
+    'SEC-DATA':['C1.1','Data Protection'],
+    'HEADERS':['CC7.1','Configuration Monitoring'],'CONFIG':['CC7.1','Configuration'],
+    'INPUT':['CC6.6','Input Validation'],'SEC-INJ':['CC6.6','Input Validation'],
+    'AUDIT':['CC7.2','Monitoring Activities'],'ERROR':['CC7.2','Error Monitoring'],
+    'COMP':['CC9.1','Risk Assessment'],'DEV-DEP':['CC9.1','Third-Party Risk'],
+    'DEV-BUILD':['CC8.1','Change Management'],
+    'SSRF':['CC6.6','Network Security'],'RATE':['A1.1','Availability'],
+    'INCIDENT':['CC7.4','Incident Response'],'SUPPLY':['CC9.2','Vendor Management'],
+    'PATCH':['CC7.1','Vulnerability Management'],'EOL':['CC9.1','Component Risk'],
+    'AGENT':['CC6.6','Security Controls'],
+  },
+  'HIPAA': {
+    'AUTH':['§164.312(d)','Person Authentication'],
+    'AUTHZ':['§164.312(a)','Access Control'],
+    'SESSION':['§164.312(a)','Automatic Logoff'],
+    'CRYPTO':['§164.312(a)(2)(iv)','Encryption & Decryption'],
+    'SEC-CRYPTO':['§164.312(e)(2)(ii)','Encryption of ePHI'],
+    'SECRETS':['§164.312(a)','Encryption Keys'],
+    'DATA':['§164.312(a)(2)(iv)','PHI Encryption'],
+    'SEC-DATA':['§164.312(e)','Transmission Security'],
+    'AUDIT':['§164.312(b)','Audit Controls'],
+    'ERROR':['§164.308(a)(1)','Security Management'],
+    'PATCH':['§164.308(a)(1)','Security Management'],
+    'INCIDENT':['§164.308(a)(6)','Incident Procedures'],
+    'HEADERS':['§164.312(c)','Integrity Controls'],
+    'INPUT':['§164.312(c)','Integrity'],
+  },
+  'CMMC': {
+    'AUTH':['IA.L2-3.5.3','Authentication'],'SESSION':['IA.L2-3.5.3','Session Auth'],
+    'AUTHZ':['AC.L2-3.1.3','CUI Flow Control'],'BOLA':['AC.L2-3.1.3','Access Control'],
+    'CRYPTO':['SC.L2-3.13.10','Cryptography'],'SEC-CRYPTO':['SC.L2-3.13.10','Cryptography'],
+    'DATA':['MP.L2-3.8.1','Media Protection'],'SEC-DATA':['MP.L2-3.8.1','Data Protection'],
+    'AUDIT':['AU.L2-3.3.1','Audit Logging'],'ERROR':['SI.L1-3.14.1','System Integrity'],
+    'CONFIG':['CM.L2-3.4.1','Configuration Management'],
+    'HEADERS':['CM.L2-3.4.1','Configuration'],
+    'INFRA':['CM.L1-3.4.1','Least Functionality'],
+    'INPUT':['SI.L2-3.14.2','Malicious Code'],'SEC-INJ':['SI.L2-3.14.2','Code Security'],
+    'COMP':['SI.L1-3.14.1','Flaw Remediation'],'DEV-DEP':['SI.L1-3.14.1','Flaw Remediation'],
+    'SSRF':['SC.L2-3.13.7','Network Comms'],'RATE':['SC.L2-3.13.8','Network Comms'],
+    'INCIDENT':['IR.L2-3.6.1','Incident Response'],
+    'SUPPLY':['SR.L2-3.17.1','Supply Chain Risk'],
+    'PATCH':['SI.L1-3.14.1','Flaw Remediation'],'EOL':['SA.L2-3.14.1','Unsupported Systems'],
+    'SECRETS':['IA.L2-3.5.10','Passwords & Secrets'],
+    'TRUST':['SC.L2-3.13.2','Security Engineering'],
+  },
+  'FedRAMP': {
+    'AUTH':['IA-2','Identification & Auth'],'SESSION':['IA-2(8)','Replay-Resistant Auth'],
+    'AUTHZ':['AC-3','Access Enforcement'],'BOLA':['AC-3','Access Enforcement'],
+    'CRYPTO':['SC-28','Protection at Rest'],'SEC-CRYPTO':['SC-28','Protection at Rest'],
+    'SECRETS':['IA-5','Auth Management'],'DATA':['SC-28','Data Protection'],
+    'SEC-DATA':['SC-28','Data Protection'],
+    'HEADERS':['CM-6','Configuration Settings'],'CONFIG':['CM-6','Configuration Settings'],
+    'INFRA':['CM-7','Least Functionality'],
+    'INPUT':['SI-10','Input Validation'],'SEC-INJ':['SI-10','Input Validation'],
+    'AUDIT':['AU-2','Event Logging'],'ERROR':['SI-11','Error Handling'],
+    'COMP':['SA-22','Unsupported Components'],'DEV-DEP':['SA-22','Component Management'],
+    'DEV-BUILD':['SA-15','Development Process'],
+    'SSRF':['SC-7','Boundary Protection'],'RATE':['SC-5','DoS Protection'],
+    'SEC-MEM':['SI-16','Memory Protection'],
+    'PATCH':['SI-2','Flaw Remediation'],'EOL':['SA-22','Unsupported Components'],
+    'INCIDENT':['IR-4','Incident Handling'],'SUPPLY':['SR-3','Supply Chain Controls'],
+  },
+  'DoD Cloud SRG': {
+    'AUTH':['SRG-APP-000149','Authentication'],'SESSION':['SRG-APP-000190','Session Management'],
+    'AUTHZ':['SRG-APP-000033','Access Control'],'BOLA':['SRG-APP-000033','Access Control'],
+    'CRYPTO':['SRG-APP-000514','Encryption'],'SEC-CRYPTO':['SRG-APP-000514','Encryption'],
+    'AUDIT':['SRG-APP-000098','Audit Logging'],'ERROR':['SRG-APP-000266','Error Handling'],
+    'CONFIG':['SRG-APP-000383','Configuration'],'HEADERS':['SRG-APP-000383','Configuration'],
+    'INPUT':['SRG-APP-000251','Input Validation'],'SEC-INJ':['SRG-APP-000251','Input Validation'],
+    'SSRF':['SRG-APP-000516','Network Security'],
+    'PATCH':['SRG-APP-000456','Patch Management'],'COMP':['SRG-APP-000456','Component Security'],
+  },
+  'SEC/FINRA': {
+    'AUTH':['Reg S-P §4','Access Controls'],'SESSION':['Reg S-P §4','Access Controls'],
+    'AUTHZ':['Reg S-P §4','Access Controls'],'BOLA':['Reg S-P §4','Access Controls'],
+    'DATA':['Reg S-P §3','Data Protection'],'SEC-DATA':['Reg S-P §3','Data Protection'],
+    'CRYPTO':['Reg S-P §3','Encryption'],'SEC-CRYPTO':['Reg S-P §3','Encryption'],
+    'AUDIT':['Reg S-P §6','Monitoring'],'ERROR':['Reg S-P §6','Monitoring'],
+    'INCIDENT':['Reg S-P §5','Incident Response'],
+    'PATCH':['Cybersecurity Rule','Vulnerability Mgmt'],
+    'COMP':['Cybersecurity Rule','Component Risk'],
+  },
+  'EU DORA': {
+    'AUTH':['Art. 9(3)','Access Controls'],'SESSION':['Art. 9(3)','Access Controls'],
+    'AUTHZ':['Art. 9(3)','Access Controls'],'BOLA':['Art. 9(3)','Access Controls'],
+    'DATA':['Art. 9(2)','Data Protection'],'SEC-DATA':['Art. 9(2)','Data Protection'],
+    'CRYPTO':['Art. 9(2)','Cryptography'],'SEC-CRYPTO':['Art. 9(2)','Cryptography'],
+    'AUDIT':['Art. 10','Logging & Monitoring'],'ERROR':['Art. 10','Monitoring'],
+    'INCIDENT':['Art. 17','Incident Management'],
+    'INFRA':['Art. 9(4)','ICT Asset Management'],'HEADERS':['Art. 9(4)','Hardening'],
+    'CONFIG':['Art. 9(4)','Configuration'],
+    'COMP':['Art. 10(2)','Vulnerability Management'],
+    'PATCH':['Art. 10(2)','Patch Management'],'EOL':['Art. 10(2)','Component Lifecycle'],
+    'SUPPLY':['Art. 28','Third-Party ICT Risk'],'DEV-DEP':['Art. 28','Third-Party Risk'],
+    'SSRF':['Art. 9(4)','Network Security'],'RATE':['Art. 9(4)','Availability'],
+  },
+  'EU AI Act': {
+    'AGENT':['Art. 9','Risk Management System'],
+    'SEC-INJ':['Art. 15','Robustness & Cybersecurity'],
+    'SEC-AUTH':['Art. 15','Security Measures'],
+    'SEC-CRYPTO':['Art. 15','Cybersecurity'],
+    'AUTH':['Art. 13','Transparency'],
+    'AUDIT':['Art. 12','Record-Keeping'],'ERROR':['Art. 12','Monitoring'],
+    'DATA':['Art. 10','Data Governance'],'SEC-DATA':['Art. 10','Data Governance'],
+    'INPUT':['Art. 15','Adversarial Robustness'],
+    'COMP':['Art. 9','Risk Management'],'DEV-DEP':['Art. 9','Risk Management'],
+  },
+};
+
+function getFwInfo(c, fw) {
+  if (!fw) return null;
+  const tbl = FW_MAP[fw];
+  if (!tbl) return null;
+  const fam = c.family || '';
+  if (tbl[fam]) return {id: tbl[fam][0], label: tbl[fam][1]};
+  for (const [k, v] of Object.entries(tbl)) {
+    if (fam.startsWith(k) || (c.id || '').startsWith(k + '-')) return {id: v[0], label: v[1]};
+  }
+  return null;
+}
+
 function statusLabel(s) {
   return {
     NON_COMPLIANT: 'Non-compliant', NEEDS_REVIEW: 'Needs review',
@@ -437,19 +723,23 @@ function buildCard(c) {
   const evidenceHtml = c.evidence ? `
     <div class="section">
       <div class="s-title">${c.tier === 'manual_confirmation' || eff === 'NOT_TESTED' ? 'Test procedure / checklist' : 'Evidence'}</div>
-      <div class="evidence-box">${esc(c.evidence)}</div>
+      <div class="evidence-box">${fmtEvidence(c.evidence)}</div>
     </div>` : '';
 
   // ── What To Confirm (all NEEDS_REVIEW findings) ──
-  const _reviewText = c.review_steps || ('Manually verify that ' + (c.name || 'this control') + ' requirements are met.');
+  const _rawReviewText = c.review_steps || ('Manually verify that ' + (c.name || 'this control') + ' requirements are met.');
+  const _reviewText = filterReviewSteps(_rawReviewText, DETECTED_LANG);
   const _reviewContext = (eff === 'NEEDS_REVIEW' && c.tier === 'automatic_confirmation')
     ? '<p style="margin:0 0 8px 0;padding:6px 8px;background:rgba(250,173,20,.12);border-left:3px solid var(--warn);border-radius:3px;font-size:12px;color:var(--warn)">⚠️ The scanner found indirect evidence (see above). Confirm whether this control is specifically violated before triaging.</p>'
+    : '';
+  const _langNote = (DETECTED_LANG && _rawReviewText !== _reviewText)
+    ? `<p style="margin:0 0 6px 0;font-size:11px;color:var(--muted)">Showing ${DETECTED_LANG} steps · <a href="#" style="color:var(--muted)" onclick="this.closest('.evidence-box').querySelector('.all-steps').style.display='block';this.parentNode.style.display='none';return false">Show all languages</a></p><div class="all-steps" style="display:none">${esc(_rawReviewText)}</div>`
     : '';
   const reviewProcHtml = eff === 'NEEDS_REVIEW' ? `
     <div class="section">
       <details class="rp-details" open>
         <summary>✅ What to confirm</summary>
-        <div class="evidence-box" style="margin-top:6px">${_reviewContext}${esc(_reviewText)}</div>
+        <div class="evidence-box" style="margin-top:6px">${_reviewContext}${_langNote}${esc(_reviewText)}</div>
       </details>
     </div>` : '';
 
@@ -460,13 +750,14 @@ function buildCard(c) {
       <div class="remediation-box">${esc(c.remediation)}</div>
     </div>` : '';
 
-  // ── Meta ──
+  // ── Meta + Requirements ──
   const metaHtml = `
     <div class="meta-row">
       <span><b>Family</b> ${esc(c.family)}</span>
       <span><b>CIA</b> ${esc(c.cia)}</span>
       ${c.cvss ? `<span><b>CVSS</b> ${c.cvss.score.toFixed(1)}</span>` : ''}
       ${c.source ? `<span><b>Source</b> ${esc(c.source)}</span>` : ''}
+      ${c.statement ? `<details class="req-details" style="margin-left:auto"><summary>📄 Control requirements</summary><div class="evidence-box" style="margin-top:6px;font-size:12px">${esc(c.statement)}</div></details>` : ''}
     </div>`;
 
   // ── Triage buttons ──
@@ -506,10 +797,20 @@ function buildCard(c) {
   const el = document.createElement('div');
   el.className = 'ctrl ' + cc;
   el.dataset.id = c.id;
+  const _fw = document.getElementById('fwDrop') ? document.getElementById('fwDrop').value : '';
+  const _fwInfo = getFwInfo(c, _fw);
+  const _fwHead = _fw
+    ? (_fwInfo
+        ? `<span class="fw-id-badge">${esc(_fwInfo.id)} — ${esc(_fwInfo.label)}</span>`
+        : `<span class="fw-nr-label">⊘ Not relevant to ${esc(_fw)}</span>`)
+    : '';
+  const _dispId   = (_fw && _fwInfo) ? esc(_fwInfo.id)                        : esc(c.id);
+  const _dispName = (_fw && _fwInfo) ? esc(_fwInfo.label + ': ' + c.name)     : esc(c.name);
   el.innerHTML = `
     <div class="ctrl-head">
-      <span class="ctrl-id">${esc(c.id)}</span>
-      <span class="ctrl-name">${esc(c.name)}</span>
+      <span class="ctrl-id" title="${esc(c.id)}">${_dispId}</span>
+      <span class="ctrl-name">${_dispName}</span>
+      ${_fwHead}
       <div class="badges">
         <span class="badge ${esc(c.severity)}">${esc(c.severity)}</span>
         <span class="badge ${sbc}">${sl}</span>
@@ -632,7 +933,7 @@ document.getElementById('fp-modal').addEventListener('click', e => {
 });
 
 // Filter controls (dropdowns + text)
-['fStatus','fSev','fTier','fFam'].forEach(id =>
+['fStatus','fSev','fTier','fFam','fwDrop'].forEach(id =>
   document.getElementById(id).addEventListener('change', render)
 );
 document.getElementById('fTxt').addEventListener('input', render);
