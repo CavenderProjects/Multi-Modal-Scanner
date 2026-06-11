@@ -119,7 +119,7 @@ Key differences from the Claude Code skill:
 | Feature | Claude Code Skill | Standalone App |
 |---------|-------------------|----------------|
 | Runtime | Claude Code | Python + PyQt6 (desktop) |
-| Internet required | Yes (Claude API) | No (local scan engine) |
+| Claude API required | Yes | No |
 | Scan history | Per session | SQLite database, persistent |
 | Report triage | In report (browser) | In-app triage interface |
 | AI Agent assessment | Yes | Yes |
