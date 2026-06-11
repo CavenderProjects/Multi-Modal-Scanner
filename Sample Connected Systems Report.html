@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connected Systems Assessment — https://demo-shop.example.com / https://api.demo-shop.example.com/v2</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --ink:#e2e8f0; --muted:#94a3b8;
+    --accent:#38bdf8; --accent2:#0ea5e9;
+    --crit:#ef4444; --high:#f97316; --med:#eab308; --low:#3b82f6; --info:#64748b;
+    --ok:#22c55e; --border:#334155; --code:#0b1220;
+    --cia-c:#60a5fa; --cia-i:#4ade80; --cia-a:#a78bfa;
+    --reach-direct:#f43f5e; --reach-hop:#a855f7; --reach-multi:#14b8a6; --reach-internal:#6366f1;
+    --chain:#f59e0b; --rescore:#ec4899;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#0f172a 0%,#111c35 100%);border-bottom:1px solid var(--border);padding:14px 22px;box-shadow:0 2px 10px rgba(0,0,0,0.4)}
+  h1{margin:0;font-size:18px}
+  h2{margin:22px 22px 8px;font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em}
+  h2.section-toggle{cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;transition:background 0.2s}
+  h2.section-toggle:hover{background:var(--panel)}
+  h2.section-toggle .chevron{display:inline-block;transition:transform 0.25s;font-size:12px;color:var(--accent)}
+  h2.section-toggle.collapsed .chevron{transform:rotate(-90deg)}
+  h2.section-toggle .section-count{font-size:13px;font-weight:400;color:var(--accent)}
+  h2.section-toggle.chain-heading{border-left:3px solid var(--chain)}
+  h2.section-toggle.rescore-heading{border-left:3px solid var(--rescore)}
+  main.section-body{transition:max-height 0.3s ease,opacity 0.2s ease;overflow:hidden}
+  main.section-body.collapsed{max-height:0!important;opacity:0;margin:0;padding:0}
+  .sub{color:var(--muted);font-size:13px;margin-top:4px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;margin-top:10px}
+  .pill{padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:var(--panel)}
+  .pill.toggle{cursor:pointer;transition:all 0.2s;user-select:none}
+  .pill.toggle:hover{transform:scale(1.05)}
+  .pill.toggle.off{opacity:0.35;filter:grayscale(0.7)}
+  .pill.crit{border-color:var(--crit);color:#fecaca}
+  .pill.high{border-color:var(--high);color:#fed7aa}
+  .pill.med{border-color:var(--med);color:#fef08a}
+  .pill.low{border-color:var(--low);color:#bfdbfe}
+  .pill.info-sev{border-color:var(--info);color:#cbd5e1}
+  .pill.ok{border-color:var(--ok);color:#bbf7d0}
+  .stats-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;margin-left:24px;font-weight:600;align-self:center}
+  .pill.reach-direct{border-color:var(--reach-direct);color:#fda4af}
+  .pill.reach-hop{border-color:var(--reach-hop);color:#d8b4fe}
+  .pill.reach-multi{border-color:var(--reach-multi);color:#99f6e4}
+  .pill.reach-internal{border-color:var(--reach-internal);color:#a5b4fc}
+
+  .btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--ink);cursor:pointer;font-size:13px}
+  .btn:hover{background:var(--panel2)}
+  .btn.primary{background:var(--accent2);border-color:var(--accent2);color:#fff}
+  .btn.primary:hover{background:var(--accent)}
+  .btn.ghost{background:transparent}
+  .filters{padding:10px 22px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px}
+  .filters label{display:flex;align-items:center;gap:6px}
+  select,input[type=text]{background:var(--panel2);color:var(--ink);border:1px solid var(--border);padding:6px 10px;border-radius:6px;font-size:13px}
+
+  /* Multi-select framework dropdown */
+  .ms-wrap{position:relative;display:inline-block}
+  .ms-btn{background:var(--panel2);color:var(--ink);border:1px solid var(--border);padding:6px 10px;border-radius:6px;font-size:13px;cursor:pointer;min-width:130px;display:flex;align-items:center;gap:6px;user-select:none}
+  .ms-btn::after{content:'\25BE';margin-left:auto;font-size:10px;color:var(--muted)}
+  .ms-btn .ms-count{background:var(--accent2);color:#fff;font-size:10px;padding:1px 6px;border-radius:9px;font-weight:600}
+  .ms-drop{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:50;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.5);min-width:230px;max-height:340px;overflow-y:auto;padding:4px 0}
+  .ms-drop.open{display:block}
+  .ms-drop .ms-actions{display:flex;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border)}
+  .ms-drop .ms-actions button{font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0}
+  .ms-drop .ms-actions button:hover{text-decoration:underline}
+  .ms-item{display:flex;align-items:center;gap:8px;padding:5px 12px;cursor:pointer;font-size:12px;transition:background 0.1s}
+  .ms-item:hover{background:var(--panel2)}
+  .ms-item input[type=checkbox]{accent-color:var(--accent2);cursor:pointer}
+  .ms-item .ms-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ms-item .ms-abbr{font-weight:600;color:var(--accent);min-width:70px}
+  main{padding:14px 22px 80px}
+
+  .ctrl{background:var(--panel);border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden}
+  .ctrl.sel{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok) inset}
+  .ctrl-head{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:12px}
+  .ctrl-head:hover{background:var(--panel2)}
+  .ctrl-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .ctrl-id{font-family:ui-monospace,monospace;font-weight:600}
+  .ctrl-name{font-weight:500}
+  .sev{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.05em}
+  .sev.CRITICAL{background:var(--crit);color:#fff}
+  .sev.HIGH{background:var(--high);color:#fff}
+  .sev.MEDIUM{background:var(--med);color:#111}
+  .sev.LOW{background:var(--low);color:#fff}
+  .sev.INFORMATIONAL{background:var(--info);color:#fff}
+  .reach{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.05em}
+  .reach.DIRECT{background:var(--reach-direct);color:#fff}
+  .reach.ONE_HOP{background:var(--reach-hop);color:#fff}
+  .reach.MULTI_STEP{background:var(--reach-multi);color:#fff}
+  .reach.INTERNAL{background:var(--reach-internal);color:#fff}
+  .family-tag{font-size:10px;color:var(--muted);background:var(--panel2);padding:2px 6px;border-radius:3px}
+  .cia-tag{font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600}
+  .cia-tag.C{background:rgba(96,165,250,0.2);color:var(--cia-c);border:1px solid rgba(96,165,250,0.3)}
+  .cia-tag.I{background:rgba(74,222,128,0.2);color:var(--cia-i);border:1px solid rgba(74,222,128,0.3)}
+  .cia-tag.A{background:rgba(167,139,250,0.2);color:var(--cia-a);border:1px solid rgba(167,139,250,0.3)}
+  .mit-badge{font-size:10px;color:var(--ok);font-weight:600}
+  .selected-badge{font-size:11px;color:var(--ok);font-weight:600}
+
+  .ctrl-body{padding:0 16px 16px;border-top:1px solid var(--border);display:none}
+  .ctrl.open .ctrl-body{display:block}
+  .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px 14px;font-size:12px;color:var(--muted);margin:10px 0}
+  .meta-grid b{color:var(--ink);font-weight:500}
+  .section-title{font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:0.08em;margin:14px 0 6px}
+  .finding{background:var(--panel2);padding:10px 12px;border-radius:6px;font-size:13px}
+  .source-ref{font-size:11px;color:var(--accent);margin-top:4px}
+
+  .fw-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .fw-tag{font-size:10px;color:var(--muted);background:var(--panel2);border:1px solid var(--border);padding:2px 8px;border-radius:4px;transition:opacity 0.2s}
+  .fw-tag.fw-dim{opacity:0.25}
+
+  .cvss-block{display:flex;align-items:center;gap:14px;margin:10px 0;padding:10px 14px;background:var(--panel2);border-radius:8px;border:1px solid var(--border)}
+  .cvss-score{font-size:22px;font-weight:800;min-width:48px;text-align:center;line-height:1}
+  .cvss-score.cvss-crit{color:var(--crit)}
+  .cvss-score.cvss-high{color:var(--high)}
+  .cvss-score.cvss-med{color:var(--med)}
+  .cvss-score.cvss-low{color:var(--low)}
+  .cvss-score.cvss-none{color:var(--info)}
+  .cvss-detail{flex:1;font-size:12px;color:var(--muted)}
+  .cvss-detail b{color:var(--ink)}
+  .cvss-vector{font-family:ui-monospace,monospace;font-size:11px;color:var(--accent);word-break:break-all}
+  .cvss-bar{width:120px;height:8px;background:var(--panel);border-radius:4px;overflow:hidden}
+  .cvss-bar-fill{height:100%;border-radius:4px}
+
+  .mit-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+  .mit{border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--panel2)}
+  .mit.chosen{border-color:var(--accent);background:#1e2e48}
+  .mit-header{display:flex;align-items:flex-start;gap:10px}
+  .mit-header input{margin-top:4px}
+  .mit-label{font-weight:500}
+  .mit-summary{font-size:13px;color:var(--muted);margin-top:2px}
+  .mit-actions{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+  .artifact{margin-top:10px;background:var(--code);border:1px solid var(--border);border-radius:6px;padding:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;white-space:pre;overflow-x:auto;display:none}
+  .artifact.show{display:block}
+  .artifact-head{display:flex;justify-content:space-between;align-items:center;font-family:-apple-system,sans-serif;margin-bottom:6px;color:var(--muted);font-size:11px}
+  .artifact-file{color:var(--accent)}
+
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+  .overlay.show{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:900px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+  .modal header{position:static;padding:14px 18px;background:var(--panel2)}
+  .modal .body{padding:14px 18px;overflow-y:auto}
+  .modal .footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+  .note{font-size:12px;color:var(--muted);margin:8px 22px 0;padding:10px 12px;background:var(--panel2);border-left:3px solid var(--accent);border-radius:4px}
+  .bulk{display:flex;gap:8px;flex-wrap:wrap}
+
+  /* System badges */
+  .sys-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.05em}
+  .sys-website{background:rgba(56,189,248,0.15);color:#38bdf8;border:1px solid rgba(56,189,248,0.3)}
+  .sys-api{background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.3)}
+  .sys-skill{background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3)}
+  .sys-code{background:rgba(249,115,22,0.15);color:#f97316;border:1px solid rgba(249,115,22,0.3)}
+
+  /* Chain step visualization */
+  .chain-flow{margin:14px 0;padding:0 8px}
+  .chain-entry{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--chain);margin-bottom:8px;padding:6px 10px;background:rgba(245,158,11,0.08);border:1px dashed var(--chain);border-radius:6px}
+  .chain-entry-label{font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:0.08em}
+  .chain-step{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;position:relative}
+  .chain-step-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .chain-step-num{font-size:11px;font-weight:800;color:var(--chain);min-width:20px}
+  .chain-step-action{font-size:12px;color:var(--ink)}
+  .chain-step-action b{color:var(--muted);font-weight:600}
+  .chain-step-result{font-size:12px;color:var(--muted);padding-left:28px}
+  .chain-step-result b{color:var(--muted);font-weight:600}
+  .chain-connector{display:flex;justify-content:center;padding:4px 0}
+  .chain-connector::after{content:'';display:block;width:2px;height:18px;background:var(--chain)}
+  .chain-connector-arrow{display:flex;justify-content:center;font-size:14px;color:var(--chain);margin-top:-4px;margin-bottom:4px}
+  .chain-impact{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--crit);margin-top:8px;padding:6px 10px;background:rgba(239,68,68,0.08);border:1px dashed var(--crit);border-radius:6px}
+  .chain-impact-label{font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:0.08em}
+  .steps-badge{font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(245,158,11,0.15);color:var(--chain);border:1px solid rgba(245,158,11,0.3);font-weight:600}
+  .cvss-inline{font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--panel2);border:1px solid var(--border)}
+
+  /* Rescore section */
+  .rescore-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden}
+  .rescore-head{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:12px}
+  .rescore-head:hover{background:var(--panel2)}
+  .rescore-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .rescore-body{padding:0 16px 16px;border-top:1px solid var(--border);display:none}
+  .rescore-card.open .rescore-body{display:block}
+  .rescore-compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0}
+  .rescore-col{background:var(--panel2);border-radius:8px;padding:12px;border:1px solid var(--border)}
+  .rescore-col.new-col{border-color:var(--rescore);box-shadow:0 0 0 1px rgba(236,72,153,0.2)}
+  .rescore-col-title{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:8px;font-weight:600}
+  .rescore-col.new-col .rescore-col-title{color:var(--rescore)}
+  .rescore-arrow{font-size:13px;color:var(--rescore);font-weight:700}
+  .rescore-struck{text-decoration:line-through;opacity:0.5}
+  .chain-link{font-size:12px;color:var(--chain);cursor:pointer;text-decoration:underline;margin-top:10px;display:inline-block}
+  .chain-link:hover{color:var(--accent)}
+
+  @media (max-width:700px){.rescore-compare{grid-template-columns:1fr}}
+  @media (max-width:600px){.stats{font-size:11px}.btn{padding:7px 10px;font-size:12px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="topbar">
+    <div>
+      <h1>Connected Systems Assessment</h1>
+      <div class="sub">https://demo-shop.example.com (Website) &#x2194; https://api.demo-shop.example.com/v2 (API) &middot; select a mitigation for each chain and export a remediation bundle</div>
+    </div>
+    <div class="bulk">
+      <button class="btn" id="expandAll">Expand all</button>
+      <button class="btn" id="collapseAll">Collapse all</button>
+      <button class="btn" id="clearSel">Clear selections</button>
+      <button class="btn primary" id="reviewBtn">Review &amp; Export (<span id="selCount">0</span>/<span id="totalChains">6</span>)</button>
+    </div>
+  </div>
+  <div class="stats">
+    <span class="pill crit toggle" data-sev="CRITICAL">&#x1F534; 3 Critical</span>
+    <span class="pill high toggle" data-sev="HIGH">&#x1F7E0; 2 High</span>
+    <span class="pill med toggle" data-sev="MEDIUM">&#x1F7E1; 1 Medium</span>
+    <span class="pill low toggle" data-sev="LOW">&#x1F535; 0 Low</span>
+    <span class="pill info-sev toggle" data-sev="INFORMATIONAL">&#x26AA; 0 Informational</span>
+    <span class="pill ok" id="progressPill">0 selected</span>
+    <span class="stats-label">Reachability</span>
+    <span class="pill reach-direct toggle" data-reach="DIRECT">&#x1F3AF; Direct</span>
+    <span class="pill reach-hop toggle" data-reach="ONE_HOP">&#x2197;&#xFE0F; One Hop</span>
+    <span class="pill reach-multi toggle" data-reach="MULTI_STEP">&#x1F500; Multi-Step</span>
+    <span class="pill reach-internal toggle" data-reach="INTERNAL">&#x1F3E0; Internal</span>
+  </div>
+</header>
+
+<div class="note">
+  <b>How this works:</b> This report identifies <em>chained vulnerabilities</em> that span connected systems and highlights <em>compounded risk</em> where individual findings change severity in a cross-system context. Select a mitigation for each chain, then click <em>Review &amp; Export</em> to compile a remediation bundle. <b>No files are modified by this page.</b>
+</div>
+
+<div class="filters">
+  <label>Severity
+    <select id="fSev"><option value="">All</option><option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option><option>INFORMATIONAL</option></select>
+  </label>
+  <label>Reachability
+    <select id="fReach"><option value="">All</option><option value="DIRECT">Direct</option><option value="ONE_HOP">One Hop</option><option value="MULTI_STEP">Multi-Step</option><option value="INTERNAL">Internal</option></select>
+  </label>
+  <label>Family
+    <select id="fFam"><option value="">All</option></select>
+  </label>
+  <label>Framework
+    <div class="ms-wrap" id="fwWrap">
+      <div class="ms-btn" id="fwBtn"><span id="fwLabel">All</span></div>
+      <div class="ms-drop" id="fwDrop">
+        <div class="ms-actions"><button id="fwAll">Select all</button><button id="fwNone">Clear all</button></div>
+        <div id="fwItems"></div>
+      </div>
+    </div>
+  </label>
+  <label>CIA
+    <select id="fCia"><option value="">All</option><option value="C">Confidentiality</option><option value="I">Integrity</option><option value="A">Availability</option></select>
+  </label>
+  <label>Search
+    <input type="text" id="fTxt" placeholder="keyword..." style="width:180px">
+  </label>
+</div>
+
+<h2 class="section-toggle chain-heading" id="chainToggle"><span class="chevron">&#x25BC;</span>Chained Vulnerabilities <span class="section-count" id="chainCount">(6)</span></h2>
+<main id="chainList" class="section-body"></main>
+
+<h2 class="section-toggle rescore-heading" id="rescoreToggle"><span class="chevron">&#x25BC;</span>Compounded Risk <span class="section-count" id="rescoreCount">(4)</span></h2>
+<main id="rescoreList" class="section-body"></main>
+
+<div class="overlay" id="modal">
+  <div class="modal">
+    <header><b>Review remediation bundle</b><div class="sub" id="mCount"></div></header>
+    <div class="body" id="mBody"></div>
+    <div class="footer">
+      <button class="btn ghost" id="mClose">Cancel</button>
+      <button class="btn" id="mCopy">Copy Markdown</button>
+      <button class="btn" id="mJson">Download JSON</button>
+      <button class="btn primary" id="mDownload">Download Markdown</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CHAINS = [
+  {
+    "id": "CHAIN-001",
+    "name": "Authentication Token Relay via Stored XSS",
+    "severity": "CRITICAL",
+    "family": "CHAIN",
+    "cia": [
+      "C",
+      "I"
+    ],
+    "reachability": "DIRECT",
+    "cvss": {
+      "score": 9.8,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    },
+    "chainSteps": [
+      {
+        "system": "Website",
+        "findingId": "INPUT-004",
+        "findingName": "Cross-Site Scripting (XSS) Prevention",
+        "severity": "HIGH",
+        "action": "Inject stored XSS payload in user profile bio field via the website's profile editor",
+        "result": "Malicious JavaScript executes in any user's browser who views the attacker's profile"
+      },
+      {
+        "system": "API",
+        "findingId": "AUTH-002",
+        "findingName": "Token Security (JWT)",
+        "severity": "CRITICAL",
+        "action": "XSS payload reads API bearer token from browser localStorage and exfiltrates to attacker's server",
+        "result": "Attacker obtains valid JWT for victim's account \u2014 token has no audience restriction"
+      },
+      {
+        "system": "API",
+        "findingId": "BOLA-001",
+        "findingName": "Object-Level Access Control",
+        "severity": "CRITICAL",
+        "action": "Use stolen JWT to call /api/v2/orders/{id} for sequential order IDs belonging to other users",
+        "result": "Full data exfiltration of all customer order records, shipping addresses, and partial payment data"
+      }
+    ],
+    "entryPoint": "Website profile page (public, unauthenticated viewing)",
+    "finalImpact": "Complete customer data exfiltration via 3-step chain: stored XSS \u2192 JWT theft \u2192 BOLA exploitation. Attacker achieves full read access to every customer's order history without needing their own valid credentials.",
+    "finding": "A stored XSS vulnerability in the website's user profile bio field enables theft of API bearer tokens stored in browser localStorage. The JWT tokens lack audience restriction and are accepted by all API endpoints. Combined with the API's broken object-level authorization on the orders endpoint, a single XSS payload can be used to exfiltrate the entire customer order database.",
+    "controlStatement": "Authentication tokens obtained or stolen from System A shall not grant unauthorized access to System B without independent validation.",
+    "frameworks": {
+      "owasp": "A03:2021 \u2013 Injection \u2192 API1:2023 \u2013 BOLA",
+      "nist": "IA-4, IA-5, AC-3",
+      "iso": "A.9.4.2, A.9.4.1",
+      "cmmc": "IA.L2-3.5.1; AC.L2-3.1.1",
+      "dod_srg": "SRG-APP-000149; SRG-APP-000033",
+      "fedramp": "IA-4 (Moderate); AC-3 (Moderate)",
+      "hipaa": "\u00a7164.312(d); \u00a7164.312(a)(1)",
+      "pci_dss": "Req 8.3; Req 7.2",
+      "soc2": "CC6.1",
+      "sec_finra": "Reg S-P \u00a7248.30(a)",
+      "eu_dora": "Art. 9(4)(c)",
+      "eu_ai": "Art. 15(4)"
+    },
+    "mitigations": [
+      {
+        "label": "Move tokens to HttpOnly cookies",
+        "summary": "Store JWT in HttpOnly, Secure, SameSite=Strict cookies instead of localStorage. XSS cannot read HttpOnly cookies, breaking step 2 of the chain.",
+        "artifact": {
+          "file": "secure_auth.js",
+          "lang": "javascript",
+          "body": "// Server-side: Set JWT in HttpOnly cookie\nres.cookie('auth_token', jwt, {\n  httpOnly: true,\n  secure: true,\n  sameSite: 'strict',\n  maxAge: 3600000 // 1 hour\n});\n\n// Client-side: Remove localStorage token usage\n// API calls use cookie automatically via credentials: 'include'\nfetch('/api/v2/orders', { credentials: 'include' });"
+        }
+      },
+      {
+        "label": "Fix XSS + add CSP (break chain at step 1)",
+        "summary": "Sanitize all user input in profile bio field and deploy Content Security Policy header to prevent inline script execution. Breaks the chain at step 1.",
+        "artifact": {
+          "file": "csp_and_sanitize.py",
+          "lang": "python",
+          "body": "import bleach\nfrom flask import after_request\n\ndef sanitize_profile_bio(bio: str) -> str:\n    return bleach.clean(bio, tags=['b', 'i', 'a'], attributes={'a': ['href']})\n\n@app.after_request\ndef add_csp(response):\n    response.headers['Content-Security-Policy'] = (\n        \"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'\"\n    )\n    return response"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CHAIN-002",
+    "name": "SSRF to Internal Debug Endpoint Exploitation",
+    "severity": "CRITICAL",
+    "family": "CHAIN",
+    "cia": [
+      "C",
+      "I",
+      "A"
+    ],
+    "reachability": "DIRECT",
+    "cvss": {
+      "score": 9.8,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    },
+    "chainSteps": [
+      {
+        "system": "API",
+        "findingId": "SSRF-001",
+        "findingName": "URL Input Validation",
+        "severity": "CRITICAL",
+        "action": "Submit SSRF payload via /api/v2/import endpoint: url=http://localhost:8080/debug/config",
+        "result": "API server makes internal request to its own debug endpoint, bypassing network firewall"
+      },
+      {
+        "system": "API",
+        "findingId": "CONFIG-004",
+        "findingName": "Debug Endpoint Exposure",
+        "severity": "HIGH",
+        "action": "Debug endpoint returns full application configuration including database credentials and API keys",
+        "result": "Attacker obtains production database credentials and third-party API keys"
+      },
+      {
+        "system": "Website",
+        "findingId": "SECRETS-001",
+        "findingName": "Hardcoded Secrets Detection",
+        "severity": "HIGH",
+        "action": "Use leaked database credentials to connect directly to shared production database",
+        "result": "Full database access \u2014 read/write to all tables including user credentials, PII, and financial data"
+      }
+    ],
+    "entryPoint": "API /api/v2/import endpoint (authenticated, standard user)",
+    "finalImpact": "Full production database compromise via SSRF \u2192 debug endpoint \u2192 credential theft \u2192 direct database access. Attacker achieves unrestricted read/write access to the shared production database.",
+    "finding": "The API's /api/v2/import endpoint accepts arbitrary URLs without validation, enabling server-side request forgery. An attacker can use this to access the API's debug configuration endpoint (normally restricted to internal network only), which exposes production database credentials. Since the website and API share the same database and the credentials grant full access, the attacker achieves complete database compromise.",
+    "controlStatement": "An SSRF vulnerability in System A shall not provide a path to exploit vulnerabilities in System B that are otherwise protected by network boundaries.",
+    "frameworks": {
+      "owasp": "API10:2023 \u2013 SSRF \u2192 A05:2021 \u2013 Security Misconfiguration",
+      "nist": "SI-10, SC-7",
+      "iso": "A.13.1.1, A.14.1.3",
+      "cmmc": "SI.L2-3.14.2; SC.L2-3.13.1",
+      "dod_srg": "SRG-APP-000251; SRG-APP-000383",
+      "fedramp": "SI-10 (Moderate); SC-7 (Moderate)",
+      "hipaa": "\u00a7164.312(e)(1); \u00a7164.312(a)(1)",
+      "pci_dss": "Req 6.2.4; Req 1.3",
+      "soc2": "CC6.6; CC7.1",
+      "sec_finra": "Reg S-P \u00a7248.30(a)",
+      "eu_dora": "Art. 9(4)(a); Art. 9(4)(b)",
+      "eu_ai": "Art. 15(4)"
+    },
+    "mitigations": [
+      {
+        "label": "URL allowlist for import endpoint",
+        "summary": "Restrict /api/v2/import to approved external domains only. Block all requests to private IP ranges (127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16). Breaks chain at step 1.",
+        "artifact": {
+          "file": "ssrf_protection.py",
+          "lang": "python",
+          "body": "import ipaddress, urllib.parse\n\nALLOWED_DOMAINS = {'cdn.example.com', 'imports.partner.com'}\nBLOCKED_RANGES = [ipaddress.ip_network(r) for r in\n  ['127.0.0.0/8','10.0.0.0/8','172.16.0.0/12','192.168.0.0/16','169.254.0.0/16']]\n\ndef validate_import_url(url: str) -> bool:\n    parsed = urllib.parse.urlparse(url)\n    if parsed.hostname not in ALLOWED_DOMAINS:\n        return False\n    try:\n        ip = ipaddress.ip_address(parsed.hostname)\n        if any(ip in net for net in BLOCKED_RANGES):\n            return False\n    except ValueError:\n        pass  # hostname is not an IP\n    return parsed.scheme == 'https'"
+        }
+      },
+      {
+        "label": "Disable debug endpoints in production",
+        "summary": "Remove or disable all debug/diagnostic endpoints in production builds. Use environment-based configuration to ensure debug routes are never registered in production. Breaks chain at step 2.",
+        "artifact": {
+          "file": "disable_debug.py",
+          "lang": "python",
+          "body": "import os\nfrom flask import Flask\n\napp = Flask(__name__)\n\n# Only register debug routes in development\nif os.environ.get('FLASK_ENV') == 'development':\n    from .debug_routes import debug_bp\n    app.register_blueprint(debug_bp, url_prefix='/debug')\n\n# Production: explicitly verify no debug routes\n@app.before_first_request\ndef verify_no_debug():\n    if os.environ.get('FLASK_ENV') == 'production':\n        for rule in app.url_map.iter_rules():\n            assert '/debug' not in rule.rule, f'Debug route {rule} found in production!'"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CHAIN-003",
+    "name": "Brute-Force to Mass Assignment Privilege Escalation",
+    "severity": "CRITICAL",
+    "family": "CHAIN",
+    "cia": [
+      "C",
+      "I",
+      "A"
+    ],
+    "reachability": "DIRECT",
+    "cvss": {
+      "score": 9.1,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    },
+    "chainSteps": [
+      {
+        "system": "Website",
+        "findingId": "AUTH-003",
+        "findingName": "Brute-Force Protection",
+        "severity": "HIGH",
+        "action": "Run automated credential stuffing against /login with leaked password database (no rate limiting)",
+        "result": "Valid user credentials obtained for a standard (non-admin) account"
+      },
+      {
+        "system": "API",
+        "findingId": "BOPLA-002",
+        "findingName": "Mass Assignment Prevention",
+        "severity": "CRITICAL",
+        "action": "Authenticate with stolen credentials, then PUT /api/v2/users/self with {\"role\": \"admin\", \"permissions\": [\"*\"]}",
+        "result": "Standard user account elevated to admin \u2014 mass assignment overwrites role and permissions fields"
+      },
+      {
+        "system": "API",
+        "findingId": "FUNC-001",
+        "findingName": "Admin Function Isolation",
+        "severity": "CRITICAL",
+        "action": "Use elevated admin account to access /api/v2/admin/users, /api/v2/admin/config, /api/v2/admin/export",
+        "result": "Full administrative control \u2014 export all user data, modify system configuration, create backdoor accounts"
+      }
+    ],
+    "entryPoint": "Website login page (public, unauthenticated)",
+    "finalImpact": "Full administrative takeover via credential stuffing \u2192 mass assignment privilege escalation \u2192 admin function access. Attacker gains ability to export all data, modify configurations, and create persistent backdoor accounts.",
+    "finding": "The website's login page has no brute-force protection, allowing automated credential stuffing. Once a valid standard user account is compromised, the API's mass assignment vulnerability allows the attacker to elevate their role to admin by including role/permissions fields in a profile update request. The API's admin endpoints lack function-level authorization checks beyond role verification, granting the attacker full administrative control.",
+    "controlStatement": "A user with limited privileges in System A shall not be able to leverage the connection between systems to obtain elevated privileges in System B.",
+    "frameworks": {
+      "owasp": "A07:2021 \u2013 Auth Failures \u2192 API3:2023 \u2013 BOPLA \u2192 API5:2023 \u2013 BFLA",
+      "nist": "AC-6, AC-6(1), IA-5",
+      "iso": "A.9.2.3, A.9.4.1",
+      "cmmc": "AC.L2-3.1.5; IA.L2-3.5.1",
+      "dod_srg": "SRG-APP-000062; SRG-APP-000149",
+      "fedramp": "AC-6 (Moderate); IA-5 (Moderate)",
+      "hipaa": "\u00a7164.312(a)(1); \u00a7164.312(d)",
+      "pci_dss": "Req 7.2.1; Req 8.3",
+      "soc2": "CC6.3; CC6.1",
+      "sec_finra": "Reg S-P \u00a7248.30(a)",
+      "eu_dora": "Art. 9(4)(c)",
+      "eu_ai": "Art. 15(4)"
+    },
+    "mitigations": [
+      {
+        "label": "Add rate limiting + account lockout",
+        "summary": "Implement progressive delays and account lockout after 5 failed attempts. Breaks chain at step 1.",
+        "artifact": {
+          "file": "rate_limit.py",
+          "lang": "python",
+          "body": "from flask_limiter import Limiter\n\nlimiter = Limiter(app, default_limits=['100/hour'])\n\n@app.route('/login', methods=['POST'])\n@limiter.limit('5/minute')\ndef login():\n    # Check account lockout\n    if is_locked(request.form['email']):\n        return jsonify({'error': 'Account temporarily locked'}), 429\n    # ... auth logic ...\n    if not valid:\n        increment_failures(request.form['email'])\n        if get_failures(request.form['email']) >= 5:\n            lock_account(request.form['email'], duration=900)  # 15 min\n    return jsonify({'error': 'Invalid credentials'}), 401"
+        }
+      },
+      {
+        "label": "Allowlist mutable fields in API",
+        "summary": "Explicitly define which fields can be updated via PUT/PATCH. Never allow role, permissions, or admin flags to be set by the user. Breaks chain at step 2.",
+        "artifact": {
+          "file": "secure_update.py",
+          "lang": "python",
+          "body": "MUTABLE_FIELDS = {'name', 'email', 'bio', 'avatar_url', 'timezone'}\nPROTECTED_FIELDS = {'role', 'permissions', 'is_admin', 'created_at', 'id'}\n\n@app.route('/api/v2/users/self', methods=['PUT'])\n@require_auth\ndef update_profile(user):\n    data = request.get_json()\n    # Reject any protected fields\n    illegal = set(data.keys()) & PROTECTED_FIELDS\n    if illegal:\n        return jsonify({'error': f'Cannot modify: {illegal}'}), 403\n    # Only update allowed fields\n    updates = {k: v for k, v in data.items() if k in MUTABLE_FIELDS}\n    user.update(**updates)\n    return jsonify(user.to_dict())"
+        }
+      }
+    ]
+  },
+  {
+    "id": "TRUST-001",
+    "name": "Shared JWT Signing Key",
+    "severity": "HIGH",
+    "family": "TRUST",
+    "cia": [
+      "C",
+      "I"
+    ],
+    "reachability": "MULTI_STEP",
+    "cvss": {
+      "score": 7.7,
+      "vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:N"
+    },
+    "chainSteps": [
+      {
+        "system": "Website",
+        "findingId": "SECRETS-001",
+        "findingName": "Hardcoded Secrets Detection",
+        "severity": "HIGH",
+        "action": "Extract JWT_SECRET from website's client-side JavaScript bundle or environment leak",
+        "result": "JWT signing key obtained"
+      },
+      {
+        "system": "API",
+        "findingId": "AUTH-002",
+        "findingName": "Token Security (JWT)",
+        "severity": "CRITICAL",
+        "action": "Forge arbitrary JWT tokens signed with the shared key, impersonating any user including admins",
+        "result": "Unlimited API access as any user \u2014 complete authentication bypass"
+      }
+    ],
+    "entryPoint": "Website JavaScript source (public, viewable in browser DevTools)",
+    "finalImpact": "Complete authentication bypass on the API via shared JWT signing key exposure. Attacker can forge tokens for any user identity.",
+    "finding": "The website and API share the same JWT signing secret. The website's client-side bundle or environment configuration leak exposes this secret. Since the API uses the same key to validate JWTs, an attacker with the signing key can forge tokens for any user, including admin accounts, achieving complete authentication bypass on the API.",
+    "controlStatement": "Systems shall not share API keys, database credentials, encryption keys, or signing secrets. Compromise of a shared secret in one system shall not grant access to the other.",
+    "frameworks": {
+      "owasp": "A02:2021 \u2013 Crypto Failures \u2192 API2:2023 \u2013 Broken Auth",
+      "nist": "SC-12, IA-5",
+      "iso": "A.10.1.2, A.9.2.4",
+      "cmmc": "SC.L2-3.13.10; IA.L2-3.5.10",
+      "dod_srg": "SRG-APP-000219; SRG-APP-000171",
+      "fedramp": "SC-12 (Moderate); IA-5 (Moderate)",
+      "hipaa": "\u00a7164.312(d); \u00a7164.312(e)(2)(ii)",
+      "pci_dss": "Req 3.6; Req 8.3.2",
+      "soc2": "CC6.1; CC6.7",
+      "sec_finra": "Reg S-P \u00a7248.30(a)",
+      "eu_dora": "Art. 9(4)(c); Art. 9(4)(d)",
+      "eu_ai": "Art. 15(4)"
+    },
+    "mitigations": [
+      {
+        "label": "Separate signing keys per system",
+        "summary": "Use distinct JWT signing keys for the website and API. The API should validate tokens signed with its own key only. If SSO is needed, use a dedicated identity provider (Auth0, Keycloak) with per-audience keys.",
+        "artifact": {
+          "file": "key_isolation.py",
+          "lang": "python",
+          "body": "import os\n\n# Each system loads its own signing key\n# NEVER share keys between systems\nAPI_JWT_SECRET = os.environ['API_JWT_SECRET']  # Unique to API\nWEB_JWT_SECRET = os.environ['WEB_JWT_SECRET']  # Unique to Website\n\n# Better: use asymmetric keys (RS256)\n# API has private key for signing, website has public key for verification\nAPI_PRIVATE_KEY = open(os.environ['API_KEY_PATH']).read()\nAPI_PUBLIC_KEY = open(os.environ['API_PUB_PATH']).read()"
+        }
+      },
+      {
+        "label": "Remove secrets from client-side code",
+        "summary": "Never expose JWT signing keys in client-side JavaScript. Move all token operations to the server side. The client should never need the signing key.",
+        "artifact": {
+          "file": "server_side_auth.py",
+          "lang": "python",
+          "body": "# Server-side only token handling\nimport jwt, os\n\nSECRET = os.environ['JWT_SECRET']  # Never exposed to client\n\ndef create_token(user_id: int, role: str) -> str:\n    return jwt.encode(\n        {'sub': user_id, 'role': role, 'aud': 'api.demo-shop.example.com'},\n        SECRET, algorithm='RS256'  # Use RS256, not HS256\n    )\n\ndef verify_token(token: str) -> dict:\n    return jwt.decode(\n        token, SECRET, algorithms=['RS256'],\n        audience='api.demo-shop.example.com'  # Enforce audience\n    )"
+        }
+      }
+    ]
+  },
+  {
+    "id": "DATAFLOW-001",
+    "name": "API Excessive Data Rendered in Website",
+    "severity": "HIGH",
+    "family": "DATAFLOW",
+    "cia": [
+      "C"
+    ],
+    "reachability": "DIRECT",
+    "cvss": {
+      "score": 6.5,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+    },
+    "chainSteps": [
+      {
+        "system": "API",
+        "findingId": "BOPLA-001",
+        "findingName": "Excessive Data Exposure",
+        "severity": "HIGH",
+        "action": "API returns full user objects including internal fields (password_hash, is_admin, internal_id, last_ip)",
+        "result": "Sensitive internal data included in every API response to the website frontend"
+      },
+      {
+        "system": "Website",
+        "findingId": "ERROR-001",
+        "findingName": "Error Message Information Leakage",
+        "severity": "LOW",
+        "action": "Website renders API response data in client-side JavaScript, exposing internal fields in DOM/DevTools",
+        "result": "Any authenticated user can view other users' password hashes, admin flags, and internal IDs via browser DevTools"
+      }
+    ],
+    "entryPoint": "Website user profile page (authenticated, standard user)",
+    "finalImpact": "Sensitive internal data exposure via API \u2192 website rendering pipeline. Password hashes, admin flags, and internal identifiers of all users are accessible to any authenticated user through the browser.",
+    "finding": "The API returns excessive data in user-related endpoints (password hashes, admin flags, internal IDs, IP addresses). The website's frontend JavaScript stores the full API response in client-side state and renders portions of it in the DOM. While the website only displays name and email, the full API response \u2014 including sensitive fields \u2014 is visible in the browser's DevTools Network tab and JavaScript console.",
+    "controlStatement": "Excessive data returned by the API shall not be exposed to end users through the website's rendering logic.",
+    "frameworks": {
+      "owasp": "API3:2023 \u2013 BOPLA \u2192 A01:2021 \u2013 Broken Access Control",
+      "nist": "AC-4, SC-8",
+      "iso": "A.13.2.1, A.14.1.3",
+      "cmmc": "AC.L2-3.1.3; SC.L2-3.13.8",
+      "dod_srg": "SRG-APP-000038; SRG-APP-000219",
+      "fedramp": "AC-4 (Moderate); SC-8 (Moderate)",
+      "hipaa": "\u00a7164.312(e)(1); \u00a7164.312(a)(1)",
+      "pci_dss": "Req 3.4; Req 6.2.4",
+      "soc2": "CC6.1; CC6.7",
+      "sec_finra": "Reg S-P \u00a7248.30(a)",
+      "eu_dora": "Art. 9(4)(d)",
+      "eu_ai": "Art. 15(4)"
+    },
+    "mitigations": [
+      {
+        "label": "API response field filtering",
+        "summary": "Implement a serialization layer that only returns fields the requesting client is authorized to see. Use DTOs/schemas to explicitly define response shapes.",
+        "artifact": {
+          "file": "response_filter.py",
+          "lang": "python",
+          "body": "from pydantic import BaseModel\n\nclass UserPublic(BaseModel):\n    id: int\n    name: str\n    email: str\n    avatar_url: str | None\n\n    class Config:\n        # Excludes: password_hash, is_admin, internal_id, last_ip\n        from_attributes = True\n\n@app.get('/api/v2/users/{user_id}')\ndef get_user(user_id: int):\n    user = db.get_user(user_id)\n    return UserPublic.from_orm(user).dict()"
+        }
+      },
+      {
+        "label": "Website-side response sanitization",
+        "summary": "Add a response interceptor that strips unexpected fields before storing in client state.",
+        "artifact": {
+          "file": "api_sanitizer.js",
+          "lang": "javascript",
+          "body": "const ALLOWED_USER_FIELDS = ['id', 'name', 'email', 'avatar_url'];\n\nfunction sanitizeResponse(data, allowedFields) {\n  if (Array.isArray(data)) return data.map(d => sanitizeResponse(d, allowedFields));\n  return Object.fromEntries(\n    Object.entries(data).filter(([key]) => allowedFields.includes(key))\n  );\n}\n\n// Usage in API client\nasync function fetchUser(id) {\n  const resp = await fetch(`/api/v2/users/${id}`, { credentials: 'include' });\n  const data = await resp.json();\n  return sanitizeResponse(data, ALLOWED_USER_FIELDS);\n}"
+        }
+      }
+    ]
+  },
+  {
+    "id": "INCIDENT-001",
+    "name": "Cross-System Audit Trail Gap",
+    "severity": "MEDIUM",
+    "family": "INCIDENT",
+    "cia": [
+      "I"
+    ],
+    "reachability": "INTERNAL",
+    "cvss": {
+      "score": 0.0,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N"
+    },
+    "chainSteps": [
+      {
+        "system": "Website",
+        "findingId": "AUDIT-002",
+        "findingName": "Authentication Event Logging",
+        "severity": "INFORMATIONAL",
+        "action": "Website logs authentication events but does not include request trace IDs or API correlation headers",
+        "result": "Website login events cannot be correlated with subsequent API calls"
+      },
+      {
+        "system": "API",
+        "findingId": "AUDIT-002",
+        "findingName": "Security Event Alerting",
+        "severity": "INFORMATIONAL",
+        "action": "API logs individual request events but has no alerting for cross-system attack patterns",
+        "result": "Multi-step attacks spanning website and API are invisible to monitoring \u2014 no correlated view exists"
+      }
+    ],
+    "entryPoint": "N/A (detection gap, not an exploit)",
+    "finalImpact": "Attack chains CHAIN-001, CHAIN-002, and CHAIN-003 would be undetectable by current logging and monitoring. Each step generates isolated log entries in separate systems with no correlation identifiers. SOC team cannot reconstruct the attack chain from logs.",
+    "finding": "The website and API both have logging deficiencies, but the critical gap is that they share no correlation mechanism. The website logs auth events without API trace IDs, and the API logs requests without website session context. A multi-step attack chain spanning both systems would appear as unrelated individual events in separate log stores, making detection and incident response extremely difficult.",
+    "controlStatement": "Cross-system attack chains shall be detectable through correlated logging across connected systems.",
+    "frameworks": {
+      "owasp": "A09:2021 \u2013 Logging Failures \u2192 API8:2023 \u2013 Security Misconfiguration",
+      "nist": "AU-3, AU-12, SI-4",
+      "iso": "A.12.4.1, A.12.4.3",
+      "cmmc": "AU.L2-3.3.1, AU.L2-3.3.2",
+      "dod_srg": "SRG-APP-000095; SRG-APP-000096",
+      "fedramp": "AU-3 (Low); AU-12 (Low)",
+      "hipaa": "\u00a7164.312(b) \u2014 Audit Controls",
+      "pci_dss": "Req 10.2; Req 10.6",
+      "soc2": "CC7.2; CC7.3",
+      "sec_finra": "SEC Cyber Rule \u00a7229.106",
+      "eu_dora": "Art. 10(1)",
+      "eu_ai": "Art. 12(1)"
+    },
+    "mitigations": [
+      {
+        "label": "Distributed tracing with OpenTelemetry",
+        "summary": "Implement OpenTelemetry across both systems with a shared trace context. Every request from the website to the API carries a trace ID that links the full transaction across systems.",
+        "artifact": {
+          "file": "otel_setup.py",
+          "lang": "python",
+          "body": "from opentelemetry import trace\nfrom opentelemetry.sdk.trace import TracerProvider\nfrom opentelemetry.sdk.trace.export import BatchSpanExporter\nfrom opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter\n\nprovider = TracerProvider()\nprovider.add_span_processor(BatchSpanExporter(OTLPSpanExporter(\n    endpoint='http://otel-collector:4317'\n)))\ntrace.set_tracer_provider(provider)\n\n# Both website and API use the same collector\n# Trace IDs propagate automatically via W3C Trace Context headers"
+        }
+      },
+      {
+        "label": "Centralized SIEM with cross-system correlation rules",
+        "summary": "Send logs from both systems to a centralized SIEM (Splunk, Elastic, etc.) with correlation rules that detect multi-step attack patterns.",
+        "artifact": {
+          "file": "siem_rules.yaml",
+          "lang": "yaml",
+          "body": "# Cross-system attack chain detection rules\nrules:\n  - name: XSS_to_API_Token_Theft\n    description: Detect stored XSS followed by API token usage from different IP\n    conditions:\n      - event: website.xss_detected\n        within: 1h\n      - event: api.auth.token_used\n        where: ip != original_session_ip\n    severity: critical\n    alert: pagerduty\n\n  - name: Brute_Force_to_Privilege_Escalation\n    conditions:\n      - event: website.auth.failed_login\n        count: \">= 10\"\n        within: 5m\n      - event: api.user.role_changed\n        within: 30m\n    severity: critical"
+        }
+      }
+    ]
+  }
+];
+const RESCORED = [
+  {
+    "id": "RESCORE-BOLA-001",
+    "originalSystem": "API",
+    "originalFindingId": "BOLA-001",
+    "originalFindingName": "Object-Level Access Control",
+    "chainId": "CHAIN-001",
+    "originalReachability": "DIRECT",
+    "newReachability": "DIRECT",
+    "reachabilityJustification": "Reachability unchanged \u2014 BOLA was already DIRECT. However, the XSS chain removes the authentication requirement (attacker uses stolen token instead of their own credentials).",
+    "originalCvss": {
+      "score": 9.1,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    },
+    "newCvss": {
+      "score": 9.8,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    },
+    "cvssJustification": "PR changed from Low to None \u2014 attacker doesn't need their own valid credentials when using a token stolen via XSS. The attack can be executed by an unauthenticated attacker who triggers the XSS chain."
+  },
+  {
+    "id": "RESCORE-CONFIG-004",
+    "originalSystem": "API",
+    "originalFindingId": "CONFIG-004",
+    "originalFindingName": "Debug Endpoint Exposure",
+    "chainId": "CHAIN-002",
+    "originalReachability": "INTERNAL",
+    "newReachability": "ONE_HOP",
+    "reachabilityJustification": "Reachability promoted from INTERNAL to ONE_HOP \u2014 the SSRF in the API's /import endpoint provides a path to the debug endpoint that was previously only accessible from the internal network. One exploitation step (SSRF) is needed to reach it.",
+    "originalCvss": {
+      "score": 7.5,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    },
+    "newCvss": {
+      "score": 9.1,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    },
+    "cvssJustification": "I changed from None to High \u2014 via the SSRF chain, the debug endpoint not only leaks information (C:H) but the leaked credentials enable database modification (I:H). The cross-system context expands the integrity impact."
+  },
+  {
+    "id": "RESCORE-AUTH-003",
+    "originalSystem": "Website",
+    "originalFindingId": "AUTH-003",
+    "originalFindingName": "Brute-Force Protection",
+    "chainId": "CHAIN-003",
+    "originalReachability": "DIRECT",
+    "newReachability": "DIRECT",
+    "reachabilityJustification": "Reachability unchanged \u2014 login page remains directly accessible. However, the impact of successful brute-force is dramatically amplified by the downstream API mass assignment and admin access chain.",
+    "originalCvss": {
+      "score": 7.5,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    },
+    "newCvss": {
+      "score": 9.1,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    },
+    "cvssJustification": "I changed from None to High \u2014 in isolation, brute-force only compromises confidentiality (stolen credentials). But in the cross-system context, stolen credentials \u2192 mass assignment \u2192 admin access \u2192 full system modification. The effective integrity impact is High."
+  },
+  {
+    "id": "RESCORE-INPUT-004",
+    "originalSystem": "Website",
+    "originalFindingId": "INPUT-004",
+    "originalFindingName": "Cross-Site Scripting (XSS) Prevention",
+    "chainId": "CHAIN-001",
+    "originalReachability": "DIRECT",
+    "newReachability": "DIRECT",
+    "reachabilityJustification": "Reachability unchanged. However, the XSS finding's effective severity is amplified because it serves as the entry point for a chain that culminates in full data exfiltration via the API.",
+    "originalCvss": {
+      "score": 6.1,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+    },
+    "newCvss": {
+      "score": 8.1,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N"
+    },
+    "cvssJustification": "C changed from Low to High, I changed from Low to High \u2014 in isolation, XSS has limited confidentiality/integrity impact. In the cross-system chain, XSS enables token theft \u2192 BOLA \u2192 full data exfiltration. The effective impact through the chain is High for both C and I."
+  }
+];
+
+const chainList = document.getElementById('chainList');
+const rescoreList = document.getElementById('rescoreList');
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* Populate family dropdown */
+const fams = Array.from(new Set(CHAINS.map(c => c.family))).sort();
+const fFam = document.getElementById('fFam');
+fams.forEach(f => { const o = document.createElement('option'); o.value = o.textContent = f; fFam.appendChild(o); });
+
+/* Framework multi-select */
+const FW_LABELS = {
+  owasp:'OWASP Top 10', owasp_api:'OWASP API Top 10', nist:'NIST 800-53', iso:'ISO 27001',
+  cmmc:'CMMC 2.0', dod_srg:'DoD SRG', fedramp:'FedRAMP', hipaa:'HIPAA',
+  pci_dss:'PCI-DSS v4.0', soc2:'SOC 2 Type II', sec_finra:'SEC / FINRA',
+  eu_dora:'EU DORA', eu_ai:'EU AI Act'
+};
+const allFwKeys = Array.from(new Set(CHAINS.flatMap(c => c.frameworks ? Object.keys(c.frameworks) : []))).sort((a,b) => {
+  const ia = Object.keys(FW_LABELS).indexOf(a), ib = Object.keys(FW_LABELS).indexOf(b);
+  return (ia===-1?99:ia) - (ib===-1?99:ib);
+});
+const activeFw = new Set(allFwKeys);
+
+const fwItems = document.getElementById('fwItems');
+allFwKeys.forEach(k => {
+  const label = FW_LABELS[k] || k.toUpperCase();
+  const abbr = k.toUpperCase().replace(/_/g,' ');
+  const item = document.createElement('label');
+  item.className = 'ms-item';
+  item.innerHTML = '<input type="checkbox" checked data-fw="'+esc(k)+'"><span class="ms-abbr">'+esc(abbr)+'</span><span class="ms-label">'+esc(label)+'</span>';
+  fwItems.appendChild(item);
+});
+
+function updateFwLabel() {
+  const el = document.getElementById('fwLabel');
+  if (activeFw.size === allFwKeys.length) { el.innerHTML = 'All'; }
+  else if (activeFw.size === 0) { el.innerHTML = 'None'; }
+  else { el.innerHTML = activeFw.size + ' of ' + allFwKeys.length + ' <span class="ms-count">' + activeFw.size + '</span>'; }
+}
+
+document.getElementById('fwBtn').addEventListener('click', function(e) {
+  e.stopPropagation();
+  document.getElementById('fwDrop').classList.toggle('open');
+});
+document.addEventListener('click', function(e) {
+  if (!document.getElementById('fwWrap').contains(e.target))
+    document.getElementById('fwDrop').classList.remove('open');
+});
+fwItems.addEventListener('change', function(e) {
+  if (e.target.type === 'checkbox') {
+    var k = e.target.dataset.fw;
+    if (e.target.checked) activeFw.add(k); else activeFw.delete(k);
+    updateFwLabel(); render();
+  }
+});
+document.getElementById('fwAll').addEventListener('click', function() {
+  allFwKeys.forEach(function(k){ activeFw.add(k); });
+  fwItems.querySelectorAll('input').forEach(function(cb){ cb.checked = true; });
+  updateFwLabel(); render();
+});
+document.getElementById('fwNone').addEventListener('click', function() {
+  activeFw.clear();
+  fwItems.querySelectorAll('input').forEach(function(cb){ cb.checked = false; });
+  updateFwLabel(); render();
+});
+
+/* State */
+const state = {
+  selections: {},  /* chainId -> mitigation index */
+  sevFilters: new Set(['CRITICAL','HIGH','MEDIUM','LOW','INFORMATIONAL']),
+  reachFilters: new Set(['DIRECT','ONE_HOP','MULTI_STEP','INTERNAL'])
+};
+
+/* Severity pill toggles */
+document.querySelectorAll('.pill.toggle[data-sev]').forEach(function(pill) {
+  pill.addEventListener('click', function() {
+    var sev = pill.dataset.sev;
+    if (state.sevFilters.has(sev)) { state.sevFilters.delete(sev); pill.classList.add('off'); }
+    else { state.sevFilters.add(sev); pill.classList.remove('off'); }
+    render();
+  });
+});
+
+/* Reachability pill toggles */
+document.querySelectorAll('.pill.toggle[data-reach]').forEach(function(pill) {
+  pill.addEventListener('click', function() {
+    var r = pill.dataset.reach;
+    if (state.reachFilters.has(r)) { state.reachFilters.delete(r); pill.classList.add('off'); }
+    else { state.reachFilters.add(r); pill.classList.remove('off'); }
+    render();
+  });
+});
+
+/* Helpers */
+function cvssClass(score) {
+  if (score >= 9) return 'cvss-crit';
+  if (score >= 7) return 'cvss-high';
+  if (score >= 4) return 'cvss-med';
+  if (score > 0) return 'cvss-low';
+  return 'cvss-none';
+}
+function cvssLabel(score) {
+  if (score >= 9) return 'Critical';
+  if (score >= 7) return 'High';
+  if (score >= 4) return 'Medium';
+  if (score > 0) return 'Low';
+  return 'None';
+}
+function cvssColor(score) {
+  if (score >= 9) return 'var(--crit)';
+  if (score >= 7) return 'var(--high)';
+  if (score >= 4) return 'var(--med)';
+  if (score > 0) return 'var(--low)';
+  return 'var(--info)';
+}
+function sysClass(system) {
+  var s = system.toLowerCase();
+  if (s === 'website' || s === 'web') return 'sys-website';
+  if (s === 'api') return 'sys-api';
+  if (s === 'skill') return 'sys-skill';
+  if (s === 'code') return 'sys-code';
+  return 'sys-website';
+}
+function renderCvssBlock(cvss) {
+  if (!cvss) return '';
+  return '<div class="cvss-block">'
+    + '<div class="cvss-score ' + cvssClass(cvss.score) + '">' + cvss.score.toFixed(1) + '</div>'
+    + '<div class="cvss-detail"><div><b>CVSS v3.1</b> &mdash; ' + cvssLabel(cvss.score) + '</div>'
+    + '<div class="cvss-vector">' + esc(cvss.vector) + '</div></div>'
+    + '<div><div class="cvss-bar"><div class="cvss-bar-fill" style="width:' + (cvss.score * 10) + '%;background:' + cvssColor(cvss.score) + '"></div></div></div>'
+    + '</div>';
+}
+
+/* Filter logic */
+function passesFilters(item) {
+  var sev = document.getElementById('fSev').value;
+  var reach = document.getElementById('fReach').value;
+  var fam = document.getElementById('fFam').value;
+  var cia = document.getElementById('fCia').value;
+  var txt = document.getElementById('fTxt').value.trim().toLowerCase();
+
+  if (sev && item.severity !== sev) return false;
+  if (!sev && !state.sevFilters.has(item.severity)) return false;
+  if (reach && item.reachability !== reach) return false;
+  if (!reach && !state.reachFilters.has(item.reachability)) return false;
+  if (fam && item.family !== fam) return false;
+  if (activeFw.size < allFwKeys.length && item.frameworks) {
+    var fwKeys = Object.keys(item.frameworks);
+    if (!fwKeys.some(function(k){ return activeFw.has(k); })) return false;
+  }
+  if (cia && (!item.cia || !item.cia.includes(cia))) return false;
+  if (txt) {
+    var hay = ((item.id||'') + ' ' + (item.name||'') + ' ' + (item.finding||'') + ' ' + (item.family||'')).toLowerCase();
+    if (!hay.includes(txt)) return false;
+  }
+  return true;
+}
+
+/* Chain card */
+function chainCardFor(c) {
+  var div = document.createElement('div');
+  div.className = 'ctrl' + (c.id in state.selections ? ' sel' : '');
+  div.id = 'chain-' + c.id;
+
+  var selectedIdx = state.selections[c.id];
+  var selectedLabel = selectedIdx != null ? c.mitigations[selectedIdx].label : '';
+
+  /* Chain step flow */
+  var stepsHtml = '<div class="chain-flow">';
+  stepsHtml += '<div class="chain-entry"><span class="chain-entry-label">Entry Point</span> ' + esc(c.entryPoint) + '</div>';
+
+  c.chainSteps.forEach(function(step, i) {
+    if (i > 0) {
+      stepsHtml += '<div class="chain-connector"></div><div class="chain-connector-arrow">&#x25BC;</div>';
+    }
+    stepsHtml += '<div class="chain-step">'
+      + '<div class="chain-step-header">'
+      + '<span class="chain-step-num">' + (i + 1) + '.</span>'
+      + '<span class="sys-badge ' + sysClass(step.system) + '">' + esc(step.system) + '</span>'
+      + '<span style="font-family:ui-monospace,monospace;font-size:11px;color:var(--accent)">' + esc(step.findingId) + '</span>'
+      + '<span class="sev ' + step.severity + '">' + step.severity + '</span>'
+      + '<span style="font-size:12px;color:var(--muted)">' + esc(step.findingName) + '</span>'
+      + '</div>'
+      + '<div class="chain-step-action"><b>Action:</b> ' + esc(step.action) + '</div>'
+      + '<div class="chain-step-result"><b>Result:</b> ' + esc(step.result) + '</div>'
+      + '</div>';
+  });
+
+  stepsHtml += '<div class="chain-connector"></div><div class="chain-connector-arrow">&#x25BC;</div>';
+  stepsHtml += '<div class="chain-impact"><span class="chain-impact-label">Final Impact</span> ' + esc(c.finalImpact) + '</div>';
+  stepsHtml += '</div>';
+
+  div.innerHTML = '<div class="ctrl-head">'
+    + '<div class="ctrl-title">'
+    + '<span class="sev ' + c.severity + '">' + c.severity + '</span>'
+    + '<span class="reach ' + c.reachability + '">' + c.reachability.replace(/_/g, ' ') + '</span>'
+    + (c.cvss ? '<span class="cvss-inline ' + cvssClass(c.cvss.score) + '" style="color:' + cvssColor(c.cvss.score) + '">' + c.cvss.score.toFixed(1) + '</span>' : '')
+    + '<span class="ctrl-name">' + esc(c.name) + '</span>'
+    + '<span class="ctrl-id">' + esc(c.id) + '</span>'
+    + '<span class="steps-badge">' + c.chainSteps.length + ' steps</span>'
+    + c.cia.map(function(x){ return '<span class="cia-tag ' + x + '">' + (x==='C'?'&#x1F512; Conf':x==='I'?'&#x1F50F; Integ':'&#x1F511; Avail') + '</span>'; }).join('')
+    + (selectedIdx != null ? '<span class="selected-badge">&#x2713; ' + esc(selectedLabel) + '</span>' : '')
+    + '</div>'
+    + '<div><button class="btn ghost" data-act="toggle">Details &#x25BE;</button></div>'
+    + '</div>'
+    + '<div class="ctrl-body">'
+    + '<div class="section-title">Vulnerability Chain Visualization</div>'
+    + stepsHtml
+    + '<div class="meta-grid">'
+    + '<div><b>Family:</b> ' + esc(c.family) + '</div>'
+    + '<div><b>CIA:</b> ' + c.cia.join(', ') + '</div>'
+    + '<div><b>Reachability:</b> ' + c.reachability.replace(/_/g, ' ') + '</div>'
+    + '<div><b>Entry Point:</b> ' + esc(c.entryPoint) + '</div>'
+    + '</div>'
+    + renderCvssBlock(c.cvss)
+    + '<div class="section-title">Chain Description</div>'
+    + '<div class="finding">' + esc(c.finding) + '</div>'
+    + '<div class="section-title">Final Impact</div>'
+    + '<div class="finding" style="border-left:3px solid var(--crit)">' + esc(c.finalImpact) + '</div>'
+    + '<div class="section-title">Control Statement</div>'
+    + '<div class="finding">' + esc(c.controlStatement) + '</div>'
+    + (c.frameworks ? '<div class="fw-tags">' + Object.entries(c.frameworks).map(function(e){ return '<span class="fw-tag' + (activeFw.has(e[0]) ? '' : ' fw-dim') + '">' + esc(e[0].toUpperCase().replace(/_/g,' ')) + ': ' + esc(e[1]) + '</span>'; }).join('') + '</div>' : '')
+    + '<div class="section-title">Candidate mitigations &mdash; pick one</div>'
+    + '<div class="mit-list">'
+    + c.mitigations.map(function(m, i) {
+        return '<div class="mit' + (state.selections[c.id]===i ? ' chosen' : '') + '" data-mit-idx="' + i + '">'
+          + '<label class="mit-header">'
+          + '<input type="radio" name="mit-' + c.id + '" value="' + i + '"' + (state.selections[c.id]===i ? ' checked' : '') + '>'
+          + '<div><div class="mit-label">' + esc(m.label) + '</div>'
+          + '<div class="mit-summary">' + esc(m.summary) + '</div></div>'
+          + '</label>'
+          + '<div class="mit-actions">'
+          + '<button class="btn" data-act="preview" data-idx="' + i + '">Preview artifact</button>'
+          + '<button class="btn" data-act="copy" data-idx="' + i + '">Copy artifact</button>'
+          + '<button class="btn" data-act="export" data-idx="' + i + '">Export artifact</button>'
+          + '</div>'
+          + '<div class="artifact" id="art-' + c.id + '-' + i + '">'
+          + '<div class="artifact-head"><span class="artifact-file">' + esc(m.artifact.file) + '</span><span>' + esc(m.artifact.lang) + '</span></div>'
+          + esc(m.artifact.body)
+          + '</div></div>';
+      }).join('')
+    + '</div></div>';
+
+  return div;
+}
+
+/* Rescore card */
+function rescoreCardFor(r) {
+  var div = document.createElement('div');
+  div.className = 'rescore-card';
+  div.id = 'rescore-' + r.id;
+
+  div.innerHTML = '<div class="rescore-head">'
+    + '<div class="rescore-title">'
+    + '<span class="sys-badge ' + sysClass(r.originalSystem) + '">' + esc(r.originalSystem) + '</span>'
+    + '<span style="font-family:ui-monospace,monospace;font-weight:600">' + esc(r.originalFindingId) + '</span>'
+    + '<span style="font-weight:500">' + esc(r.originalFindingName) + '</span>'
+    + '<span class="rescore-arrow"><span class="rescore-struck"><span class="reach ' + r.originalReachability + '" style="font-size:10px">' + r.originalReachability.replace(/_/g,' ') + '</span></span>'
+    + ' &#x2192; <span class="reach ' + r.newReachability + '" style="font-size:10px">' + r.newReachability.replace(/_/g,' ') + '</span></span>'
+    + '<span class="rescore-arrow">'
+    + '<span class="rescore-struck" style="font-size:12px;color:' + cvssColor(r.originalCvss.score) + '">' + r.originalCvss.score.toFixed(1) + '</span>'
+    + ' &#x2192; <span style="font-size:12px;color:' + cvssColor(r.newCvss.score) + ';font-weight:800">' + r.newCvss.score.toFixed(1) + '</span>'
+    + '</span>'
+    + '</div>'
+    + '<div><button class="btn ghost" data-act="toggle-rescore">Details &#x25BE;</button></div>'
+    + '</div>'
+    + '<div class="rescore-body">'
+    + '<div class="rescore-compare">'
+    + '<div class="rescore-col">'
+    + '<div class="rescore-col-title">Original Assessment</div>'
+    + '<div style="margin-bottom:8px"><span class="reach ' + r.originalReachability + '">' + r.originalReachability.replace(/_/g,' ') + '</span></div>'
+    + renderCvssBlock(r.originalCvss)
+    + '</div>'
+    + '<div class="rescore-col new-col">'
+    + '<div class="rescore-col-title">Cross-System Assessment</div>'
+    + '<div style="margin-bottom:8px"><span class="reach ' + r.newReachability + '">' + r.newReachability.replace(/_/g,' ') + '</span></div>'
+    + renderCvssBlock(r.newCvss)
+    + '</div>'
+    + '</div>'
+    + '<div class="section-title">Reachability Justification</div>'
+    + '<div class="finding">' + esc(r.reachabilityJustification) + '</div>'
+    + '<div class="section-title">CVSS Justification</div>'
+    + '<div class="finding">' + esc(r.cvssJustification) + '</div>'
+    + '<a class="chain-link" data-chain="' + esc(r.chainId) + '">Part of chain: ' + esc(r.chainId)
+    + (function(){ var ch = CHAINS.find(function(x){ return x.id === r.chainId; }); return ch ? ' &mdash; ' + esc(ch.name) : ''; })()
+    + '</a>'
+    + '</div>';
+
+  return div;
+}
+
+/* Render */
+function render() {
+  chainList.innerHTML = '';
+  rescoreList.innerHTML = '';
+  var chainShown = 0;
+
+  for (var i = 0; i < CHAINS.length; i++) {
+    var c = CHAINS[i];
+    if (!passesFilters(c)) continue;
+    chainShown++;
+    chainList.appendChild(chainCardFor(c));
+  }
+  if (chainShown === 0) {
+    var d = document.createElement('div'); d.className = 'note'; d.textContent = 'No chains match the current filters.';
+    chainList.appendChild(d);
+  }
+
+  var rescoreShown = 0;
+  for (var j = 0; j < RESCORED.length; j++) {
+    var r = RESCORED[j];
+    /* Rescore filter: match based on the chain it belongs to */
+    var parentChain = CHAINS.find(function(ch){ return ch.id === r.chainId; });
+    if (parentChain && !passesFilters(parentChain)) continue;
+    rescoreShown++;
+    rescoreList.appendChild(rescoreCardFor(r));
+  }
+  if (rescoreShown === 0) {
+    var d2 = document.createElement('div'); d2.className = 'note'; d2.textContent = 'No compounded risk findings match the current filters.';
+    rescoreList.appendChild(d2);
+  }
+
+  /* Update section heading counts */
+  document.getElementById('chainCount').textContent = '(' + chainShown + ')';
+  document.getElementById('rescoreCount').textContent = '(' + rescoreShown + ')';
+
+  updateCounts();
+}
+
+/* Event delegation for chains */
+chainList.addEventListener('click', function(e) {
+  var t = e.target;
+  var card = t.closest('.ctrl');
+  if (!card) return;
+  var cid = card.querySelector('.ctrl-id');
+  if (!cid) return;
+  cid = cid.textContent;
+  var c = CHAINS.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  var act = t.dataset && t.dataset.act;
+  var head = t.closest('.ctrl-head');
+
+  if (head && !act && !t.closest('button') && !t.closest('a') && !t.closest('input')) {
+    card.classList.toggle('open'); return;
+  }
+  if (act === 'toggle') { card.classList.toggle('open'); return; }
+  if (act === 'preview') {
+    var idx = +t.dataset.idx;
+    var a = card.querySelector('#art-' + cid + '-' + idx);
+    if (a) a.classList.toggle('show');
+    return;
+  }
+  if (act === 'copy') {
+    var idx2 = +t.dataset.idx;
+    var m = c.mitigations[idx2];
+    navigator.clipboard.writeText('# ' + m.artifact.file + '\n' + m.artifact.body).then(
+      function(){ t.textContent = 'Copied!'; setTimeout(function(){ t.textContent = 'Copy artifact'; }, 1200); },
+      function(){ t.textContent = 'Copy failed'; }
+    );
+    return;
+  }
+  if (act === 'export') {
+    var idx3 = +t.dataset.idx;
+    var m2 = c.mitigations[idx3];
+    var content = '# ' + m2.artifact.file + '\n# Chain: ' + c.id + ' — ' + c.name + '\n# Mitigation: ' + m2.label + '\n\n' + m2.artifact.body;
+    downloadFile(m2.artifact.file, content, 'text/plain');
+    t.textContent = 'Exported!'; setTimeout(function(){ t.textContent = 'Export artifact'; }, 1200);
+    return;
+  }
+});
+
+chainList.addEventListener('change', function(e) {
+  if (e.target.matches('input[type=radio][name^="mit-"]')) {
+    var cid = e.target.name.slice(4);
+    state.selections[cid] = +e.target.value;
+    render();
+  }
+});
+
+/* Event delegation for rescore cards */
+rescoreList.addEventListener('click', function(e) {
+  var t = e.target;
+  /* Toggle expand */
+  var card = t.closest('.rescore-card');
+  if (!card) return;
+  var act = t.dataset && t.dataset.act;
+  var head = t.closest('.rescore-head');
+  if (head && !act && !t.closest('button') && !t.closest('a')) {
+    card.classList.toggle('open'); return;
+  }
+  if (act === 'toggle-rescore') { card.classList.toggle('open'); return; }
+  /* Chain link click */
+  if (t.classList.contains('chain-link') || t.closest('.chain-link')) {
+    var link = t.classList.contains('chain-link') ? t : t.closest('.chain-link');
+    var chainId = link.dataset.chain;
+    var target = document.getElementById('chain-' + chainId);
+    if (target) {
+      target.classList.add('open');
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    e.preventDefault();
+    return;
+  }
+});
+
+/* Filter change handlers */
+document.getElementById('fSev').addEventListener('change', render);
+document.getElementById('fReach').addEventListener('change', render);
+document.getElementById('fFam').addEventListener('change', render);
+document.getElementById('fCia').addEventListener('change', render);
+document.getElementById('fTxt').addEventListener('input', render);
+
+/* Bulk actions */
+document.getElementById('expandAll').addEventListener('click', function() {
+  document.querySelectorAll('.ctrl, .rescore-card').forEach(function(el){ el.classList.add('open'); });
+});
+document.getElementById('collapseAll').addEventListener('click', function() {
+  document.querySelectorAll('.ctrl, .rescore-card').forEach(function(el){ el.classList.remove('open'); });
+});
+document.getElementById('clearSel').addEventListener('click', function() {
+  if (confirm('Clear all selections?')) { state.selections = {}; render(); }
+});
+
+/* Section collapse/expand toggles */
+document.querySelectorAll('.section-toggle').forEach(function(h2) {
+  h2.addEventListener('click', function() {
+    h2.classList.toggle('collapsed');
+    var body = h2.nextElementSibling;
+    if (body && body.classList.contains('section-body')) {
+      body.classList.toggle('collapsed');
+    }
+  });
+});
+
+function updateCounts() {
+  var n = Object.keys(state.selections).length;
+  document.getElementById('selCount').textContent = n;
+  document.getElementById('progressPill').textContent = n + ' selected';
+}
+
+/* Review / Export modal */
+var modal = document.getElementById('modal');
+document.getElementById('reviewBtn').addEventListener('click', function() {
+  var selected = CHAINS.filter(function(c){ return c.id in state.selections; }).map(function(c){
+    return { c: c, m: c.mitigations[state.selections[c.id]] };
+  });
+  if (selected.length === 0) { alert('Select at least one mitigation first.'); return; }
+  document.getElementById('mCount').textContent = selected.length + ' of ' + CHAINS.length + ' chains have a chosen mitigation';
+
+  var html = '';
+  selected.forEach(function(item) {
+    var c = item.c, m = item.m;
+    html += '<div style="border-bottom:1px solid var(--border);padding:8px 0">'
+      + '<div><b>' + esc(c.id) + '</b> &mdash; ' + esc(c.name)
+      + ' <span class="sev ' + c.severity + '">' + c.severity + '</span>'
+      + ' <span class="reach ' + c.reachability + '">' + c.reachability.replace(/_/g,' ') + '</span>'
+      + ' <span class="family-tag">' + esc(c.family) + '</span>'
+      + ' <span class="steps-badge">' + c.chainSteps.length + ' steps</span>'
+      + (c.cvss ? ' <span style="color:var(--muted);font-size:11px">CVSS ' + c.cvss.score.toFixed(1) + '</span>' : '')
+      + '</div>'
+      + '<div class="mit-summary"><b>Chosen:</b> ' + esc(m.label) + '</div>'
+      + '<div class="mit-summary">' + esc(m.summary) + '</div>'
+      + '<div class="mit-summary" style="color:var(--accent)">' + esc(m.artifact.file) + ' &middot; ' + esc(m.artifact.lang) + '</div>'
+      + '</div>';
+  });
+
+  /* Include re-scored findings */
+  if (RESCORED.length > 0) {
+    html += '<div style="margin-top:14px;border-top:2px solid var(--rescore);padding-top:10px">'
+      + '<div style="font-size:12px;text-transform:uppercase;color:var(--rescore);letter-spacing:0.08em;font-weight:600;margin-bottom:8px">Compounded Risk</div>';
+    RESCORED.forEach(function(r) {
+      html += '<div style="border-bottom:1px solid var(--border);padding:6px 0;font-size:12px">'
+        + '<b>' + esc(r.originalFindingId) + '</b> &mdash; ' + esc(r.originalFindingName)
+        + ' (' + esc(r.originalSystem) + ')'
+        + ' &middot; CVSS ' + r.originalCvss.score.toFixed(1) + ' &#x2192; ' + r.newCvss.score.toFixed(1)
+        + ' &middot; ' + r.originalReachability.replace(/_/g,' ') + ' &#x2192; ' + r.newReachability.replace(/_/g,' ')
+        + ' &middot; Chain: ' + esc(r.chainId)
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('mBody').innerHTML = html;
+  modal.classList.add('show');
+});
+document.getElementById('mClose').addEventListener('click', function(){ modal.classList.remove('show'); });
+modal.addEventListener('click', function(e){ if (e.target === modal) modal.classList.remove('show'); });
+
+function bundleMarkdown() {
+  var selected = CHAINS.filter(function(c){ return c.id in state.selections; }).map(function(c){
+    return { c: c, m: c.mitigations[state.selections[c.id]] };
+  });
+  var now = new Date().toISOString();
+  var md = '# Connected Systems Assessment — Remediation Bundle\n\n';
+  md += 'Systems: https://demo-shop.example.com (Website) ↔ https://api.demo-shop.example.com/v2 (API)\n';
+  md += 'Generated: ' + now + '\n';
+  md += 'Chains with chosen mitigation: ' + selected.length + ' / ' + CHAINS.length + '\n';
+  md += 'Compounded risk findings: ' + RESCORED.length + '\n\n';
+  md += '> Review each artifact carefully before applying.\n\n';
+
+  md += '## Chain Summary\n\n';
+  md += '| ID | Name | Severity | Reachability | Steps | CVSS | Chosen mitigation |\n';
+  md += '|---|---|---|---|---|---|---|\n';
+  selected.forEach(function(item) {
+    var c = item.c, m = item.m;
+    md += '| ' + c.id + ' | ' + c.name + ' | ' + c.severity + ' | ' + c.reachability.replace(/_/g,' ')
+      + ' | ' + c.chainSteps.length + ' | ' + (c.cvss ? c.cvss.score.toFixed(1) : 'N/A') + ' | ' + m.label + ' |\n';
+  });
+
+  md += '\n---\n\n## Detailed Chain Remediation\n\n';
+  selected.forEach(function(item) {
+    var c = item.c, m = item.m;
+    md += '### ' + c.id + ' — ' + c.name + '\n\n';
+    md += '- **Severity:** ' + c.severity + '\n';
+    md += '- **Reachability:** ' + c.reachability.replace(/_/g,' ') + '\n';
+    md += '- **Family:** ' + c.family + '\n';
+    md += '- **CIA:** ' + c.cia.join(', ') + '\n';
+    md += '- **Steps:** ' + c.chainSteps.length + '\n';
+    if (c.cvss) md += '- **CVSS v3.1:** ' + c.cvss.score.toFixed(1) + ' (' + c.cvss.vector + ')\n';
+    if (c.frameworks) {
+      Object.entries(c.frameworks).forEach(function(e){ md += '- **' + e[0].toUpperCase() + ':** ' + e[1] + '\n'; });
+    }
+    md += '\n**Chain Steps:**\n\n';
+    c.chainSteps.forEach(function(step, i) {
+      md += (i+1) + '. **' + step.system + ' — ' + step.findingId + '** (' + step.severity + ')\n';
+      md += '   - Action: ' + step.action + '\n';
+      md += '   - Result: ' + step.result + '\n';
+    });
+    md += '\n**Entry Point:** ' + c.entryPoint + '\n';
+    md += '\n**Description:** ' + c.finding + '\n';
+    md += '\n**Final Impact:** ' + c.finalImpact + '\n';
+    md += '\n**Chosen mitigation:** ' + m.label + '\n\n' + m.summary + '\n\n';
+    md += '**Artifact:** `' + m.artifact.file + '`\n\n```' + m.artifact.lang + '\n' + m.artifact.body + '\n```\n\n---\n\n';
+  });
+
+  if (RESCORED.length > 0) {
+    md += '## Compounded Risk\n\n';
+    md += '| Finding | System | Original CVSS | New CVSS | Original Reach | New Reach | Chain |\n';
+    md += '|---|---|---|---|---|---|---|\n';
+    RESCORED.forEach(function(r) {
+      md += '| ' + r.originalFindingId + ' — ' + r.originalFindingName
+        + ' | ' + r.originalSystem
+        + ' | ' + r.originalCvss.score.toFixed(1)
+        + ' | ' + r.newCvss.score.toFixed(1)
+        + ' | ' + r.originalReachability.replace(/_/g,' ')
+        + ' | ' + r.newReachability.replace(/_/g,' ')
+        + ' | ' + r.chainId + ' |\n';
+    });
+    md += '\n';
+    RESCORED.forEach(function(r) {
+      md += '### ' + r.originalFindingId + ' — ' + r.originalFindingName + '\n\n';
+      md += '- **System:** ' + r.originalSystem + '\n';
+      md += '- **Chain:** ' + r.chainId + '\n';
+      md += '- **Original CVSS:** ' + r.originalCvss.score.toFixed(1) + ' (' + r.originalCvss.vector + ')\n';
+      md += '- **New CVSS:** ' + r.newCvss.score.toFixed(1) + ' (' + r.newCvss.vector + ')\n';
+      md += '- **Original Reachability:** ' + r.originalReachability.replace(/_/g,' ') + '\n';
+      md += '- **New Reachability:** ' + r.newReachability.replace(/_/g,' ') + '\n';
+      md += '\n**Reachability Justification:** ' + r.reachabilityJustification + '\n';
+      md += '\n**CVSS Justification:** ' + r.cvssJustification + '\n\n---\n\n';
+    });
+  }
+
+  return md;
+}
+
+function bundleJSON() {
+  var selected = CHAINS.filter(function(c){ return c.id in state.selections; }).map(function(c){
+    return {
+      id: c.id, name: c.name, family: c.family, severity: c.severity, reachability: c.reachability,
+      cia: c.cia, cvss: c.cvss, chainSteps: c.chainSteps, entryPoint: c.entryPoint,
+      finalImpact: c.finalImpact, finding: c.finding,
+      chosen: c.mitigations[state.selections[c.id]]
+    };
+  });
+  return JSON.stringify({
+    generated: new Date().toISOString(),
+    reportType: 'Connected Systems Assessment',
+    systemA: { name: 'https://demo-shop.example.com', type: 'Website' },
+    systemB: { name: 'https://api.demo-shop.example.com/v2', type: 'API' },
+    totalSelectedChains: selected.length,
+    totalChains: CHAINS.length,
+    chains: selected,
+    rescored: RESCORED
+  }, null, 2);
+}
+
+function downloadFile(name, content, mime) {
+  var blob = new Blob([content], { type: mime });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+
+document.getElementById('mDownload').addEventListener('click', function() {
+  downloadFile('cross-system-remediation-bundle.md', bundleMarkdown(), 'text/markdown');
+});
+document.getElementById('mJson').addEventListener('click', function() {
+  downloadFile('cross-system-remediation-bundle.json', bundleJSON(), 'application/json');
+});
+document.getElementById('mCopy').addEventListener('click', function() {
+  navigator.clipboard.writeText(bundleMarkdown()).then(
+    function(){ var b = document.getElementById('mCopy'); b.textContent = 'Copied!'; setTimeout(function(){ b.textContent = 'Copy Markdown'; }, 1500); },
+    function(){ alert('Copy failed — try Download instead.'); }
+  );
+});
+
+render();
+</script>
+</body>
+</html>
