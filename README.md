@@ -149,7 +149,7 @@ The Connected Systems report adds:
 
 ---
 
-## Limitations and Honest Caveats
+## Limitations and Caveats
 
 This is a **workflow augmentation tool**, not an autonomous security assessment engine.
 
