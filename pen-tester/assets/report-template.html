@@ -468,12 +468,16 @@ function buildCard(c) {
     }
   }
 
-  // ── Review Procedure (review_required only) ──
-  const reviewProcHtml = (c.tier === 'review_required' && c.review_steps) ? `
+  // ── What To Confirm (all NEEDS_REVIEW findings) ──
+  const _reviewText = c.review_steps || ('Manually verify that ' + (c.name || 'this control') + ' requirements are met.');
+  const _reviewContext = (eff === 'NEEDS_REVIEW' && c.tier === 'automatic_confirmation')
+    ? '<p style="margin:0 0 8px 0;padding:6px 8px;background:rgba(250,173,20,.12);border-left:3px solid var(--warn);border-radius:3px;font-size:12px;color:var(--warn)">⚠️ The scanner found indirect evidence (see above). Confirm whether this control is specifically violated before triaging.</p>'
+    : '';
+  const reviewProcHtml = eff === 'NEEDS_REVIEW' ? `
     <div class="section">
-      <details class="rp-details">
-        <summary>📋 Review procedure</summary>
-        <div class="evidence-box" style="margin-top:6px">${esc(c.review_steps)}</div>
+      <details class="rp-details" open>
+        <summary>✅ What to confirm</summary>
+        <div class="evidence-box" style="margin-top:6px">${_reviewContext}${esc(_reviewText)}</div>
       </details>
     </div>` : '';
 
