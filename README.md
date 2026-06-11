@@ -133,7 +133,7 @@ Key differences from the Claude Code skill:
 
 This is a **workflow augmentation tool**, not an autonomous security assessment engine.
 
-- It does not perform active network scanning, probing, or discovery against live systems
+- It does not perform port scanning, network discovery, or automated exploitation. Website and API assessments make live HTTP requests to the target; OS, code review, STIG, and agent assessments do not make external network requests
 - Output requires review by a qualified security professional before use in any regulatory or audit context
 - False-positive evaluation is only as good as the context provided
 - It does not replace legal review for risk acceptance decisions with significant regulatory exposure
