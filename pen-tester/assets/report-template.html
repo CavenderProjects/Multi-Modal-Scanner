@@ -5,566 +5,1051 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{REPORT_TITLE}} — {{TARGET_NAME}}</title>
 <style>
-  :root{
-    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --ink:#e2e8f0; --muted:#94a3b8;
-    --accent:#38bdf8; --accent2:#0ea5e9;
-    --crit:#ef4444; --high:#f97316; --med:#eab308; --low:#3b82f6; --info:#64748b;
-    --ok:#22c55e; --border:#334155; --code:#0b1220;
-    --cia-c:#60a5fa; --cia-i:#4ade80; --cia-a:#a78bfa;
-    --reach-direct:#f43f5e; --reach-hop:#a855f7; --reach-multi:#14b8a6; --reach-internal:#6366f1;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
-  header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#0f172a 0%,#111c35 100%);border-bottom:1px solid var(--border);padding:14px 22px;box-shadow:0 2px 10px rgba(0,0,0,0.4)}
-  h1{margin:0;font-size:18px}
-  h2{margin:22px 22px 8px;font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em}
-  .sub{color:var(--muted);font-size:13px;margin-top:4px}
-  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
-  .stats{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;margin-top:10px}
-  .pill{padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:var(--panel)}
-  .pill.toggle{cursor:pointer;transition:all 0.2s;user-select:none}
-  .pill.toggle:hover{transform:scale(1.05)}
-  .pill.toggle.off{opacity:0.35;filter:grayscale(0.7)}
-  .pill.crit{border-color:var(--crit);color:#fecaca}
-  .pill.high{border-color:var(--high);color:#fed7aa}
-  .pill.med{border-color:var(--med);color:#fef08a}
-  .pill.low{border-color:var(--low);color:#bfdbfe}
-  .pill.info-sev{border-color:var(--info);color:#cbd5e1}
-  .pill.ok{border-color:var(--ok);color:#bbf7d0}
-  .stats-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;margin-left:24px;font-weight:600;align-self:center}
-  .pill.reach-direct{border-color:var(--reach-direct);color:#fda4af}
-  .pill.reach-hop{border-color:var(--reach-hop);color:#d8b4fe}
-  .pill.reach-multi{border-color:var(--reach-multi);color:#99f6e4}
-  .pill.reach-internal{border-color:var(--reach-internal);color:#a5b4fc}
+:root {
+  --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --code:#0b1220;
+  --ink:#e2e8f0; --muted:#94a3b8; --border:#334155;
+  --crit:#ef4444; --high:#f97316; --med:#eab308; --low:#3b82f6; --info:#64748b;
+  --ok:#22c55e; --warn:#f59e0b; --fp:#8b5cf6; --manual:#fb923c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;font-size:14px}
 
-  .btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--ink);cursor:pointer;font-size:13px}
-  .btn:hover{background:var(--panel2)}
-  .btn.primary{background:var(--accent2);border-color:var(--accent2);color:#fff}
-  .btn.primary:hover{background:var(--accent)}
-  .btn.ghost{background:transparent}
-  .filters{padding:10px 22px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px}
-  .filters label{display:flex;align-items:center;gap:6px}
-  select,input[type=text]{background:var(--panel2);color:var(--ink);border:1px solid var(--border);padding:6px 10px;border-radius:6px;font-size:13px}
+/* ── Header ── */
+header{position:sticky;top:0;z-index:20;background:#0f172aee;backdrop-filter:blur(6px);border-bottom:1px solid var(--border);padding:12px 20px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
+.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-size:17px;font-weight:600;margin-bottom:2px}
+.hdr-sub{color:var(--muted);font-size:12px}
+.hdr-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.stat-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
 
-  /* Multi-select framework dropdown */
-  .ms-wrap{position:relative;display:inline-block}
-  .ms-btn{background:var(--panel2);color:var(--ink);border:1px solid var(--border);padding:6px 10px;border-radius:6px;font-size:13px;cursor:pointer;min-width:130px;display:flex;align-items:center;gap:6px;user-select:none}
-  .ms-btn::after{content:'▾';margin-left:auto;font-size:10px;color:var(--muted)}
-  .ms-btn .ms-count{background:var(--accent2);color:#fff;font-size:10px;padding:1px 6px;border-radius:9px;font-weight:600}
-  .ms-drop{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:50;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.5);min-width:230px;max-height:340px;overflow-y:auto;padding:4px 0}
-  .ms-drop.open{display:block}
-  .ms-drop .ms-actions{display:flex;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border)}
-  .ms-drop .ms-actions button{font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0}
-  .ms-drop .ms-actions button:hover{text-decoration:underline}
-  .ms-item{display:flex;align-items:center;gap:8px;padding:5px 12px;cursor:pointer;font-size:12px;transition:background 0.1s}
-  .ms-item:hover{background:var(--panel2)}
-  .ms-item input[type=checkbox]{accent-color:var(--accent2);cursor:pointer}
-  .ms-item .ms-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .ms-item .ms-abbr{font-weight:600;color:var(--accent);min-width:70px}
-  main{padding:14px 22px 80px}
+/* ── Stat pill buttons ── */
+.pill{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--panel);white-space:nowrap;cursor:pointer;font-family:inherit;transition:box-shadow .12s,opacity .12s,filter .12s}
+.pill:hover{filter:brightness(1.2)}
+.pill.sel{box-shadow:0 0 0 2px currentColor;filter:brightness(1.3);font-weight:700}
+.stat-pills.has-sel .pill:not(.sel){opacity:0.4}
+.pill.crit{border-color:var(--crit);color:#fca5a5}
+.pill.high{border-color:var(--high);color:#fed7aa}
+.pill.med {border-color:var(--med);color:#fef08a}
+.pill.low {border-color:var(--low);color:#bfdbfe}
+.pill.ok  {border-color:var(--ok);color:#bbf7d0}
+.pill.warn{border-color:var(--warn);color:#fde68a}
+.pill.fp  {border-color:var(--fp);color:#ddd6fe}
 
-  .ctrl{background:var(--panel);border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden}
-  .ctrl.sel{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok) inset}
-  .ctrl-head{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:12px}
-  .ctrl-head:hover{background:var(--panel2)}
-  .ctrl-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .ctrl-id{font-family:ui-monospace,monospace;font-weight:600}
-  .ctrl-name{font-weight:500}
-  .sev{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.05em}
-  .sev.CRITICAL{background:var(--crit);color:#fff}
-  .sev.HIGH{background:var(--high);color:#fff}
-  .sev.MEDIUM{background:var(--med);color:#111}
-  .sev.LOW{background:var(--low);color:#fff}
-  .sev.INFORMATIONAL{background:var(--info);color:#fff}
-  .reach{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.05em}
-  .reach.DIRECT{background:var(--reach-direct);color:#fff}
-  .reach.ONE_HOP{background:var(--reach-hop);color:#fff}
-  .reach.MULTI_STEP{background:var(--reach-multi);color:#fff}
-  .reach.INTERNAL{background:var(--reach-internal);color:#fff}
-  .family-tag{font-size:10px;color:var(--muted);background:var(--panel2);padding:2px 6px;border-radius:3px}
-  .cia-tag{font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600}
-  .cia-tag.C{background:rgba(96,165,250,0.2);color:var(--cia-c);border:1px solid rgba(96,165,250,0.3)}
-  .cia-tag.I{background:rgba(74,222,128,0.2);color:var(--cia-i);border:1px solid rgba(74,222,128,0.3)}
-  .cia-tag.A{background:rgba(167,139,250,0.2);color:var(--cia-a);border:1px solid rgba(167,139,250,0.3)}
-  .mit-badge{font-size:10px;color:var(--ok);font-weight:600}
-  .selected-badge{font-size:11px;color:var(--ok);font-weight:600}
+/* ── Buttons ── */
+.btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--panel2);color:var(--ink);cursor:pointer;font-size:12px;font-weight:500;transition:background .12s}
+.btn:hover{background:#334155}
+.btn.primary{background:#0e7490;border-color:#0e7490;color:#fff}
+.btn.primary:hover{background:#0891b2}
+.btn.sm{padding:4px 9px;font-size:11px}
+.btn.confirm {border-color:var(--crit);color:#fca5a5}  .btn.confirm:hover {background:rgba(239,68,68,.12)}
+.btn.compliant{border-color:var(--ok);color:#bbf7d0}   .btn.compliant:hover{background:rgba(34,197,94,.1)}
+.btn.na-btn  {border-color:var(--info);color:#cbd5e1}  .btn.na-btn:hover  {background:rgba(100,116,139,.15)}
+.btn.fp-btn  {border-color:var(--fp);color:#ddd6fe}    .btn.fp-btn:hover  {background:rgba(139,92,246,.12)}
+.btn.undo-btn{border-color:var(--warn);color:#fde68a;font-size:11px} .btn.undo-btn:hover{background:rgba(245,158,11,.1)}
 
-  .ctrl-body{padding:0 16px 16px;border-top:1px solid var(--border);display:none}
-  .ctrl.open .ctrl-body{display:block}
-  .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px 14px;font-size:12px;color:var(--muted);margin:10px 0}
-  .meta-grid b{color:var(--ink);font-weight:500}
-  .section-title{font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:0.08em;margin:14px 0 6px}
-  .finding{background:var(--panel2);padding:10px 12px;border-radius:6px;font-size:13px}
-  .source-ref{font-size:11px;color:var(--accent);margin-top:4px}
-  .worst-case{background:var(--panel2);border-left:3px solid var(--crit);padding:8px 12px;border-radius:4px;font-size:12px;color:#fca5a5;margin:8px 0}
-  .worst-case b{color:var(--crit)}
-  .existing-mit{background:var(--panel2);border-left:3px solid var(--ok);padding:8px 12px;border-radius:4px;font-size:12px;color:#bbf7d0;margin:8px 0}
-  .existing-mit b{color:var(--ok)}
-  .fw-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-  .fw-tag{font-size:10px;color:var(--muted);background:var(--panel2);border:1px solid var(--border);padding:2px 8px;border-radius:4px;transition:opacity 0.2s}
-  .fw-tag.fw-dim{opacity:0.25}
+/* ── Filter bar ── */
+.filter-bar{background:var(--panel);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px}
+.filter-bar label{display:flex;align-items:center;gap:5px;white-space:nowrap;color:var(--muted)}
+select,input[type=text]{background:var(--panel2);color:var(--ink);border:1px solid var(--border);padding:4px 8px;border-radius:5px;font-size:12px}
+input[type=text]{width:160px}
 
-  .cvss-block{display:flex;align-items:center;gap:14px;margin:10px 0;padding:10px 14px;background:var(--panel2);border-radius:8px;border:1px solid var(--border)}
-  .cvss-score{font-size:22px;font-weight:800;min-width:48px;text-align:center;line-height:1}
-  .cvss-score.cvss-crit{color:var(--crit)}
-  .cvss-score.cvss-high{color:var(--high)}
-  .cvss-score.cvss-med{color:var(--med)}
-  .cvss-score.cvss-low{color:var(--low)}
-  .cvss-score.cvss-none{color:var(--info)}
-  .cvss-detail{flex:1;font-size:12px;color:var(--muted)}
-  .cvss-detail b{color:var(--ink)}
-  .cvss-vector{font-family:ui-monospace,monospace;font-size:11px;color:var(--accent);word-break:break-all}
-  .cvss-bar{width:120px;height:8px;background:var(--panel);border-radius:4px;overflow:hidden}
-  .cvss-bar-fill{height:100%;border-radius:4px}
+/* ── Main ── */
+main{padding:12px 20px 80px;max-width:1100px;margin:0 auto}
 
-  .mit-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
-  .mit{border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--panel2)}
-  .mit.chosen{border-color:var(--accent);background:#1e2e48}
-  .mit-header{display:flex;align-items:flex-start;gap:10px}
-  .mit-header input{margin-top:4px}
-  .mit-label{font-weight:500}
-  .mit-summary{font-size:13px;color:var(--muted);margin-top:2px}
-  .mit-actions{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
-  .artifact{margin-top:10px;background:var(--code);border:1px solid var(--border);border-radius:6px;padding:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;white-space:pre;overflow-x:auto;display:none}
-  .artifact.show{display:block}
-  .artifact-head{display:flex;justify-content:space-between;align-items:center;font-family:-apple-system,sans-serif;margin-bottom:6px;color:var(--muted);font-size:11px}
-  .artifact-file{color:var(--accent)}
+/* ── Control cards ── */
+.ctrl{border:1px solid var(--border);border-left:3px solid var(--border);border-radius:8px;margin:8px 0;overflow:hidden;background:var(--panel)}
+.ctrl.nc    {border-left-color:var(--crit)}
+.ctrl.nr    {border-left-color:var(--warn)}
+.ctrl.manual{border-left-color:var(--manual)}
+.ctrl.ok    {border-left-color:var(--ok);opacity:.75}
+.ctrl.fp-c  {border-left-color:var(--fp);opacity:.7}
+.ctrl.na    {border-left-color:var(--info);opacity:.6}
 
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
-  .overlay.show{display:flex}
-  .modal{background:var(--panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:900px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
-  .modal header{position:static;padding:14px 18px;background:var(--panel2)}
-  .modal .body{padding:14px 18px;overflow-y:auto}
-  .modal .footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.ctrl-head{padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;flex-wrap:wrap}
+.ctrl-head:hover{background:var(--panel2)}
+.ctrl-id  {font-family:ui-monospace,monospace;font-size:12px;font-weight:700;white-space:nowrap;color:var(--accent,#38bdf8)}
+.ctrl-name{font-size:13px;font-weight:500;flex:1;min-width:0}
+.badges   {display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-left:auto}
 
-  .note{font-size:12px;color:var(--muted);margin:8px 22px 0;padding:10px 12px;background:var(--panel2);border-left:3px solid var(--accent);border-radius:4px}
-  .bulk{display:flex;gap:8px;flex-wrap:wrap}
-  @media (max-width:600px){.stats{font-size:11px}.btn{padding:7px 10px;font-size:12px}}
+/* ── Badges ── */
+.badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase;white-space:nowrap}
+.badge.CRITICAL    {background:var(--crit);color:#fff}
+.badge.HIGH        {background:var(--high);color:#fff}
+.badge.MEDIUM      {background:var(--med);color:#111}
+.badge.LOW         {background:var(--low);color:#fff}
+.badge.INFORMATIONAL{background:var(--info);color:#fff}
+.badge.s-nc{background:var(--crit);color:#fff}
+.badge.s-nr{background:var(--warn);color:#111}
+.badge.s-nt{background:var(--manual);color:#fff}
+.badge.s-ok{background:var(--ok);color:#111}
+.badge.s-fp{background:var(--fp);color:#fff}
+.badge.s-na{background:var(--info);color:#fff}
+.badge.t-auto  {background:rgba(34,197,94,.12);color:var(--ok);border:1px solid rgba(34,197,94,.3)}
+.badge.t-review{background:rgba(245,158,11,.12);color:var(--warn);border:1px solid rgba(245,158,11,.3)}
+.badge.t-manual{background:rgba(251,146,60,.12);color:var(--manual);border:1px solid rgba(251,146,60,.3)}
+.badge.fam{background:var(--panel2);color:var(--muted);border:1px solid var(--border)}
+
+/* ── Card body ── */
+.ctrl-body{padding:0 14px 14px;border-top:1px solid var(--border);display:none}
+.ctrl.open .ctrl-body{display:block}
+.section{margin-top:12px}
+.s-title{font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.07em;margin-bottom:5px;font-weight:600}
+.evidence-box{background:var(--code);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word;max-height:280px;overflow-y:auto;color:#cbd5e1;line-height:1.65}
+.remediation-box{background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.2);border-radius:6px;padding:10px 12px;font-size:12px;white-space:pre-wrap;word-break:break-word;color:#bbf7d0}
+.meta-row{font-size:12px;color:var(--muted);margin-top:8px;display:flex;gap:16px;flex-wrap:wrap}
+.meta-row b{color:var(--ink);font-weight:500}
+
+/* ── Review / manual banners ── */
+.banner{display:flex;align-items:flex-start;gap:8px;border-radius:6px;padding:10px 12px;margin-top:12px;font-size:12px;line-height:1.55}
+.banner.review{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#fde68a}
+.banner.manual{background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.25);color:#fed7aa}
+.banner.fp-banner{background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.3);color:#ddd6fe}
+.banner.decided{border-radius:6px;padding:7px 10px;margin-top:8px;font-size:12px;display:flex;align-items:center;gap:8px}
+.banner.decided.d-nc{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
+.banner.decided.d-ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#bbf7d0}
+.banner.decided.d-na{background:rgba(100,116,139,.1);border:1px solid rgba(100,116,139,.3);color:#cbd5e1}
+
+/* ── Review procedure details ── */
+.rp-details summary{cursor:pointer;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);user-select:none;list-style:none}
+.rp-details summary::-webkit-details-marker{display:none}
+.rp-details summary:hover{color:var(--ink)}
+.rp-details[open] summary{color:var(--ink)}
+
+/* ── Triage ── */
+.triage{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.triage-label{font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.07em;font-weight:600;margin-bottom:7px}
+.triage-btns{display:flex;gap:7px;flex-wrap:wrap}
+
+/* ── Scan results toggle ── */
+.scan-title-btn{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--muted);font-size:11px;font-family:inherit;font-weight:600;text-transform:uppercase;letter-spacing:.07em;cursor:pointer;padding:0;margin-bottom:5px}
+.scan-title-btn:hover{color:var(--ink)}
+.scan-results-body{display:none}
+.scan-results-body.open{display:block}
+
+/* ── Notes ── */
+.card-footer{display:flex;justify-content:flex-start;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.notes-section{width:100%;display:flex;flex-direction:column;align-items:flex-start}
+.btn.btn-active{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.notes-toggle{color:var(--muted);border-color:transparent;background:transparent;font-size:11px;padding:3px 8px}
+.notes-toggle:hover{background:var(--panel2);border-color:var(--border);color:var(--ink)}
+.notes-toggle.has-note{color:#7dd3fc;border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.06)}
+.notes-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#38bdf8;margin-left:4px;vertical-align:middle}
+.notes-ta{display:none;width:100%;margin-top:8px;background:var(--panel2);color:var(--ink);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:12px;font-family:inherit;resize:vertical;min-height:72px;line-height:1.55}
+.notes-ta:focus{outline:none;border-color:#38bdf8}
+.notes-section.open .notes-ta{display:block}
+
+/* ── FP Modal ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.overlay.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:460px;padding:20px}
+.modal h3{font-size:15px;margin-bottom:6px}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:10px}
+.modal textarea{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--border);border-radius:6px;padding:9px;font-size:13px;resize:vertical;min-height:80px;font-family:inherit}
+.modal textarea:focus{outline:none;border-color:var(--fp)}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+
+.no-match{text-align:center;color:var(--muted);padding:50px;font-size:14px}
+/* ── Control requirements details ── */
+.req-details summary{cursor:pointer;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);user-select:none;list-style:none}
+.req-details summary::-webkit-details-marker{display:none}
+.req-details summary:hover{color:var(--ink)}
+.req-details[open] summary{color:var(--ink)}
+/* ── Framework not-relevant label ── */
+.fw-nr-label{flex:1;text-align:center;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);opacity:.75;pointer-events:none;align-self:center}
+.fw-id-badge{font-size:11px;font-weight:600;color:var(--accent);background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.3);border-radius:4px;padding:2px 6px;white-space:nowrap;align-self:center}
+/* ── Framework dropdown ── */
+#fwDrop{background:var(--panel2);color:var(--ink);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;max-width:160px}
 </style>
 </head>
 <body>
 
+<!-- ── Header ── -->
 <header>
-  <div class="topbar">
+  <div class="hdr-top">
     <div>
       <h1>{{REPORT_TITLE}}</h1>
-      <div class="sub">{{TARGET_NAME}} · {{TOTAL_CONTROLS}} controls tested · {{FRAMEWORK}} · select a mitigation for each finding and export a remediation bundle</div>
+      <div class="hdr-sub">{{TARGET_NAME}} &nbsp;·&nbsp; {{TOTAL_CONTROLS}} controls &nbsp;·&nbsp; {{FRAMEWORK}} &nbsp;·&nbsp; {{REPORT_DATE}}</div>
     </div>
-    <div class="bulk">
-      <button class="btn" id="expandAll">Expand all</button>
-      <button class="btn" id="collapseAll">Collapse all</button>
-      <button class="btn" id="clearSel">Clear selections</button>
-      <button class="btn primary" id="reviewBtn">Review &amp; Export (<span id="selCount">0</span>/{{NON_COMPLIANT_COUNT}})</button>
+    <div class="hdr-actions">
+      <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px">
+        Framework
+        <select id="fwDrop">
+          <option value="">— Default view —</option>
+          <option value="OWASP Top 10">OWASP Top 10</option>
+          <option value="NIST SP 800-53">NIST SP 800-53</option>
+          <option value="ISO/IEC 27001">ISO/IEC 27001</option>
+          <option value="PCI-DSS">PCI-DSS</option>
+          <option value="SOC 2">SOC 2</option>
+          <option value="HIPAA">HIPAA</option>
+          <option value="CMMC">CMMC</option>
+          <option value="DoD Cloud SRG">DoD Cloud SRG</option>
+          <option value="FedRAMP">FedRAMP</option>
+          <option value="SEC/FINRA">SEC/FINRA</option>
+          <option value="EU DORA">EU DORA</option>
+          <option value="EU AI Act">EU AI Act</option>
+        </select>
+      </label>
+      <button class="btn sm" id="expandAll">Expand all</button>
+      <button class="btn sm" id="collapseAll">Collapse all</button>
+      <button class="btn primary" id="saveReport">⬇ Save updated report</button>
     </div>
   </div>
-  <div class="stats">
-    <span class="pill crit toggle" data-sev="CRITICAL">🔴 {{CRIT_COUNT}} Critical</span>
-    <span class="pill high toggle" data-sev="HIGH">🟠 {{HIGH_COUNT}} High</span>
-    <span class="pill med toggle" data-sev="MEDIUM">🟡 {{MED_COUNT}} Medium</span>
-    <span class="pill low toggle" data-sev="LOW">🔵 {{LOW_COUNT}} Low</span>
-    <span class="pill info-sev toggle" data-sev="INFORMATIONAL">⚪ {{INFO_COUNT}} Informational</span>
-    <span class="pill ok" id="progressPill">0 selected</span>
-    <span class="stats-label">Reachability</span>
-    <span class="pill reach-direct toggle" data-reach="DIRECT">🎯 Direct</span>
-    <span class="pill reach-hop toggle" data-reach="ONE_HOP">↗️ One Hop</span>
-    <span class="pill reach-multi toggle" data-reach="MULTI_STEP">🔀 Multi-Step</span>
-    <span class="pill reach-internal toggle" data-reach="INTERNAL">🏠 Internal</span>
+  <div class="stat-pills">
+    <button class="pill crit" data-ptype="sev"    data-pval="CRITICAL"       id="pill-crit">🔴 {{CRIT_COUNT}} Critical</button>
+    <button class="pill high" data-ptype="sev"    data-pval="HIGH"           id="pill-high">🟠 {{HIGH_COUNT}} High</button>
+    <button class="pill med"  data-ptype="sev"    data-pval="MEDIUM"         id="pill-med">🟡 {{MED_COUNT}} Medium</button>
+    <button class="pill low"  data-ptype="sev"    data-pval="LOW"            id="pill-low">🔵 {{LOW_COUNT}} Low</button>
+    <button class="pill ok"   data-ptype="status" data-pval="COMPLIANT"      id="pill-compliant">✅ — Compliant</button>
+    <button class="pill warn" data-ptype="status" data-pval="NEEDS_REVIEW"   id="pill-review">⚠️ — Needs review</button>
+    <button class="pill fp"   data-ptype="status" data-pval="FALSE_POSITIVE" id="pill-fp">🛡 — Suppressed</button>
   </div>
 </header>
 
-<div class="note">
-  <b>How this works:</b> Each finding has candidate mitigations with pre-generated <em>remediation artifacts</em> (code fixes, config patches). Select a radio button to choose your approach. <em>Preview artifact</em> shows the fix inline. <em>Export artifact</em> downloads the file. Click <em>Review &amp; Export</em> to compile a bundle of all your selections. <b>No files are modified by this page.</b>
-</div>
-
-<div class="filters">
-  <label>Severity
-    <select id="fSev"><option value="">All</option><option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option><option>INFORMATIONAL</option></select>
+<!-- ── Filter bar ── -->
+<div class="filter-bar">
+  <label>Show
+    <select id="fStatus">
+      <option value="all">All controls</option>
+      <option value="active">Non-compliant + Needs review</option>
+      <option value="NON_COMPLIANT">Non-compliant only</option>
+      <option value="NEEDS_REVIEW">Needs review only</option>
+      <option value="NOT_TESTED">Not tested only</option>
+      <option value="COMPLIANT">Compliant only</option>
+      <option value="FALSE_POSITIVE">Suppressed only</option>
+      <option value="NOT_APPLICABLE">Not applicable only</option>
+    </select>
   </label>
-  <label>Reachability
-    <select id="fReach"><option value="">All</option><option value="DIRECT">Direct</option><option value="ONE_HOP">One Hop</option><option value="MULTI_STEP">Multi-Step</option><option value="INTERNAL">Internal</option></select>
+  <label>Severity
+    <select id="fSev">
+      <option value="">All</option>
+      <option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option>
+    </select>
+  </label>
+  <label>Tier
+    <select id="fTier">
+      <option value="">All tiers</option>
+      <option value="automatic_confirmation">Automatic</option>
+      <option value="review_required">Review required</option>
+      <option value="manual_confirmation">Manual confirmation</option>
+    </select>
   </label>
   <label>Family
-    <select id="fFam"><option value="">All</option></select>
+    <select id="fFam"><option value="">All families</option></select>
   </label>
-  <label>Framework
-    <div class="ms-wrap" id="fwWrap">
-      <div class="ms-btn" id="fwBtn"><span id="fwLabel">All</span></div>
-      <div class="ms-drop" id="fwDrop">
-        <div class="ms-actions"><button id="fwAll">Select all</button><button id="fwNone">Clear all</button></div>
-        <div id="fwItems"></div>
-      </div>
-    </div>
-  </label>
-  <label>CIA
-    <select id="fCia"><option value="">All</option><option value="C">Confidentiality</option><option value="I">Integrity</option><option value="A">Accessibility</option></select>
-  </label>
-  <label>Status
-    <select id="fStatus"><option value="">All</option><option value="sel">Mitigation selected</option><option value="unsel">No selection</option></select>
-  </label>
-  <label>Search
-    <input type="text" id="fTxt" placeholder="keyword…" style="width:180px">
-  </label>
+  <input type="text" id="fTxt" placeholder="Search ID, name, evidence…">
 </div>
 
+<!-- ── Control list ── -->
 <main id="list"></main>
 
-<div class="overlay" id="modal">
+<!-- ── False-positive justification modal ── -->
+<div class="overlay" id="fp-modal">
   <div class="modal">
-    <header><b>Review remediation bundle</b><div class="sub" id="mCount"></div></header>
-    <div class="body" id="mBody"></div>
-    <div class="footer">
-      <button class="btn ghost" id="mClose">Cancel</button>
-      <button class="btn" id="mCopy">Copy Markdown</button>
-      <button class="btn" id="mJson">Download JSON</button>
-      <button class="btn primary" id="mDownload">Download Markdown</button>
+    <h3>Mark as false positive</h3>
+    <p>Enter a justification. It will be stored in the downloaded report and carried forward automatically on the next scan when you load that report.</p>
+    <textarea id="fp-text" placeholder="Explain why this is a false positive…"></textarea>
+    <div class="modal-actions">
+      <button class="btn" id="fp-cancel">Cancel</button>
+      <button class="btn primary" id="fp-confirm">Confirm false positive</button>
     </div>
   </div>
 </div>
 
+<!-- ── Controls data (JSON; separate from script for clean replacement on save) ── -->
+<script type="application/json" id="sat-controls-data">
+{{CONTROLS_JSON}}
+</script>
+
 <script>
-const CONTROLS = {{CONTROLS_JSON}};
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+const CONTROLS = JSON.parse(document.getElementById('sat-controls-data').textContent);
 
-const list = document.getElementById('list');
-
-/* Populate family dropdown */
-const fams = Array.from(new Set(CONTROLS.map(c => c.family))).sort();
-const fFam = document.getElementById('fFam');
-fams.forEach(f => { const o = document.createElement('option'); o.value = o.textContent = f; fFam.appendChild(o); });
-
-/* Framework multi-select: discover all framework keys from findings data */
-const FW_LABELS = {
-  owasp:'OWASP Top 10', owasp_api:'OWASP API Top 10', nist:'NIST 800-53', iso:'ISO 27001',
-  cmmc:'CMMC 2.0', dod_srg:'DoD SRG', fedramp:'FedRAMP', hipaa:'HIPAA',
-  pci_dss:'PCI-DSS v4.0', soc2:'SOC 2 Type II', sec_finra:'SEC / FINRA',
-  eu_dora:'EU DORA', eu_ai:'EU AI Act'
+const REPORT_ID = "{{REPORT_ID}}";
+const lsKey     = id => 'sat_'  + REPORT_ID + '_' + id;
+const lsNoteKey = id => 'satn_' + REPORT_ID + '_' + id;
+// Safe localStorage wrapper — silently no-ops if storage is blocked (file:// security, private mode, etc.)
+const ls = {
+  get(k)    { try { return localStorage.getItem(k); }    catch(e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); }        catch(e) {} },
+  del(k)    { try { localStorage.removeItem(k); }        catch(e) {} },
 };
-const allFwKeys = Array.from(new Set(CONTROLS.flatMap(c => c.frameworks ? Object.keys(c.frameworks) : []))).sort((a,b) => {
-  const ia = Object.keys(FW_LABELS).indexOf(a), ib = Object.keys(FW_LABELS).indexOf(b);
-  return (ia===-1?99:ia) - (ib===-1?99:ib);
-});
-const activeFw = new Set(allFwKeys);  /* default = all selected */
 
-/* Build framework dropdown items */
-const fwItems = document.getElementById('fwItems');
-allFwKeys.forEach(k => {
-  const label = FW_LABELS[k] || k.toUpperCase();
-  const abbr = k.toUpperCase().replace(/_/g,' ');
-  const item = document.createElement('label');
-  item.className = 'ms-item';
-  item.innerHTML = `<input type="checkbox" checked data-fw="${k}"><span class="ms-abbr">${abbr}</span><span class="ms-label">${label}</span>`;
-  fwItems.appendChild(item);
-});
+// ── Decision store ────────────────────────────────────────────────────────────
+// decisions[controlId] = {status, mitigationDesc}
+const decisions = {};
 
-function updateFwLabel() {
-  const el = document.getElementById('fwLabel');
-  if (activeFw.size === allFwKeys.length) { el.innerHTML = 'All'; }
-  else if (activeFw.size === 0) { el.innerHTML = 'None'; }
-  else { el.innerHTML = activeFw.size + ' of ' + allFwKeys.length + ' <span class="ms-count">' + activeFw.size + '</span>'; }
-}
-
-/* Toggle dropdown */
-document.getElementById('fwBtn').addEventListener('click', e => {
-  e.stopPropagation();
-  document.getElementById('fwDrop').classList.toggle('open');
-});
-document.addEventListener('click', e => {
-  if (!document.getElementById('fwWrap').contains(e.target))
-    document.getElementById('fwDrop').classList.remove('open');
-});
-
-/* Checkbox changes */
-fwItems.addEventListener('change', e => {
-  if (e.target.type === 'checkbox') {
-    const k = e.target.dataset.fw;
-    if (e.target.checked) activeFw.add(k); else activeFw.delete(k);
-    updateFwLabel(); render();
+// Seed: controls already marked as FP by Python (carried from prior report)
+CONTROLS.forEach(c => {
+  if (c.mitigation === 'YES') {
+    decisions[c.id] = {
+      status: 'FALSE_POSITIVE',
+      mitigationDesc: c.mitigationDesc || 'Carried forward from previous assessment report'
+    };
   }
 });
 
-/* Select-all / clear-all */
-document.getElementById('fwAll').addEventListener('click', () => {
-  allFwKeys.forEach(k => activeFw.add(k));
-  fwItems.querySelectorAll('input').forEach(cb => cb.checked = true);
-  updateFwLabel(); render();
-});
-document.getElementById('fwNone').addEventListener('click', () => {
-  activeFw.clear();
-  fwItems.querySelectorAll('input').forEach(cb => cb.checked = false);
-  updateFwLabel(); render();
+// Override with any decisions saved in localStorage for this report
+CONTROLS.forEach(c => {
+  const raw = ls.get(lsKey(c.id));
+  if (raw) {
+    try { decisions[c.id] = JSON.parse(raw); } catch(e) {}
+  }
 });
 
-const state = {
-  selections: {},
-  sevFilters: new Set(['CRITICAL','HIGH','MEDIUM','LOW','INFORMATIONAL']),
-  reachFilters: new Set(['DIRECT','ONE_HOP','MULTI_STEP','INTERNAL'])
+function saveDecision(id, status, mitigationDesc) {
+  decisions[id] = { status, mitigationDesc: mitigationDesc || '' };
+  ls.set(lsKey(id), JSON.stringify(decisions[id]));
+}
+
+function clearDecision(id) {
+  delete decisions[id];
+  ls.del(lsKey(id));
+}
+
+// ── Notes store ───────────────────────────────────────────────────────────────
+// notes[controlId] = string
+const notes = {};
+
+// Seed from CONTROLS JSON (persisted in a saved report)
+CONTROLS.forEach(c => { if (c.note) notes[c.id] = c.note; });
+
+// Override with localStorage (live session edits)
+CONTROLS.forEach(c => {
+  const raw = ls.get(lsNoteKey(c.id));
+  if (raw !== null) notes[c.id] = raw;
+});
+
+function saveNote(id, text) {
+  if (text) { notes[id] = text; ls.set(lsNoteKey(id), text); }
+  else       { delete notes[id]; ls.del(lsNoteKey(id)); }
+}
+
+// Effective status: localStorage decision takes priority over initial status
+function effStatus(c) {
+  return decisions[c.id]?.status || c.status;
+}
+
+// ── Populate family filter ────────────────────────────────────────────────────
+const fams = [...new Set(CONTROLS.map(c => c.family))].sort();
+const fFamEl = document.getElementById('fFam');
+fams.forEach(f => {
+  const o = document.createElement('option');
+  o.value = o.textContent = f;
+  fFamEl.appendChild(o);
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"]/g,
+    c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+// ── Evidence formatter — bold [FAIL] / [PASS] ─────────────────────────────
+function fmtEvidence(text) {
+  return esc(text)
+    .replace(/\[FAIL\]/g, '<strong style="color:#ef4444">[FAIL]</strong>')
+    .replace(/\[PASS\]/g, '<strong style="color:#22c55e">[PASS]</strong>');
+}
+
+// ── Language detection — scan evidence file extensions across all controls ─
+const _EXT_LANG = {
+  '.py':'Python','.js':'Js/Ts','.ts':'Js/Ts','.jsx':'Js/Ts','.tsx':'Js/Ts',
+  '.rs':'Rust','.java':'Java','.kt':'Java',
+  '.c':'C/C++','.cpp':'C/C++','.cc':'C/C++','.h':'C/C++',
+  '.cs':'C#','.go':'Go','.php':'Php'
+};
+function detectLanguage() {
+  const counts = {};
+  for (const c of CONTROLS) {
+    const ev = (c.evidence || '') + ' ' + (c.finding || '');
+    for (const [ext, lang] of Object.entries(_EXT_LANG)) {
+      const re = new RegExp('\\' + ext.replace('.','[.]') + '(?=[:,(\\s]|$)', 'gi');
+      const m = ev.match(re);
+      if (m) counts[lang] = (counts[lang] || 0) + m.length;
+    }
+  }
+  const entries = Object.entries(counts);
+  return entries.length ? entries.sort((a,b) => b[1]-a[1])[0][0] : null;
+}
+const DETECTED_LANG = detectLanguage();
+
+// ── Review steps — filter to detected language section ────────────────────
+const _LANG_KEYS = ['Python','Js/Ts','Rust','Java','C/C++','C#','Go','Php'];
+function filterReviewSteps(text, lang) {
+  if (!lang || !text) return text;
+  const lines = text.split('\n');
+  const out = [];
+  let inMine = false, inOther = false;
+  for (const line of lines) {
+    const t = line.trimStart();
+    const hit = _LANG_KEYS.find(k => t.startsWith(k + ':'));
+    if (hit) {
+      if (hit === lang) { inMine = true; inOther = false; out.push(line); }
+      else              { inMine = false; inOther = true; }
+    } else if (inMine)  { out.push(line); }
+    else if (!inOther)  { out.push(line); } // general steps before any lang section
+  }
+  return out.join('\n').trim() || text; // fallback to full text if nothing matched
+}
+
+// ── Framework family→ID mapping table ─────────────────────────────────────
+// [framework_short_id, category_label]
+const FW_MAP = {
+  'OWASP Top 10': {
+    'AUTHZ':['A01','Broken Access Control'],'BOLA':['A01','Broken Access Control'],
+    'BOPLA':['A01','Broken Access Control'],'BFLA':['A01','Broken Access Control'],
+    'FUNC':['A01','Broken Access Control'],
+    'CRYPTO':['A02','Cryptographic Failures'],'SEC-CRYPTO':['A02','Cryptographic Failures'],
+    'SECRETS':['A02','Cryptographic Failures'],'SEC-DATA':['A02','Cryptographic Failures'],
+    'DATA':['A02','Cryptographic Failures'],
+    'SEC-INJ':['A03','Injection'],'INPUT':['A03','Injection'],
+    'HEADERS':['A05','Security Misconfiguration'],'CONFIG':['A05','Security Misconfiguration'],
+    'INFRA':['A05','Security Misconfiguration'],
+    'DEV-DEP':['A06','Vulnerable Components'],'COMP':['A06','Vulnerable Components'],
+    'AUTH':['A07','Auth Failures'],'SESSION':['A07','Auth Failures'],
+    'SEC-AUTH':['A07','Auth Failures'],
+    'DEV-BUILD':['A08','Software Integrity'],
+    'AUDIT':['A09','Logging & Monitoring'],'ERROR':['A09','Logging & Monitoring'],
+    'SSRF':['A10','SSRF'],'WEBHOOK':['A10','SSRF'],
+    'GRAPHQL':['A03','Injection'],'RATE':['A09','Security Misconfiguration'],
+    'AGENT':['A05','Security Misconfiguration'],
+  },
+  'NIST SP 800-53': {
+    'AUTH':['IA-2','Identification & Auth'],'SESSION':['IA-2','Session Auth'],
+    'AUTHZ':['AC-3','Access Enforcement'],'BOLA':['AC-3','Access Enforcement'],
+    'BOPLA':['AC-3','Access Enforcement'],'BFLA':['AC-3','Access Enforcement'],
+    'CRYPTO':['SC-28','Cryptographic Protection'],'SEC-CRYPTO':['SC-28','Cryptographic Protection'],
+    'SECRETS':['IA-5','Auth Management'],'DATA':['SC-28','Data Protection'],
+    'SEC-DATA':['SC-28','Data Protection'],
+    'HEADERS':['CM-6','Configuration Settings'],'CONFIG':['CM-6','Configuration Settings'],
+    'INFRA':['CM-7','Least Functionality'],
+    'INPUT':['SI-10','Input Validation'],'SEC-INJ':['SI-10','Input Validation'],
+    'GRAPHQL':['SI-10','Input Validation'],
+    'AUDIT':['AU-2','Event Logging'],'ERROR':['SI-11','Error Handling'],
+    'COMP':['SA-22','Unsupported Components'],'DEV-DEP':['SA-22','Component Management'],
+    'DEV-BUILD':['SA-15','Development Process'],
+    'SSRF':['SC-7','Boundary Protection'],'RATE':['SC-5','DoS Protection'],
+    'SEC-MEM':['SI-16','Memory Protection'],
+    'TRUST':['SC-16','Transmission Attributes'],'LATERAL':['SC-7','Boundary Protection'],
+    'INCIDENT':['IR-4','Incident Handling'],'SUPPLY':['SR-3','Supply Chain Controls'],
+    'PATCH':['SI-2','Flaw Remediation'],'EOL':['SA-22','Unsupported Components'],
+    'SVCCONFIG':['CM-6','Configuration'],'SVCEXPOSE':['CM-7','Least Functionality'],
+    'SOFTINV':['CM-8','System Inventory'],'AGENT':['SI-10','Input Validation'],
+    'WEBHOOK':['SC-7','Boundary Protection'],
+  },
+  'ISO/IEC 27001': {
+    'AUTH':['A.8.5','Secure Authentication'],'SESSION':['A.8.5','Secure Authentication'],
+    'AUTHZ':['A.8.3','Access Control'],'BOLA':['A.8.3','Access Control'],
+    'BOPLA':['A.8.3','Access Control'],'BFLA':['A.8.3','Access Control'],
+    'CRYPTO':['A.8.24','Use of Cryptography'],'SEC-CRYPTO':['A.8.24','Use of Cryptography'],
+    'SECRETS':['A.8.24','Cryptography'],'DATA':['A.8.11','Data Masking'],
+    'SEC-DATA':['A.8.11','Data Protection'],
+    'HEADERS':['A.8.9','Configuration Management'],'CONFIG':['A.8.9','Configuration Management'],
+    'INFRA':['A.8.9','Configuration Management'],
+    'INPUT':['A.8.28','Secure Coding'],'SEC-INJ':['A.8.28','Secure Coding'],
+    'SEC-MEM':['A.8.28','Secure Coding'],'GRAPHQL':['A.8.28','Secure Coding'],
+    'AUDIT':['A.8.15','Logging'],'ERROR':['A.8.28','Error Handling'],
+    'COMP':['A.8.8','Vulnerability Management'],'DEV-DEP':['A.8.8','Vulnerability Management'],
+    'DEV-BUILD':['A.8.25','Secure Dev Lifecycle'],
+    'SSRF':['A.8.21','Network Security'],'RATE':['A.8.21','Network Security'],
+    'TRUST':['A.8.21','Network Security'],'LATERAL':['A.8.21','Network Security'],
+    'INCIDENT':['A.5.26','Incident Response'],'SUPPLY':['A.5.21','Supply Chain Security'],
+    'PATCH':['A.8.8','Vulnerability Management'],'EOL':['A.8.8','Component Lifecycle'],
+    'SVCCONFIG':['A.8.9','Service Hardening'],'SVCEXPOSE':['A.8.21','Network Security'],
+    'AGENT':['A.8.28','Secure Coding'],'WEBHOOK':['A.8.21','Network Security'],
+  },
+  'PCI-DSS': {
+    'AUTH':['Req 8','Identification & Auth'],'SESSION':['Req 8','Authentication'],
+    'AUTHZ':['Req 7','Access Control'],'BOLA':['Req 7','Access Control'],
+    'CRYPTO':['Req 3–4','Cryptography'],'SEC-CRYPTO':['Req 3–4','Cryptography'],
+    'SECRETS':['Req 3','Cryptographic Keys'],'DATA':['Req 3','Stored Data Protection'],
+    'SEC-DATA':['Req 3–4','Data Protection'],
+    'HEADERS':['Req 6','Secure Configurations'],'CONFIG':['Req 6','Secure Configurations'],
+    'INFRA':['Req 2','Baseline Config'],
+    'INPUT':['Req 6.2','Input Validation'],'SEC-INJ':['Req 6.2','Injection Prevention'],
+    'GRAPHQL':['Req 6.2','Input Validation'],
+    'AUDIT':['Req 10','Logging'],'ERROR':['Req 6','Error Handling'],
+    'COMP':['Req 6.3','Vulnerability Mgmt'],'DEV-DEP':['Req 6.3','Component Security'],
+    'DEV-BUILD':['Req 6','Secure Development'],
+    'SSRF':['Req 6','SSRF Prevention'],'RATE':['Req 6','Rate Limiting'],
+    'PATCH':['Req 6.3','Patch Management'],'EOL':['Req 6.3','Component Lifecycle'],
+    'SVCCONFIG':['Req 2','Service Hardening'],'SVCEXPOSE':['Req 1','Network Security'],
+    'SEC-MEM':['Req 6.2','Memory Safety'],'AGENT':['Req 6','Secure Development'],
+    'WEBHOOK':['Req 6','Integration Security'],
+  },
+  'SOC 2': {
+    'AUTH':['CC6.1','Logical Access Controls'],'SESSION':['CC6.1','Session Management'],
+    'AUTHZ':['CC6.3','Authorization'],'BOLA':['CC6.3','Authorization'],
+    'CRYPTO':['CC6.1','Encryption'],'SEC-CRYPTO':['CC6.1','Encryption'],
+    'SECRETS':['CC6.1','Encryption Keys'],'DATA':['C1.1','Data Confidentiality'],
+    'SEC-DATA':['C1.1','Data Protection'],
+    'HEADERS':['CC7.1','Configuration Monitoring'],'CONFIG':['CC7.1','Configuration'],
+    'INPUT':['CC6.6','Input Validation'],'SEC-INJ':['CC6.6','Input Validation'],
+    'AUDIT':['CC7.2','Monitoring Activities'],'ERROR':['CC7.2','Error Monitoring'],
+    'COMP':['CC9.1','Risk Assessment'],'DEV-DEP':['CC9.1','Third-Party Risk'],
+    'DEV-BUILD':['CC8.1','Change Management'],
+    'SSRF':['CC6.6','Network Security'],'RATE':['A1.1','Availability'],
+    'INCIDENT':['CC7.4','Incident Response'],'SUPPLY':['CC9.2','Vendor Management'],
+    'PATCH':['CC7.1','Vulnerability Management'],'EOL':['CC9.1','Component Risk'],
+    'AGENT':['CC6.6','Security Controls'],
+  },
+  'HIPAA': {
+    'AUTH':['§164.312(d)','Person Authentication'],
+    'AUTHZ':['§164.312(a)','Access Control'],
+    'SESSION':['§164.312(a)','Automatic Logoff'],
+    'CRYPTO':['§164.312(a)(2)(iv)','Encryption & Decryption'],
+    'SEC-CRYPTO':['§164.312(e)(2)(ii)','Encryption of ePHI'],
+    'SECRETS':['§164.312(a)','Encryption Keys'],
+    'DATA':['§164.312(a)(2)(iv)','PHI Encryption'],
+    'SEC-DATA':['§164.312(e)','Transmission Security'],
+    'AUDIT':['§164.312(b)','Audit Controls'],
+    'ERROR':['§164.308(a)(1)','Security Management'],
+    'PATCH':['§164.308(a)(1)','Security Management'],
+    'INCIDENT':['§164.308(a)(6)','Incident Procedures'],
+    'HEADERS':['§164.312(c)','Integrity Controls'],
+    'INPUT':['§164.312(c)','Integrity'],
+  },
+  'CMMC': {
+    'AUTH':['IA.L2-3.5.3','Authentication'],'SESSION':['IA.L2-3.5.3','Session Auth'],
+    'AUTHZ':['AC.L2-3.1.3','CUI Flow Control'],'BOLA':['AC.L2-3.1.3','Access Control'],
+    'CRYPTO':['SC.L2-3.13.10','Cryptography'],'SEC-CRYPTO':['SC.L2-3.13.10','Cryptography'],
+    'DATA':['MP.L2-3.8.1','Media Protection'],'SEC-DATA':['MP.L2-3.8.1','Data Protection'],
+    'AUDIT':['AU.L2-3.3.1','Audit Logging'],'ERROR':['SI.L1-3.14.1','System Integrity'],
+    'CONFIG':['CM.L2-3.4.1','Configuration Management'],
+    'HEADERS':['CM.L2-3.4.1','Configuration'],
+    'INFRA':['CM.L1-3.4.1','Least Functionality'],
+    'INPUT':['SI.L2-3.14.2','Malicious Code'],'SEC-INJ':['SI.L2-3.14.2','Code Security'],
+    'COMP':['SI.L1-3.14.1','Flaw Remediation'],'DEV-DEP':['SI.L1-3.14.1','Flaw Remediation'],
+    'SSRF':['SC.L2-3.13.7','Network Comms'],'RATE':['SC.L2-3.13.8','Network Comms'],
+    'INCIDENT':['IR.L2-3.6.1','Incident Response'],
+    'SUPPLY':['SR.L2-3.17.1','Supply Chain Risk'],
+    'PATCH':['SI.L1-3.14.1','Flaw Remediation'],'EOL':['SA.L2-3.14.1','Unsupported Systems'],
+    'SECRETS':['IA.L2-3.5.10','Passwords & Secrets'],
+    'TRUST':['SC.L2-3.13.2','Security Engineering'],
+  },
+  'FedRAMP': {
+    'AUTH':['IA-2','Identification & Auth'],'SESSION':['IA-2(8)','Replay-Resistant Auth'],
+    'AUTHZ':['AC-3','Access Enforcement'],'BOLA':['AC-3','Access Enforcement'],
+    'CRYPTO':['SC-28','Protection at Rest'],'SEC-CRYPTO':['SC-28','Protection at Rest'],
+    'SECRETS':['IA-5','Auth Management'],'DATA':['SC-28','Data Protection'],
+    'SEC-DATA':['SC-28','Data Protection'],
+    'HEADERS':['CM-6','Configuration Settings'],'CONFIG':['CM-6','Configuration Settings'],
+    'INFRA':['CM-7','Least Functionality'],
+    'INPUT':['SI-10','Input Validation'],'SEC-INJ':['SI-10','Input Validation'],
+    'AUDIT':['AU-2','Event Logging'],'ERROR':['SI-11','Error Handling'],
+    'COMP':['SA-22','Unsupported Components'],'DEV-DEP':['SA-22','Component Management'],
+    'DEV-BUILD':['SA-15','Development Process'],
+    'SSRF':['SC-7','Boundary Protection'],'RATE':['SC-5','DoS Protection'],
+    'SEC-MEM':['SI-16','Memory Protection'],
+    'PATCH':['SI-2','Flaw Remediation'],'EOL':['SA-22','Unsupported Components'],
+    'INCIDENT':['IR-4','Incident Handling'],'SUPPLY':['SR-3','Supply Chain Controls'],
+  },
+  'DoD Cloud SRG': {
+    'AUTH':['SRG-APP-000149','Authentication'],'SESSION':['SRG-APP-000190','Session Management'],
+    'AUTHZ':['SRG-APP-000033','Access Control'],'BOLA':['SRG-APP-000033','Access Control'],
+    'CRYPTO':['SRG-APP-000514','Encryption'],'SEC-CRYPTO':['SRG-APP-000514','Encryption'],
+    'AUDIT':['SRG-APP-000098','Audit Logging'],'ERROR':['SRG-APP-000266','Error Handling'],
+    'CONFIG':['SRG-APP-000383','Configuration'],'HEADERS':['SRG-APP-000383','Configuration'],
+    'INPUT':['SRG-APP-000251','Input Validation'],'SEC-INJ':['SRG-APP-000251','Input Validation'],
+    'SSRF':['SRG-APP-000516','Network Security'],
+    'PATCH':['SRG-APP-000456','Patch Management'],'COMP':['SRG-APP-000456','Component Security'],
+  },
+  'SEC/FINRA': {
+    'AUTH':['Reg S-P §4','Access Controls'],'SESSION':['Reg S-P §4','Access Controls'],
+    'AUTHZ':['Reg S-P §4','Access Controls'],'BOLA':['Reg S-P §4','Access Controls'],
+    'DATA':['Reg S-P §3','Data Protection'],'SEC-DATA':['Reg S-P §3','Data Protection'],
+    'CRYPTO':['Reg S-P §3','Encryption'],'SEC-CRYPTO':['Reg S-P §3','Encryption'],
+    'AUDIT':['Reg S-P §6','Monitoring'],'ERROR':['Reg S-P §6','Monitoring'],
+    'INCIDENT':['Reg S-P §5','Incident Response'],
+    'PATCH':['Cybersecurity Rule','Vulnerability Mgmt'],
+    'COMP':['Cybersecurity Rule','Component Risk'],
+  },
+  'EU DORA': {
+    'AUTH':['Art. 9(3)','Access Controls'],'SESSION':['Art. 9(3)','Access Controls'],
+    'AUTHZ':['Art. 9(3)','Access Controls'],'BOLA':['Art. 9(3)','Access Controls'],
+    'DATA':['Art. 9(2)','Data Protection'],'SEC-DATA':['Art. 9(2)','Data Protection'],
+    'CRYPTO':['Art. 9(2)','Cryptography'],'SEC-CRYPTO':['Art. 9(2)','Cryptography'],
+    'AUDIT':['Art. 10','Logging & Monitoring'],'ERROR':['Art. 10','Monitoring'],
+    'INCIDENT':['Art. 17','Incident Management'],
+    'INFRA':['Art. 9(4)','ICT Asset Management'],'HEADERS':['Art. 9(4)','Hardening'],
+    'CONFIG':['Art. 9(4)','Configuration'],
+    'COMP':['Art. 10(2)','Vulnerability Management'],
+    'PATCH':['Art. 10(2)','Patch Management'],'EOL':['Art. 10(2)','Component Lifecycle'],
+    'SUPPLY':['Art. 28','Third-Party ICT Risk'],'DEV-DEP':['Art. 28','Third-Party Risk'],
+    'SSRF':['Art. 9(4)','Network Security'],'RATE':['Art. 9(4)','Availability'],
+  },
+  'EU AI Act': {
+    'AGENT':['Art. 9','Risk Management System'],
+    'SEC-INJ':['Art. 15','Robustness & Cybersecurity'],
+    'SEC-AUTH':['Art. 15','Security Measures'],
+    'SEC-CRYPTO':['Art. 15','Cybersecurity'],
+    'AUTH':['Art. 13','Transparency'],
+    'AUDIT':['Art. 12','Record-Keeping'],'ERROR':['Art. 12','Monitoring'],
+    'DATA':['Art. 10','Data Governance'],'SEC-DATA':['Art. 10','Data Governance'],
+    'INPUT':['Art. 15','Adversarial Robustness'],
+    'COMP':['Art. 9','Risk Management'],'DEV-DEP':['Art. 9','Risk Management'],
+  },
 };
 
-function esc(s){ return String(s).replace(/[&<>]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[c])); }
+function getFwInfo(c, fw) {
+  if (!fw) return null;
+  const tbl = FW_MAP[fw];
+  if (!tbl) return null;
+  const fam = c.family || '';
+  if (tbl[fam]) return {id: tbl[fam][0], label: tbl[fam][1]};
+  // prefix match (handles families like CPX-STRUCT matching CPX key if added)
+  for (const [k, v] of Object.entries(tbl)) {
+    if (fam.startsWith(k) || (c.id || '').startsWith(k + '-')) return {id: v[0], label: v[1]};
+  }
+  return null;
+}
 
-/* Severity pill toggle handlers */
-document.querySelectorAll('.pill.toggle[data-sev]').forEach(pill => {
-  pill.addEventListener('click', () => {
-    const sev = pill.dataset.sev;
-    if (state.sevFilters.has(sev)) { state.sevFilters.delete(sev); pill.classList.add('off'); }
-    else { state.sevFilters.add(sev); pill.classList.remove('off'); }
-    render();
-  });
-});
+function statusLabel(s) {
+  return {
+    NON_COMPLIANT: 'Non-compliant', NEEDS_REVIEW: 'Needs review',
+    NOT_TESTED: 'Not tested', COMPLIANT: 'Compliant',
+    FALSE_POSITIVE: 'Suppressed', NOT_APPLICABLE: 'Not applicable',
+  }[s] || s;
+}
 
-/* Reachability pill toggle handlers */
-document.querySelectorAll('.pill.toggle[data-reach]').forEach(pill => {
-  pill.addEventListener('click', () => {
-    const r = pill.dataset.reach;
-    if (state.reachFilters.has(r)) { state.reachFilters.delete(r); pill.classList.add('off'); }
-    else { state.reachFilters.add(r); pill.classList.remove('off'); }
-    render();
-  });
-});
+function statusBadgeClass(s) {
+  return { NON_COMPLIANT:'s-nc', NEEDS_REVIEW:'s-nr', NOT_TESTED:'s-nt',
+           COMPLIANT:'s-ok', FALSE_POSITIVE:'s-fp', NOT_APPLICABLE:'s-na' }[s] || '';
+}
 
+function cardClass(c) {
+  const s = effStatus(c);
+  if (s === 'NON_COMPLIANT')  return 'nc';
+  if (s === 'NEEDS_REVIEW')   return c.tier === 'manual_confirmation' ? 'manual' : 'nr';
+  if (s === 'NOT_TESTED')     return 'manual';
+  if (s === 'COMPLIANT')      return 'ok';
+  if (s === 'FALSE_POSITIVE') return 'fp-c';
+  if (s === 'NOT_APPLICABLE') return 'na';
+  return 'nr';
+}
+
+function tierBadge(tier) {
+  if (tier === 'review_required')   return '<span class="badge t-review">Review required</span>';
+  if (tier === 'manual_confirmation') return '<span class="badge t-manual">Manual confirm</span>';
+  return '<span class="badge t-auto">Automatic</span>';
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
 function render() {
-  const sev = document.getElementById('fSev').value;
-  const reach = document.getElementById('fReach').value;
-  const fam = document.getElementById('fFam').value;
-  const cia = document.getElementById('fCia').value;
-  const sts = document.getElementById('fStatus').value;
-  const txt = document.getElementById('fTxt').value.trim().toLowerCase();
-  list.innerHTML = '';
+  const fStatus = document.getElementById('fStatus').value;
+  const fSev    = document.getElementById('fSev').value;
+  const fTier   = document.getElementById('fTier').value;
+  const fFam    = document.getElementById('fFam').value;
+  const txt     = document.getElementById('fTxt').value.trim().toLowerCase();
+  const listEl  = document.getElementById('list');
+  listEl.innerHTML = '';
+
+  // Pill-based filters (override fStatus/fSev when any pill is selected)
+  const pillsEl     = document.querySelector('.stat-pills');
+  const selPills    = [...pillsEl.querySelectorAll('.pill.sel')];
+  const pilSevs     = selPills.filter(p => p.dataset.ptype === 'sev').map(p => p.dataset.pval);
+  const pilStatuses = selPills.filter(p => p.dataset.ptype === 'status').map(p => p.dataset.pval);
+  const usePills    = selPills.length > 0;
+
   let shown = 0;
   for (const c of CONTROLS) {
-    if (sev && c.severity !== sev) continue;
-    if (!sev && !state.sevFilters.has(c.severity)) continue;
-    if (reach && c.reachability !== reach) continue;
-    if (!reach && !state.reachFilters.has(c.reachability)) continue;
-    if (fam && c.family !== fam) continue;
-    /* Framework filter: if not all selected, finding must map to at least one active framework */
-    if (activeFw.size < allFwKeys.length && c.frameworks) {
-      const fwKeys = Object.keys(c.frameworks);
-      if (!fwKeys.some(k => activeFw.has(k))) continue;
+    const eff = effStatus(c);
+
+    if (usePills) {
+      // Show controls matching any selected pill (severity OR status, union)
+      let match = false;
+      if (pilSevs.includes(c.severity)) match = true;
+      if (!match && pilStatuses.length) {
+        // "NEEDS_REVIEW" pill also covers NOT_TESTED
+        const expanded = pilStatuses.flatMap(s =>
+          s === 'NEEDS_REVIEW' ? ['NEEDS_REVIEW', 'NOT_TESTED'] : [s]
+        );
+        if (expanded.includes(eff)) match = true;
+      }
+      if (!match) continue;
+    } else {
+      // Standard dropdown status filter
+      if (fStatus === 'active') {
+        if (!['NON_COMPLIANT','NEEDS_REVIEW','NOT_TESTED'].includes(eff)) continue;
+      } else if (fStatus !== 'all') {
+        if (eff !== fStatus) continue;
+      }
+      if (fSev && c.severity !== fSev) continue;
     }
-    if (cia && !c.cia.includes(cia)) continue;
-    const sel = c.id in state.selections;
-    if (sts === 'sel'   && !sel) continue;
-    if (sts === 'unsel' &&  sel) continue;
+
+    if (fTier && c.tier !== fTier)     continue;
+    if (fFam  && c.family !== fFam)    continue;
     if (txt) {
-      const hay = (c.id + ' ' + c.name + ' ' + c.finding + ' ' + c.family).toLowerCase();
+      const hay = (c.id + ' ' + c.name + ' ' + (c.evidence || '') + ' ' + c.family).toLowerCase();
       if (!hay.includes(txt)) continue;
     }
+
     shown++;
-    list.appendChild(cardFor(c));
+    listEl.appendChild(buildCard(c));
   }
-  if (shown === 0) {
-    const d = document.createElement('div'); d.className='note'; d.textContent='No controls match the current filters.';
-    list.appendChild(d);
+
+  if (!shown) {
+    const d = document.createElement('div');
+    d.className = 'no-match';
+    d.textContent = 'No controls match the current filters.';
+    listEl.appendChild(d);
   }
-  updateCounts();
+
+  // Auto-expand non-compliant, review, and manual cards
+  listEl.querySelectorAll('.ctrl.nc, .ctrl.nr, .ctrl.manual').forEach(el => {
+    el.classList.add('open');
+  });
+
+  updatePills();
 }
 
-function cardFor(c) {
-  const div = document.createElement('div');
-  div.className = 'ctrl' + (c.id in state.selections ? ' sel' : '');
-  const selectedIdx = state.selections[c.id];
-  const selectedLabel = selectedIdx != null ? c.mitigations[selectedIdx].label : '';
-  div.innerHTML = `
-    <div class="ctrl-head">
-      <div class="ctrl-title">
-        <span class="ctrl-id">${esc(c.id)}</span>
-        <span class="ctrl-name">${esc(c.name)}</span>
-        <span class="sev ${c.severity}">${c.severity}</span>
-        <span class="reach ${c.reachability}">${c.reachability.replace(/_/g,' ')}</span>
-        <span class="family-tag">${esc(c.family)}</span>
-        ${c.cia.map(x => `<span class="cia-tag ${x}">${x === 'C' ? '🔒 Conf' : x === 'I' ? '🔏 Integ' : '🔑 Access'}</span>`).join('')}
-        ${c.hasMitigation ? '<span class="mit-badge">🛡️ Mitigated</span>' : ''}
-        ${selectedIdx != null ? `<span class="selected-badge">✓ ${esc(selectedLabel)}</span>` : ''}
-      </div>
-      <div><button class="btn ghost" data-act="toggle">Details ▾</button></div>
-    </div>
-    <div class="ctrl-body">
-      <div class="meta-grid">
-        <div><b>Family:</b> ${esc(c.family)}</div>
-        <div><b>CIA:</b> ${c.cia.join(', ')}</div>
-        <div><b>Severity:</b> ${c.severity}</div>
-        <div><b>Reachability:</b> ${c.reachability.replace(/_/g,' ')}</div>
-      </div>
-      ${c.cvss ? `<div class="cvss-block">
-        <div class="cvss-score ${c.cvss.score>=9?'cvss-crit':c.cvss.score>=7?'cvss-high':c.cvss.score>=4?'cvss-med':c.cvss.score>0?'cvss-low':'cvss-none'}">${c.cvss.score.toFixed(1)}</div>
-        <div class="cvss-detail">
-          <div><b>CVSS v3.1</b> — ${c.cvss.score>=9?'Critical':c.cvss.score>=7?'High':c.cvss.score>=4?'Medium':c.cvss.score>0?'Low':'None'}</div>
-          <div class="cvss-vector">${esc(c.cvss.vector)}</div>
+function buildCard(c) {
+  const eff = effStatus(c);
+  const dec = decisions[c.id];
+
+  // ── Head ──
+  const cc = cardClass(c);
+  const sl = statusLabel(eff);
+  const sbc = statusBadgeClass(eff);
+
+  // ── Review / manual banner ──
+  let bannerHtml = '';
+  if (eff === 'FALSE_POSITIVE') {
+    const just = dec?.mitigationDesc || c.mitigationDesc || '';
+    bannerHtml = `<div class="banner fp-banner">🛡 <div><b>Suppressed as false positive</b><br><span style="color:var(--muted)">${esc(just)}</span></div></div>`;
+  } else if (!dec) {
+    if (c.tier === 'manual_confirmation' || eff === 'NOT_TESTED') {
+      const procRef = c.evidence
+        ? ' Work through the test procedure below and record your determination.'
+        : ' Record your determination.';
+      bannerHtml = `<div class="banner manual">📋 <div><b>Manual assessment required</b> — no automated scanner covers this control.${procRef}</div></div>`;
+    } else if (c.tier === 'review_required' && eff === 'NEEDS_REVIEW') {
+      bannerHtml = `<div class="banner review">⚠️ <div><b>Manual review required</b> — the scanner flagged a potential issue but could not confirm it automatically.<br><ol style="margin:5px 0 0 16px;padding:0;line-height:1.8"><li>Click <b>▶ Show actual scan results</b> below to see what was detected</li><li>Determine whether the flagged issue is a genuine security concern</li><li>Click <b>Confirm finding</b> to keep it, or <b>Compliant / Suppressed</b> to remove it from this report</li></ol></div></div>`;
+    }
+  }
+
+  // ── Decision banner (if already decided) ──
+  let decBannerHtml = '';
+  if (dec && eff !== 'FALSE_POSITIVE') {
+    const labels = { NON_COMPLIANT:'✓ Confirmed as a finding', COMPLIANT:'✓ Marked compliant', NOT_APPLICABLE:'✓ Marked not applicable' };
+    const cls    = { NON_COMPLIANT:'d-nc', COMPLIANT:'d-ok', NOT_APPLICABLE:'d-na' }[eff] || '';
+    const undoBtn = `<button class="btn undo-btn" data-act="undo" data-id="${esc(c.id)}" style="margin-left:auto">↩ Undo</button>`;
+    decBannerHtml = `<div class="banner decided ${cls}">${labels[eff] || sl}${undoBtn}</div>`;
+  }
+
+  // ── Evidence ──
+  let evidenceHtml = '';
+  if (c.evidence) {
+    const isManual = c.tier === 'manual_confirmation' || eff === 'NOT_TESTED';
+    if (isManual) {
+      evidenceHtml = `
+        <div class="section">
+          <div class="s-title">Test procedure / checklist</div>
+          <div class="evidence-box">${fmtEvidence(c.evidence)}</div>
+        </div>`;
+    } else {
+      evidenceHtml = `
+        <div class="section">
+          <button class="scan-title-btn" data-scan-id="${esc(c.id)}">▶ Show actual scan results</button>
+          <div class="scan-results-body" id="scan-${esc(c.id)}">
+            <div class="evidence-box">${fmtEvidence(c.evidence)}</div>
+          </div>
+        </div>`;
+    }
+  }
+
+  // ── Framework context (computed early so review section can use it) ──
+  const _fw = document.getElementById('fwDrop') ? document.getElementById('fwDrop').value : '';
+  const _fwInfo = getFwInfo(c, _fw);
+  const _fwNote = (_fw && _fwInfo)
+    ? `<p style="margin:0 0 10px 0;font-size:12px;font-weight:600;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:6px">${esc(_fwInfo.id)} — ${esc(_fwInfo.label)}</p>`
+    : '';
+
+  // ── What To Confirm (all NEEDS_REVIEW findings) ──
+  const _rawReviewText = c.review_steps || ('Manually verify that ' + (c.name || 'this control') + ' requirements are met.');
+  const _reviewText = filterReviewSteps(_rawReviewText, DETECTED_LANG);
+  const _reviewContext = (eff === 'NEEDS_REVIEW' && c.tier === 'automatic_confirmation')
+    ? '<p style="margin:0 0 8px 0;padding:6px 8px;background:rgba(250,173,20,.12);border-left:3px solid var(--warn);border-radius:3px;font-size:12px;color:var(--warn)">⚠️ The scanner found indirect evidence (see above). Confirm whether this control is specifically violated before triaging.</p>'
+    : '';
+  const _langNote = (DETECTED_LANG && _rawReviewText !== _reviewText)
+    ? `<p style="margin:0 0 6px 0;font-size:11px;color:var(--muted)">Showing ${DETECTED_LANG} steps · <a href="#" style="color:var(--muted)" onclick="this.closest('.evidence-box').querySelector('.all-steps').style.display='block';this.parentNode.style.display='none';return false">Show all languages</a></p><div class="all-steps" style="display:none">${esc(_rawReviewText)}</div>`
+    : '';
+  const reviewProcHtml = eff === 'NEEDS_REVIEW' ? `
+    <div class="section">
+      <details class="rp-details" open>
+        <summary>✅ What to confirm</summary>
+        <div class="evidence-box" style="margin-top:6px">${_fwNote}${_reviewContext}${_langNote}${esc(_reviewText)}</div>
+      </details>
+    </div>` : '';
+
+  // ── Remediation ──
+  const remediationHtml = c.remediation && eff !== 'COMPLIANT' && eff !== 'FALSE_POSITIVE' ? `
+    <div class="section">
+      <div class="s-title">Remediation</div>
+      <div class="remediation-box">${esc(c.remediation)}</div>
+    </div>` : '';
+
+  // ── Meta + Requirements ──
+  const metaHtml = `
+    <div class="meta-row">
+      <span><b>Family</b> ${esc(c.family)}</span>
+      <span><b>CIA</b> ${esc(c.cia)}</span>
+      ${c.cvss ? `<span><b>CVSS</b> ${c.cvss.score.toFixed(1)}</span>` : ''}
+      ${c.source ? `<span><b>Source</b> ${esc(c.source)}</span>` : ''}
+      ${c.statement ? `<details class="req-details" style="margin-left:auto"><summary>📄 Control requirements</summary><div class="evidence-box" style="margin-top:6px;font-size:12px">${esc(c.statement)}</div></details>` : ''}
+    </div>`;
+
+  // ── Triage buttons ──
+  let triageHtml = '';
+  if (eff === 'FALSE_POSITIVE') {
+    triageHtml = `
+      <div class="triage">
+        <button class="btn undo-btn" data-act="undo" data-id="${esc(c.id)}">↩ Remove false positive suppression</button>
+      </div>`;
+  } else if (['NON_COMPLIANT','NEEDS_REVIEW','NOT_TESTED'].includes(eff) || dec) {
+    const label = (c.tier === 'manual_confirmation' || eff === 'NOT_TESTED') ? 'Fail' : 'Confirm finding';
+    triageHtml = `
+      <div class="triage">
+        <div class="triage-label">${dec ? 'Change determination' : 'Your determination'}</div>
+        <div class="triage-btns">
+          <button class="btn confirm"   data-act="decide" data-status="NON_COMPLIANT"  data-id="${esc(c.id)}">${esc(label)}</button>
+          <button class="btn compliant" data-act="decide" data-status="COMPLIANT"      data-id="${esc(c.id)}">Pass / Compliant</button>
+          <button class="btn na-btn"    data-act="decide" data-status="NOT_APPLICABLE" data-id="${esc(c.id)}">Not applicable</button>
+          <button class="btn fp-btn"    data-act="fp"                                  data-id="${esc(c.id)}">False positive…</button>
         </div>
-        <div>
-          <div class="cvss-bar"><div class="cvss-bar-fill" style="width:${c.cvss.score*10}%;background:${c.cvss.score>=9?'var(--crit)':c.cvss.score>=7?'var(--high)':c.cvss.score>=4?'var(--med)':c.cvss.score>0?'var(--low)':'var(--info)'}"></div></div>
-        </div>
-      </div>` : ''}
-      <div class="section-title">What was found</div>
-      <div class="finding">${esc(c.finding)}${c.sourceRef ? `<div class="source-ref">📄 ${esc(c.sourceRef)}</div>` : ''}</div>
-      ${c.worstCase ? `<div class="section-title">⚠️ Worst-case if unpatched</div><div class="worst-case"><b>Risk:</b> ${esc(c.worstCase)}</div>` : ''}
-      ${c.existingMitigation ? `<div class="section-title">🛡️ Existing mitigation</div><div class="existing-mit"><b>Found:</b> ${esc(c.existingMitigation)}</div>` : ''}
-      <div class="section-title">Control statement</div>
-      <div class="finding">${esc(c.controlStatement)}</div>
-      ${c.frameworks ? `<div class="fw-tags">${Object.entries(c.frameworks).map(([k,v]) => `<span class="fw-tag${activeFw.has(k) ? '' : ' fw-dim'}">${esc(k.toUpperCase().replace(/_/g,' '))}: ${esc(v)}</span>`).join('')}</div>` : ''}
-      <div class="section-title">Candidate mitigations — pick one</div>
-      <div class="mit-list">
-        ${c.mitigations.map((m, i) => `
-          <div class="mit${state.selections[c.id]===i?' chosen':''}" data-mit-idx="${i}">
-            <label class="mit-header">
-              <input type="radio" name="mit-${c.id}" value="${i}" ${state.selections[c.id]===i?'checked':''}>
-              <div>
-                <div class="mit-label">${esc(m.label)}</div>
-                <div class="mit-summary">${esc(m.summary)}</div>
-              </div>
-            </label>
-            <div class="mit-actions">
-              <button class="btn" data-act="preview" data-idx="${i}">Preview artifact</button>
-              <button class="btn" data-act="copy" data-idx="${i}">Copy artifact</button>
-              <button class="btn" data-act="export" data-idx="${i}">Export artifact</button>
-            </div>
-            <div class="artifact" id="art-${c.id}-${i}"><div class="artifact-head"><span class="artifact-file">${esc(m.artifact.file)}</span><span>${esc(m.artifact.lang)}</span></div>${esc(m.artifact.body)}</div>
-          </div>`).join('')}
+      </div>`;
+  }
+
+  // ── Notes ──
+  const existingNote = notes[c.id] || '';
+  const hasNote      = existingNote.length > 0;
+  const notesHtml = `
+    <div class="card-footer">
+      <div class="notes-section${hasNote ? ' open' : ''}">
+        <button class="btn sm notes-toggle${hasNote ? ' has-note' : ''}" data-act="notes" data-id="${esc(c.id)}">
+          📝 Notes${hasNote ? '<span class="notes-dot"></span>' : ''}
+        </button>
+        <textarea class="notes-ta" data-id="${esc(c.id)}" placeholder="Add assessment notes, observations, or references…">${esc(existingNote)}</textarea>
       </div>
     </div>`;
-  return div;
+
+  const el = document.createElement('div');
+  el.className = 'ctrl ' + cc;
+  el.dataset.id = c.id;
+  const _fwHead = _fw
+    ? (_fwInfo
+        ? `<span class="fw-id-badge">${esc(_fwInfo.id)} — ${esc(_fwInfo.label)}</span>`
+        : `<span class="fw-nr-label">⊘ Not relevant to ${esc(_fw)}</span>`)
+    : '';
+  const _dispId   = (_fw && _fwInfo) ? esc(_fwInfo.id)                        : esc(c.id);
+  const _dispName = (_fw && _fwInfo) ? esc(_fwInfo.label + ': ' + c.name)     : esc(c.name);
+  el.innerHTML = `
+    <div class="ctrl-head">
+      <span class="ctrl-id" title="${esc(c.id)}">${_dispId}</span>
+      <span class="ctrl-name">${_dispName}</span>
+      ${_fwHead}
+      <div class="badges">
+        <span class="badge ${esc(c.severity)}">${esc(c.severity)}</span>
+        <span class="badge ${sbc}">${sl}</span>
+        ${tierBadge(c.tier)}
+        <span class="badge fam">${esc(c.family)}</span>
+      </div>
+    </div>
+    <div class="ctrl-body">
+      ${bannerHtml}
+      ${decBannerHtml}
+      ${metaHtml}
+      ${evidenceHtml}
+      ${reviewProcHtml}
+      ${remediationHtml}
+      ${triageHtml}
+      ${notesHtml}
+    </div>`;
+  return el;
 }
 
-/* Event handlers */
-list.addEventListener('click', (e) => {
-  const t = e.target;
-  const card = t.closest('.ctrl');
-  if (!card) return;
-  const cid = card.querySelector('.ctrl-id')?.textContent;
-  const c = CONTROLS.find(x => x.id === cid);
-  if (!c) return;
-  const act = t.dataset && t.dataset.act;
-  const head = t.closest('.ctrl-head');
-  if (head && !act && !t.closest('button') && !t.closest('a') && !t.closest('input')) {
-    card.classList.toggle('open'); return;
-  }
-  if (act === 'toggle') { card.classList.toggle('open'); return; }
-  if (act === 'preview') {
-    const i = +t.dataset.idx;
-    const a = card.querySelector(`#art-${cid}-${i}`);
-    if (a) a.classList.toggle('show');
-    return;
-  }
-  if (act === 'copy') {
-    const i = +t.dataset.idx;
-    const m = c.mitigations[i];
-    navigator.clipboard.writeText(`# ${m.artifact.file}\n${m.artifact.body}`).then(
-      () => { t.textContent = 'Copied!'; setTimeout(()=>t.textContent='Copy artifact', 1200); },
-      () => { t.textContent = 'Copy failed'; }
-    );
-    return;
-  }
-  if (act === 'export') {
-    const i = +t.dataset.idx;
-    const m = c.mitigations[i];
-    const content = `# ${m.artifact.file}\n# Control: ${c.id} — ${c.name}\n# Mitigation: ${m.label}\n\n${m.artifact.body}`;
-    downloadFile(m.artifact.file, content, 'text/plain');
-    t.textContent = 'Exported!'; setTimeout(() => t.textContent = 'Export artifact', 1200);
-    return;
-  }
-});
-
-list.addEventListener('change', (e) => {
-  if (e.target.matches('input[type=radio][name^="mit-"]')) {
-    const cid = e.target.name.slice(4);
-    state.selections[cid] = +e.target.value;
-    render();
-  }
-});
-
-document.getElementById('fSev').addEventListener('change', render);
-document.getElementById('fReach').addEventListener('change', render);
-document.getElementById('fFam').addEventListener('change', render);
-document.getElementById('fCia').addEventListener('change', render);
-document.getElementById('fStatus').addEventListener('change', render);
-document.getElementById('fTxt').addEventListener('input', render);
-document.getElementById('expandAll').addEventListener('click', () => { document.querySelectorAll('.ctrl').forEach(el => el.classList.add('open')); });
-document.getElementById('collapseAll').addEventListener('click', () => { document.querySelectorAll('.ctrl').forEach(el => el.classList.remove('open')); });
-document.getElementById('clearSel').addEventListener('click', () => { if (confirm('Clear all selections?')) { state.selections = {}; render(); }});
-
-function updateCounts() {
-  const n = Object.keys(state.selections).length;
-  document.getElementById('selCount').textContent = n;
-  document.getElementById('progressPill').textContent = n + ' selected';
+// ── Pills ─────────────────────────────────────────────────────────────────────
+function updatePills() {
+  const bySev      = s => CONTROLS.filter(c => c.severity === s).length;
+  const compliant  = CONTROLS.filter(c => effStatus(c) === 'COMPLIANT').length;
+  const needReview = CONTROLS.filter(c => {
+    const eff = effStatus(c);
+    return (eff === 'NEEDS_REVIEW' || eff === 'NOT_TESTED') && !decisions[c.id];
+  }).length;
+  const fp = CONTROLS.filter(c => effStatus(c) === 'FALSE_POSITIVE').length;
+  document.getElementById('pill-crit').textContent      = '🔴 ' + bySev('CRITICAL')  + ' Critical';
+  document.getElementById('pill-high').textContent      = '🟠 ' + bySev('HIGH')       + ' High';
+  document.getElementById('pill-med').textContent       = '🟡 ' + bySev('MEDIUM')     + ' Medium';
+  document.getElementById('pill-low').textContent       = '🔵 ' + bySev('LOW')        + ' Low';
+  document.getElementById('pill-compliant').textContent = '✅ ' + compliant           + ' Compliant';
+  document.getElementById('pill-review').textContent    = '⚠️ ' + needReview          + ' Needs review';
+  document.getElementById('pill-fp').textContent        = '🛡 ' + fp                  + ' Suppressed';
 }
 
-/* Review / Export modal */
-const modal = document.getElementById('modal');
-document.getElementById('reviewBtn').addEventListener('click', () => {
-  const selected = CONTROLS.filter(c => c.id in state.selections).map(c => ({ c, m: c.mitigations[state.selections[c.id]] }));
-  if (selected.length === 0) { alert('Select at least one mitigation first.'); return; }
-  document.getElementById('mCount').textContent = selected.length + ' of ' + CONTROLS.length + ' findings have a chosen mitigation';
-  document.getElementById('mBody').innerHTML = selected.map(({c,m}) => `
-    <div style="border-bottom:1px solid var(--border);padding:8px 0">
-      <div><b>${esc(c.id)}</b> — ${esc(c.name)} <span class="sev ${c.severity}">${c.severity}</span> <span class="reach ${c.reachability}">${c.reachability.replace(/_/g,' ')}</span> <span class="family-tag">${esc(c.family)}</span>${c.cvss ? ` <span style="color:var(--muted);font-size:11px">CVSS ${c.cvss.score.toFixed(1)}</span>` : ''}</div>
-      <div class="mit-summary"><b>Chosen:</b> ${esc(m.label)}</div>
-      <div class="mit-summary">${esc(m.summary)}</div>
-      <div class="mit-summary" style="color:var(--accent)">${esc(m.artifact.file)} · ${esc(m.artifact.lang)}</div>
-    </div>`).join('');
-  modal.classList.add('show');
-});
-document.getElementById('mClose').addEventListener('click', () => modal.classList.remove('show'));
-modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+// ── Events ────────────────────────────────────────────────────────────────────
+const listEl = document.getElementById('list');
+let fpTargetId = null;
 
-function bundleMarkdown() {
-  const selected = CONTROLS.filter(c => c.id in state.selections).map(c => ({ c, m: c.mitigations[state.selections[c.id]] }));
-  const now = new Date().toISOString();
-  let md = `# {{REPORT_TITLE}} — Remediation Bundle\n\nTarget: {{TARGET_NAME}}\nGenerated: ${now}\nFindings with chosen mitigation: ${selected.length} / ${CONTROLS.length}\n\n`;
-  md += `> Review each artifact carefully before applying.\n\n`;
-  md += `## Summary\n\n| ID | Name | Severity | Reachability | Family | CIA | Chosen mitigation |\n|---|---|---|---|---|---|---|\n`;
-  for (const { c, m } of selected) md += `| ${c.id} | ${c.name} | ${c.severity} | ${c.reachability.replace(/_/g,' ')} | ${c.family} | ${c.cia.join(',')} | ${m.label} |\n`;
-  md += `\n---\n\n## Detailed remediation\n\n`;
-  for (const { c, m } of selected) {
-    md += `### ${c.id} — ${c.name}\n\n`;
-    md += `- **Severity:** ${c.severity}\n- **Reachability:** ${c.reachability.replace(/_/g,' ')}\n- **Family:** ${c.family}\n- **CIA:** ${c.cia.join(', ')}\n`;
-    if (c.cvss) md += `- **CVSS v3.1:** ${c.cvss.score.toFixed(1)} (${c.cvss.vector})\n`;
-    if (c.frameworks) {
-      Object.entries(c.frameworks).forEach(([k,v]) => { md += `- **${k.toUpperCase()}:** ${v}\n`; });
+listEl.addEventListener('click', e => {
+  // Button actions
+  const btn = e.target.closest('[data-act]');
+  if (btn) {
+    const act = btn.dataset.act;
+    const id  = btn.dataset.id;
+    if (act === 'decide') {
+      saveDecision(id, btn.dataset.status, '');
+      render();
+    } else if (act === 'fp') {
+      fpTargetId = id;
+      document.getElementById('fp-text').value = '';
+      document.getElementById('fp-modal').classList.add('show');
+    } else if (act === 'undo') {
+      clearDecision(id);
+      render();
+    } else if (act === 'notes') {
+      // Toggle notes section open/closed without re-rendering the whole card
+      const section = btn.closest('.notes-section');
+      section.classList.toggle('open');
+      if (section.classList.contains('open')) {
+        section.querySelector('.notes-ta').focus();
+      }
     }
-    md += `\n**What was found:** ${c.finding}\n`;
-    if (c.worstCase) md += `\n**Worst-case:** ${c.worstCase}\n`;
-    md += `\n**Chosen mitigation:** ${m.label}\n\n${m.summary}\n\n`;
-    md += `**Artifact:** \`${m.artifact.file}\`\n\n\`\`\`${m.artifact.lang}\n${m.artifact.body}\n\`\`\`\n\n---\n\n`;
+    return;
   }
-  return md;
-}
 
-function bundleJSON() {
-  const selected = CONTROLS.filter(c => c.id in state.selections).map(c => ({
-    id: c.id, name: c.name, family: c.family, severity: c.severity, reachability: c.reachability,
-    cia: c.cia, cvss: c.cvss, finding: c.finding,
-    chosen: c.mitigations[state.selections[c.id]],
-  }));
-  return JSON.stringify({
-    generated: new Date().toISOString(),
-    reportType: "{{REPORT_TITLE}}",
-    target: "{{TARGET_NAME}}",
-    totalSelected: selected.length,
-    totalFindings: CONTROLS.length,
-    selections: selected
-  }, null, 2);
-}
+  // Scan results toggle — click the title to expand/collapse
+  const scanBtn = e.target.closest('.scan-title-btn');
+  if (scanBtn) {
+    const body = document.getElementById('scan-' + scanBtn.dataset.scanId);
+    if (body) {
+      const open = body.classList.toggle('open');
+      const openText  = scanBtn.dataset.openText  || '▶ Show actual scan results';
+      const closeText = scanBtn.dataset.closeText || '▼ Hide actual scan results';
+      scanBtn.textContent = open ? closeText : openText;
+    }
+    return;
+  }
 
-function downloadFile(name, content, mime) {
-  const blob = new Blob([content], { type: mime });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = name;
+  // Click on header → toggle expand
+  const head = e.target.closest('.ctrl-head');
+  if (head) {
+    const card = head.closest('.ctrl');
+    if (card) card.classList.toggle('open');
+  }
+});
+
+// Notes input — save on each keystroke; no re-render needed
+listEl.addEventListener('input', e => {
+  const ta = e.target.closest('.notes-ta');
+  if (!ta) return;
+  const id   = ta.dataset.id;
+  const text = ta.value;
+  saveNote(id, text);
+  // Update toggle button appearance in place
+  const section = ta.closest('.notes-section');
+  const toggle  = section.querySelector('.notes-toggle');
+  const hasDot  = toggle.querySelector('.notes-dot');
+  if (text && !hasDot) {
+    toggle.classList.add('has-note');
+    const dot = document.createElement('span');
+    dot.className = 'notes-dot';
+    toggle.appendChild(dot);
+  } else if (!text && hasDot) {
+    toggle.classList.remove('has-note');
+    hasDot.remove();
+  }
+});
+
+// FP modal
+document.getElementById('fp-confirm').addEventListener('click', () => {
+  const just = document.getElementById('fp-text').value.trim();
+  if (!just) { document.getElementById('fp-text').focus(); return; }
+  saveDecision(fpTargetId, 'FALSE_POSITIVE', just);
+  document.getElementById('fp-modal').classList.remove('show');
+  fpTargetId = null;
+  render();
+});
+
+document.getElementById('fp-cancel').addEventListener('click', () => {
+  document.getElementById('fp-modal').classList.remove('show');
+  fpTargetId = null;
+});
+
+document.getElementById('fp-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('fp-modal')) {
+    document.getElementById('fp-modal').classList.remove('show');
+    fpTargetId = null;
+  }
+});
+
+// Filter controls (dropdowns + text)
+['fStatus','fSev','fTier','fFam','fwDrop'].forEach(id =>
+  document.getElementById(id).addEventListener('change', render)
+);
+document.getElementById('fTxt').addEventListener('input', render);
+document.getElementById('expandAll').addEventListener('click', () => {
+  listEl.querySelectorAll('.ctrl').forEach(el => el.classList.add('open'));
+  document.getElementById('expandAll').classList.add('btn-active');
+  document.getElementById('collapseAll').classList.remove('btn-active');
+});
+document.getElementById('collapseAll').addEventListener('click', () => {
+  listEl.querySelectorAll('.ctrl').forEach(el => el.classList.remove('open'));
+  document.getElementById('collapseAll').classList.add('btn-active');
+  document.getElementById('expandAll').classList.remove('btn-active');
+});
+
+// Stat pill toggle — multi-select filter buttons
+document.querySelector('.stat-pills').addEventListener('click', e => {
+  const pill = e.target.closest('.pill');
+  if (!pill) return;
+  pill.classList.toggle('sel');
+  const anySelected = document.querySelector('.stat-pills .pill.sel');
+  document.querySelector('.stat-pills').classList.toggle('has-sel', !!anySelected);
+  render();
+});
+
+// ── Save updated report ───────────────────────────────────────────────────────
+// Bakes current decisions into the CONTROLS JSON, downloads a new HTML file.
+// extract_fps_from_report() in reporter.py reads the sat-controls-data tag
+// to find which controls have mitigation === 'YES' for FP carryover.
+document.getElementById('saveReport').addEventListener('click', () => {
+  const updated = CONTROLS.map(c => {
+    const d = decisions[c.id];
+    const n = notes[c.id];
+    const base = Object.assign({}, c);
+    if (d) {
+      base.status        = d.status;
+      base.mitigation    = d.status === 'FALSE_POSITIVE' ? 'YES' : 'NO';
+      base.mitigationDesc = d.mitigationDesc || '';
+    }
+    if (n) base.note = n;
+    else delete base.note;
+    return base;
+  });
+
+  // Temporarily update the data tag so outerHTML includes updated JSON
+  const dataEl = document.getElementById('sat-controls-data');
+  const orig   = dataEl.textContent;
+  dataEl.textContent = JSON.stringify(updated);
+  const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  dataEl.textContent = orig;  // restore
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const a    = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const _origName = (window.location.pathname.split('/').pop() || '').replace(/\.html$/i, '') || 'assessment-report';
+  const _now = new Date();
+  const _ts  = _now.getFullYear() + '-' + String(_now.getMonth()+1).padStart(2,'0') + '-' + String(_now.getDate()).padStart(2,'0') + '_' + String(_now.getHours()).padStart(2,'0') + '-' + String(_now.getMinutes()).padStart(2,'0');
+  a.download = _origName + '_' + _ts + '_saved.html';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-}
-document.getElementById('mDownload').addEventListener('click', () => {
-  downloadFile('remediation-bundle.md', bundleMarkdown(), 'text/markdown');
-});
-document.getElementById('mJson').addEventListener('click', () => {
-  downloadFile('remediation-bundle.json', bundleJSON(), 'application/json');
-});
-document.getElementById('mCopy').addEventListener('click', () => {
-  navigator.clipboard.writeText(bundleMarkdown()).then(
-    () => { const b = document.getElementById('mCopy'); b.textContent = 'Copied!'; setTimeout(() => b.textContent = 'Copy Markdown', 1500); },
-    () => alert('Copy failed — try Download instead.')
-  );
+
+  const btn = document.getElementById('saveReport');
+  btn.textContent = '✓ Saved!';
+  setTimeout(() => btn.textContent = '⬇ Save updated report', 2000);
 });
 
+// ── Go ────────────────────────────────────────────────────────────────────────
 render();
 </script>
 </body>

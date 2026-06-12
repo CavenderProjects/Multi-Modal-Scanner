@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STIG Compliance Assessment</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --ink:#e2e8f0; --muted:#94a3b8;
+    --accent:#38bdf8; --accent2:#0ea5e9;
+    --crit:#ef4444; --high:#f97316; --med:#eab308; --low:#3b82f6; --info:#64748b;
+    --ok:#22c55e; --border:#334155; --code:#0b1220;
+    --cat1-bg:rgba(239,68,68,0.15); --cat1-border:#ef4444; --cat1-text:#fca5a5;
+    --cat2-bg:rgba(234,179,8,0.15);  --cat2-border:#eab308; --cat2-text:#fef08a;
+    --cat3-bg:rgba(59,130,246,0.15); --cat3-border:#3b82f6; --cat3-text:#bfdbfe;
+    --open-color:#ef4444; --naf-color:#22c55e; --na-color:#64748b; --nr-color:#94a3b8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#0f172a 0%,#111c35 100%);border-bottom:1px solid var(--border);padding:14px 22px;box-shadow:0 2px 10px rgba(0,0,0,0.4)}
+  h1{margin:0;font-size:18px}
+  .sub{color:var(--muted);font-size:13px;margin-top:4px}
+  .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;margin-top:10px}
+  .pill{padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:var(--panel)}
+  .pill.toggle{cursor:pointer;transition:all 0.2s;user-select:none}
+  .pill.toggle:hover{transform:scale(1.05)}
+  .pill.toggle.off{opacity:0.35;filter:grayscale(0.7)}
+  .pill.cat1{border-color:var(--cat1-border);color:var(--cat1-text)}
+  .pill.cat2{border-color:var(--cat2-border);color:var(--cat2-text)}
+  .pill.cat3{border-color:var(--cat3-border);color:var(--cat3-text)}
+  .pill.naf{border-color:var(--ok);color:#bbf7d0}
+  .pill.na{border-color:var(--info);color:#cbd5e1}
+  .pill.nr{border-color:var(--border);color:var(--muted)}
+  .btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--ink);cursor:pointer;font-size:13px}
+  .btn:hover{background:var(--panel2)}
+  .btn.primary{background:var(--accent2);border-color:var(--accent2);color:#fff}
+  .btn.primary:hover{background:var(--accent)}
+  .filters{padding:10px 22px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px}
+  .filters label{display:flex;align-items:center;gap:6px}
+  select,input[type=text]{background:var(--panel2);color:var(--ink);border:1px solid var(--border);padding:6px 10px;border-radius:6px;font-size:13px}
+  main{padding:14px 22px 80px}
+
+  /* Summary cards */
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:22px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+  .card-label{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600}
+  .card-value{font-size:28px;font-weight:800;line-height:1.1;margin-top:4px}
+  .card-value.open{color:var(--crit)}
+  .card-value.cat1{color:var(--cat1-text)}
+  .card-value.cat2{color:var(--cat2-text)}
+  .card-value.cat3{color:var(--cat3-text)}
+  .card-value.naf{color:var(--ok)}
+  .card-value.nr{color:var(--muted)}
+
+  /* Rule rows */
+  .rule{background:var(--panel);border:1px solid var(--border);border-radius:10px;margin:8px 0;overflow:hidden}
+  .rule-head{padding:11px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;flex-wrap:wrap}
+  .rule-head:hover{background:var(--panel2)}
+  .rule-id{font-family:ui-monospace,monospace;font-size:12px;font-weight:700;min-width:90px;color:var(--accent)}
+  .rule-name{flex:1;font-weight:500;font-size:14px}
+  .cat-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;white-space:nowrap}
+  .cat-badge.CAT-I{background:var(--cat1-bg);color:var(--cat1-text);border:1px solid var(--cat1-border)}
+  .cat-badge.CAT-II{background:var(--cat2-bg);color:var(--cat2-text);border:1px solid var(--cat2-border)}
+  .cat-badge.CAT-III{background:var(--cat3-bg);color:var(--cat3-text);border:1px solid var(--cat3-border)}
+  .status-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .status-badge.Open{background:rgba(239,68,68,0.2);color:var(--open-color);border:1px solid rgba(239,68,68,0.4)}
+  .status-badge.Not-a-Finding{background:rgba(34,197,94,0.15);color:var(--naf-color);border:1px solid rgba(34,197,94,0.3)}
+  .status-badge.Not-Applicable{background:rgba(100,116,139,0.2);color:var(--na-color);border:1px solid rgba(100,116,139,0.3)}
+  .status-badge.Not-Reviewed{background:rgba(148,163,184,0.1);color:var(--nr-color);border:1px solid rgba(148,163,184,0.2)}
+  .chevron{margin-left:auto;font-size:12px;color:var(--muted);transition:transform 0.2s;flex-shrink:0}
+  .rule.open .chevron{transform:rotate(180deg)}
+
+  .rule-body{display:none;border-top:1px solid var(--border);padding:14px 16px}
+  .rule.open .rule-body{display:block}
+  .meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:12px}
+  .meta-chip{background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:2px 8px;color:var(--muted)}
+  .meta-chip b{color:var(--ink)}
+  .cci-chip{background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);color:#93c5fd;border-radius:4px;padding:2px 8px;font-size:11px;font-family:ui-monospace,monospace}
+  .section-label{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin:12px 0 6px}
+  .text-block{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:13px;white-space:pre-wrap;word-break:break-word}
+  .text-block.check{border-left:3px solid var(--med)}
+  .text-block.fix{border-left:3px solid var(--ok)}
+  .text-block.evidence{border-left:3px solid var(--accent);font-family:ui-monospace,monospace;font-size:12px}
+  .text-block.statement{border-left:3px solid var(--info)}
+  .fp-note{background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.3);border-radius:6px;padding:8px 12px;font-size:12px;color:#f9a8d4;margin-top:6px}
+
+  @media(max-width:600px){.rule-name{width:100%}.stats{font-size:11px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="topbar">
+    <div>
+      <h1>🛡️ STIG Compliance Assessment</h1>
+      <div class="sub" id="headerSub">Loading...</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="expandAll">Expand all</button>
+      <button class="btn" id="collapseAll">Collapse all</button>
+    </div>
+  </div>
+  <div class="stats" id="statPills"></div>
+</header>
+
+<div class="filters">
+  <label>CAT level
+    <select id="fCat">
+      <option value="">All</option>
+      <option value="CAT I">CAT I</option>
+      <option value="CAT II">CAT II</option>
+      <option value="CAT III">CAT III</option>
+    </select>
+  </label>
+  <label>Status
+    <select id="fStatus">
+      <option value="">All</option>
+      <option value="Open">Open</option>
+      <option value="Not a Finding">Not a Finding</option>
+      <option value="Not Applicable">Not Applicable</option>
+      <option value="Not Reviewed">Not Reviewed</option>
+    </select>
+  </label>
+  <label>Search
+    <input type="text" id="fSearch" placeholder="Vuln ID, rule, keyword..." style="width:220px">
+  </label>
+  <span id="matchCount" style="color:var(--muted);font-size:12px"></span>
+</div>
+
+<main>
+  <div class="summary-grid" id="summaryGrid"></div>
+  <div id="ruleList"></div>
+</main>
+
+<script>
+// Data injected by reporter.py above this script tag
+
+function catClass(cat){
+  return cat === 'CAT I' ? 'CAT-I' : cat === 'CAT II' ? 'CAT-II' : 'CAT-III';
+}
+
+function statusClass(s){
+  return s.replace(/\s+/g, '-');
+}
+
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderSummary(){
+  const m = STIG_META;
+  const open = m.openCat1 + m.openCat2 + m.openCat3;
+  document.getElementById('headerSub').textContent =
+    `${esc(m.target)} · ${m.totalRules} rules · ${m.date} · ${m.tester}`;
+
+  const cards = [
+    {label:'Total rules', value: m.totalRules, cls:''},
+    {label:'Open CAT I',  value: m.openCat1,   cls:'cat1'},
+    {label:'Open CAT II', value: m.openCat2,   cls:'cat2'},
+    {label:'Open CAT III',value: m.openCat3,   cls:'cat3'},
+    {label:'Not a Finding',value:m.nafCount,   cls:'naf'},
+    {label:'Not Reviewed', value:m.nrCount,    cls:'nr'},
+  ];
+  document.getElementById('summaryGrid').innerHTML = cards.map(c=>
+    `<div class="card"><div class="card-label">${c.label}</div><div class="card-value ${c.cls}">${c.value}</div></div>`
+  ).join('');
+
+  // Severity filter pills
+  document.getElementById('statPills').innerHTML = `
+    <span class="pill cat1 toggle" data-cat="CAT I">🔴 CAT I Open: ${m.openCat1}</span>
+    <span class="pill cat2 toggle" data-cat="CAT II">🟡 CAT II Open: ${m.openCat2}</span>
+    <span class="pill cat3 toggle" data-cat="CAT III">🔵 CAT III Open: ${m.openCat3}</span>
+    <span class="pill naf toggle" data-status="Not a Finding">✅ Not a Finding: ${m.nafCount}</span>
+    <span class="pill na toggle" data-status="Not Applicable">— Not Applicable: ${m.naCount}</span>
+    <span class="pill nr toggle" data-status="Not Reviewed">⬜ Not Reviewed: ${m.nrCount}</span>
+  `;
+
+  // Pill toggles drive the CAT/status filters
+  document.querySelectorAll('#statPills .toggle').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const cat = pill.dataset.cat;
+      const status = pill.dataset.status;
+      if(cat){
+        const sel = document.getElementById('fCat');
+        sel.value = (sel.value === cat) ? '' : cat;
+      } else if(status){
+        const sel = document.getElementById('fStatus');
+        sel.value = (sel.value === status) ? '' : status;
+      }
+      applyFilters();
+    });
+  });
+}
+
+function buildRuleHTML(c){
+  const catCls = catClass(c.catLevel);
+  const stCls  = statusClass(c.stigStatus);
+
+  const cciChips = (c.ccis||[]).map(cc=>
+    `<span class="cci-chip">${esc(cc)}</span>`
+  ).join('');
+
+  const metaChips = [
+    c.vulnId ? `<span class="meta-chip"><b>Vuln ID</b> ${esc(c.vulnId)}</span>` : '',
+    c.ruleId ? `<span class="meta-chip"><b>Rule</b> ${esc(c.ruleId)}</span>` : '',
+    c.srg    ? `<span class="meta-chip"><b>SRG</b> ${esc(c.srg)}</span>` : '',
+    cciChips,
+  ].filter(Boolean).join('');
+
+  const evidenceBlock = c.evidence
+    ? `<div class="section-label">Scanner evidence</div>
+       <div class="text-block evidence">${esc(c.evidence)}</div>`
+    : '';
+
+  const fpNote = c.isFalsePositive
+    ? `<div class="fp-note">⚠️ Marked as false positive — ${esc(c.fpJustification)}</div>`
+    : '';
+
+  const statementBlock = c.statement
+    ? `<div class="section-label">Control statement</div>
+       <div class="text-block statement">${esc(c.statement)}</div>`
+    : '';
+
+  const checkBlock = c.checkContent
+    ? `<div class="section-label">Check procedure</div>
+       <div class="text-block check">${esc(c.checkContent)}</div>`
+    : '';
+
+  const fixBlock = c.fixText
+    ? `<div class="section-label">Fix text</div>
+       <div class="text-block fix">${esc(c.fixText)}</div>`
+    : '';
+
+  return `
+<div class="rule" data-id="${esc(c.id)}" data-cat="${esc(c.catLevel)}" data-status="${esc(c.stigStatus)}"
+     data-search="${esc(c.vulnId+' '+c.ruleId+' '+c.name+' '+c.srg).toLowerCase()}">
+  <div class="rule-head">
+    <span class="rule-id">${esc(c.vulnId||c.id)}</span>
+    <span class="cat-badge ${catCls}">${esc(c.catLevel)}</span>
+    <span class="rule-name">${esc(c.name)}</span>
+    <span class="status-badge ${stCls}">${esc(c.stigStatus)}</span>
+    <span class="chevron">▾</span>
+  </div>
+  <div class="rule-body">
+    <div class="meta-row">${metaChips}</div>
+    ${statementBlock}
+    ${evidenceBlock}
+    ${checkBlock}
+    ${fixBlock}
+    ${fpNote}
+  </div>
+</div>`;
+}
+
+function renderRules(rules){
+  document.getElementById('ruleList').innerHTML = rules.map(buildRuleHTML).join('');
+  document.getElementById('matchCount').textContent = `${rules.length} rules`;
+  // Attach expand/collapse
+  document.querySelectorAll('.rule-head').forEach(head => {
+    head.addEventListener('click', () => head.parentElement.classList.toggle('open'));
+  });
+}
+
+function applyFilters(){
+  const cat    = document.getElementById('fCat').value;
+  const status = document.getElementById('fStatus').value;
+  const search = document.getElementById('fSearch').value.toLowerCase().trim();
+
+  const visible = CONTROLS.filter(c => {
+    if(cat    && c.catLevel   !== cat)    return false;
+    if(status && c.stigStatus !== status) return false;
+    if(search && !(c.vulnId+' '+c.ruleId+' '+c.name+' '+c.srg+' '+c.statement).toLowerCase().includes(search)) return false;
+    return true;
+  });
+  renderRules(visible);
+}
+
+// Init
+renderSummary();
+applyFilters();
+
+// Filters
+['fCat','fStatus'].forEach(id => document.getElementById(id).addEventListener('change', applyFilters));
+document.getElementById('fSearch').addEventListener('input', applyFilters);
+
+// Expand/collapse all
+document.getElementById('expandAll').addEventListener('click', () =>
+  document.querySelectorAll('.rule').forEach(r => r.classList.add('open')));
+document.getElementById('collapseAll').addEventListener('click', () =>
+  document.querySelectorAll('.rule').forEach(r => r.classList.remove('open')));
+</script>
+</body>
+</html>

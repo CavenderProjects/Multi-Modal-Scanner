@@ -1,0 +1,8 @@
+node_modules/
+.~lock.*
+*.tmp
+zipCE33a
+pen-tester/standalone/
+security-assessment-report.html
+security-assessment-report.md
+test-targets/sample-website/index.html

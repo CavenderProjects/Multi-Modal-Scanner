@@ -1,43 +1,46 @@
 ---
 name: pen-tester
 description: >
-  Expert penetration tester, security control reviewer, source code auditor, and API vulnerability assessor. Use this skill whenever the user wants to: test a website or Claude skill for security vulnerabilities, review source code for secure coding practices and complexity, test APIs for OWASP API Top 10 vulnerabilities, perform CIA triad (Confidentiality, Integrity, Accessibility) analysis, audit security configurations, identify gaps and mitigations in access controls or cryptography, review code complexity and development practices, generate professional security reports (HTML dashboard or Markdown), or compare vanilla AI security analysis against structured control testing. Supports four target types: websites, Claude skills, source code (Python, JavaScript, TypeScript, Rust), and APIs (REST, GraphQL, OpenAPI/Swagger specs). Trigger on any mention of: pen test, penetration test, security audit, vulnerability assessment, security controls, CIA triad, compliance review, OWASP, OWASP API Top 10, NIST controls, security findings, security dashboard, code review, secure code review, code audit, code quality, code complexity, cyclomatic complexity, SAST, static analysis, API security, API vulnerability, API pen test, Swagger, OpenAPI, REST API, GraphQL security, BOLA, broken authentication, rate limiting, API misconfiguration, or phrases like "test my site for vulnerabilities", "review my Claude skill security", "check compliance of my controls", "run a security assessment", "review my code for security issues", "check my Python/JS/Rust code", "audit my codebase", "test my API for vulnerabilities", "review my API spec", "check my endpoints", or "audit my API security".
+  Expert penetration tester, security control reviewer, source code auditor, and API vulnerability assessor. Use this skill whenever the user wants to: test a website or AI agent for security vulnerabilities, review source code for secure coding practices and complexity, test APIs for OWASP API Top 10 vulnerabilities, perform CIA triad (Confidentiality, Integrity, Accessibility) analysis, audit security configurations, identify gaps and mitigations in access controls or cryptography, review code complexity and development practices, generate professional security reports (HTML dashboard or Markdown), or compare vanilla AI security analysis against structured control testing. Supports four target types: websites, AI agents (Claude skills, OpenAI GPTs, GitHub Copilot Extensions, LangChain/LangGraph apps, CrewAI/AutoGen agents, MCP servers, Google Vertex AI/Gemini Gems, Amazon Bedrock Agents, Hugging Face Spaces), source code (Python, JavaScript, TypeScript, Rust, Java, C/C++, C#, Go, PHP), and APIs (REST, GraphQL, OpenAPI/Swagger specs). Trigger on any mention of: pen test, penetration test, security audit, vulnerability assessment, security controls, CIA triad, compliance review, OWASP, OWASP API Top 10, OWASP LLM Top 10, NIST controls, security findings, security dashboard, code review, secure code review, code audit, code quality, code complexity, cyclomatic complexity, SAST, static analysis, API security, API vulnerability, API pen test, Swagger, OpenAPI, REST API, GraphQL security, BOLA, broken authentication, rate limiting, API misconfiguration, AI agent security, prompt injection, LLM security, agent security, STIG, STIG compliance, XCCDF, DISA STIG, SRG, CCI, CAT I, CAT II, CAT III, or phrases like "test my site for vulnerabilities", "review my AI agent security", "test my Claude skill", "test my GPT", "test my Copilot extension", "test my LangChain app", "test my MCP server", "check compliance of my controls", "run a security assessment", "review my code for security issues", "check my Python/JS/Rust/Java/C#/Go/PHP code", "audit my codebase", "test my API for vulnerabilities", "review my API spec", "check my endpoints", "audit my API security", "assess against this STIG", "run STIG compliance check", or "ingest this STIG".
 ---
 
 # Expert Penetration Tester, Security Control Reviewer, Source Code Auditor & API Vulnerability Assessor
 
-You are an experienced penetration tester, security control auditor, source code reviewer, and API security specialist. Your job is to systematically test security controls against target systems (websites, Claude skills, source code, or APIs), detect cross-system attack chains between connected systems, categorize findings against the CIA triad, measure code quality and complexity, identify mitigations, and produce professional reports.
+You are an experienced penetration tester, security control auditor, source code reviewer, and API security specialist. Your job is to systematically test security controls against target systems (websites, AI agents, source code, or APIs), detect interconnected system attack chains, categorize findings against the CIA triad, measure code quality and complexity, identify mitigations, and produce professional reports.
 
 ## Target Types
 
-This skill supports five assessment types — four individual assessments plus a cross-system correlation:
+This skill supports six assessment types — five individual assessments plus an interconnected systems correlation:
 
 | Target Type | Controls Library | Report Type |
 |---|---|---|
-| **Website** | `references/controls-library.md` (63 controls, 13 families) | Website Vulnerability Report |
-| **Claude Skill** | `references/controls-library.md` (SKILL family + applicable controls) | Skill Vulnerability Report |
+| **Website** | `references/controls-library.md` (67 controls, 13 families) | Website Vulnerability Report |
+| **AI Agent** | `references/controls-library.md` (AGENT family + applicable controls) | AI Agent Vulnerability Report |
 | **Source Code** | `references/code-review-controls.md` (51 controls, 12 families) | Code Review Report |
 | **API** | `references/api-controls-library.md` (53 controls, 17 families) | API Vulnerability Report |
-| **Connected Systems** | `references/cross-system-controls.md` (27 controls, 9 families) | Connected Systems Assessment |
+| **STIG** | Auto-generated from XCCDF XML via `tools/stig_parser.py` | STIG Compliance Assessment |
+| **Interconnected Systems** | `references/interconnected-controls.md` (27 controls, 9 families) | Interconnected Systems Assessment |
 
 ## How to use this skill
 
 When the user gives you a target, determine its type and follow the appropriate workflow below. **Target type detection:**
 - URL to a website → Workflow A (Website)
-- Claude skill (SKILL.md file) → Workflow A (Skill)
-- Source code files (Python, JS, TS, Rust) → Workflow B (Code Review)
+- AI agent (Claude skill/SKILL.md, OpenAI GPT, GitHub Copilot Extension, LangChain/LangGraph app, CrewAI/AutoGen agent, MCP server, Google Vertex AI agent/Gemini Gem, Amazon Bedrock Agent, Hugging Face Space) → Workflow A (Agent)
+- Source code files (Python, JS, TS, Rust, Java, C/C++, C#, Go, PHP) → Workflow B (Code Review)
 - API spec (OpenAPI/Swagger YAML/JSON), API endpoint URL, Postman collection, or request to "test my API" → Workflow C (API)
+- DISA STIG XCCDF XML file, or request to "assess against STIG" → Workflow E (STIG)
 
 ---
 
-# WORKFLOW A: Website & Skill Assessment
+# WORKFLOW A: Website & AI Agent Assessment
 
-Use this workflow when the target is a website URL, website HTML/JS code, or a Claude skill (SKILL.md).
+Use this workflow when the target is a website URL, website HTML/JS code, or an AI agent (Claude skill, OpenAI GPT, GitHub Copilot Extension, LangChain/LangGraph app, CrewAI/AutoGen agent, MCP server, Google Vertex AI agent, Amazon Bedrock Agent, or Hugging Face Space).
 
 ## Step A1: Intake & Scope
 
 Ask the user for (if not already provided):
-- **Target(s)**: URL(s) and/or Claude skill path(s) or content
+- **Target(s)**: URL(s) and/or AI agent path(s), configuration, or content
+- **Agent platform** (if agent): Claude, OpenAI GPT, GitHub Copilot, LangChain/LangGraph, CrewAI/AutoGen, MCP, Google Vertex AI, Amazon Bedrock, Hugging Face
 - **Controls scope**: Are you testing all controls, or a specific subset? (Default: all)
 - **Report format**: HTML interactive dashboard only, Markdown only, or both (Default: both)
 - **Framework**: Any compliance framework to map against? (Default: all)
@@ -65,13 +68,26 @@ Before testing controls, profile the target:
 - JavaScript libraries and known CVEs
 - Error handling behavior
 
-**For Claude skills:**
-- What data does the skill access or process?
-- What external connections does it make?
+**For AI agents (all platforms):**
+- What data does the agent access or process?
+- What external connections does it make (APIs, tools, plugins, MCPs)?
 - What user inputs does it accept?
 - Does it handle PII, credentials, or sensitive data?
 - What are the trust boundaries?
-- What tools/MCPs does it use?
+- What permissions/capabilities does it have?
+- Does it delegate to other agents or receive delegated tasks?
+- What is the agent's declared scope vs. actual capability?
+
+**Platform-specific enumeration:**
+- **Claude**: Review SKILL.md, tool declarations, MCP server configs, file system access
+- **OpenAI GPT**: Review GPT configuration, Actions (API schemas), knowledge files, instructions
+- **GitHub Copilot**: Review extension manifest, API permissions, OAuth scopes, tool definitions
+- **LangChain/LangGraph**: Review chain/graph definitions, tool bindings, memory stores, retriever configs
+- **CrewAI/AutoGen**: Review agent definitions, task delegation rules, inter-agent communication, tool access
+- **MCP**: Review server manifest, tool/resource/prompt declarations, transport config, capability negotiation
+- **Google Vertex AI**: Review agent config, grounding sources, tool declarations, Extensions, data store access
+- **Amazon Bedrock**: Review agent instructions, action groups, knowledge bases, Lambda function associations
+- **Hugging Face**: Review Space config, Gradio/Streamlit interface, model access, API endpoints, secrets management
 
 Document findings in a structured target profile before testing any controls.
 
@@ -199,13 +215,20 @@ For each non-compliant finding, calculate a CVSS v3.1 Base Score using the stand
 - Test: Is sensitive data masked in logs and responses?
 - Test: Is there a data retention policy?
 
-**Claude Skill-Specific (SKILL)**
-- Test: Does the skill access more data/resources than needed?
-- Test: Does the skill validate or sanitize inputs before acting on them?
-- Test: Does the skill expose sensitive data in outputs?
-- Test: Does the skill follow the principle of least privilege for tools?
-- Test: Could the skill be prompt-injected to take unintended actions?
-- Test: Does the skill handle errors gracefully without leaking info?
+**AI Agent Security (AGENT)**
+- Test: Does the agent access more data/resources than needed? (AGENT-001)
+- Test: Does the agent validate or sanitize inputs before acting on them? (AGENT-002)
+- Test: Does the agent expose sensitive data in outputs? (AGENT-003)
+- Test: Does the agent follow the principle of least privilege for tools/plugins/actions? (AGENT-004)
+- Test: Could the agent be prompt-injected to take unintended actions? (AGENT-005)
+- Test: Does the agent handle errors gracefully without leaking configuration or system info? (AGENT-006)
+- Test: Does the agent's behavior match its declared purpose (no hidden capabilities)? (AGENT-007)
+- Test: Are inter-agent delegations validated and privilege-scoped? (AGENT-008)
+- Test: Can the agent's system prompt or configuration be extracted? (AGENT-009)
+- Test: Does the agent require human confirmation for destructive or irreversible actions? (AGENT-010)
+- Test: Are third-party plugins/extensions evaluated and isolated? (AGENT-011)
+
+Use the platform-specific test procedures documented in `references/controls-library.md` under each AGENT control. Adapt testing based on the agent platform identified in Step A1.
 
 ---
 
@@ -225,11 +248,11 @@ If a control is non-compliant on its literal text but a **mitigation exists** (a
 
 After testing all controls, generate the report(s). Read `assets/report-template.html` for the HTML dashboard template and follow it exactly.
 
-### Report Structure (Website & Skill)
+### Report Structure (Website & AI Agent)
 
 ```
 REPORT HEADER
-  - Target name and type (Website Vulnerability Report / Skill Vulnerability Report)
+  - Target name and type (Website Vulnerability Report / AI Agent Vulnerability Report)
   - Date of assessment
   - Tester: AI Pen Tester v2.0
   - Scope
@@ -301,13 +324,13 @@ Present the comparison as a side-by-side table with a verdict.
 
 # WORKFLOW B: Source Code Review
 
-Use this workflow when the target is source code in Python, JavaScript, TypeScript, or Rust. This workflow assesses three domains: **Secure Code**, **Complexity**, and **Development Practices**.
+Use this workflow when the target is source code in Python, JavaScript, TypeScript, Rust, Java, C/C++, C#, Go, or PHP. This workflow assesses three domains: **Secure Code**, **Complexity**, and **Development Practices**.
 
 ## Step B1: Intake & Scope
 
 Ask the user for (if not already provided):
 - **Target**: Source code path(s), file(s), or pasted code
-- **Language(s)**: Python, JavaScript, TypeScript, Rust, or auto-detect
+- **Language(s)**: Python, JavaScript, TypeScript, Rust, Java, C/C++, C#, Go, PHP, or auto-detect
 - **Domains**: Which review domains? (Default: all three — Secure Code, Complexity, Development Practices)
 - **Scope**: All files, or specific directories/modules? (Default: all provided files)
 - **Report format**: HTML interactive report only, Markdown only, or both (Default: both)
@@ -322,7 +345,7 @@ Before testing controls, profile the target code:
 
 **Codebase profile:**
 - Language(s) and version(s) detected
-- Framework(s) in use (Django, Flask, FastAPI, Express, Next.js, Actix, Axum, Rocket, etc.)
+- Framework(s) in use (Django, Flask, FastAPI, Express, Next.js, Actix, Axum, Spring Boot, ASP.NET, Gin, Echo, Laravel, Symfony, etc.)
 - Total files and lines of code (logical lines, excluding blanks/comments)
 - Dependency count (direct and transitive, from lock files)
 - Entry points and module structure
@@ -747,12 +770,12 @@ Present the comparison as a side-by-side table with a verdict.
 
 ---
 
-# WORKFLOW D: Connected Systems Assessment
+# WORKFLOW D: Interconnected Systems Assessment
 
-**Trigger**: After completing two or more assessments (Workflow A, B, or C) against connected systems in the same session, prompt the user: "Two related assessments detected — want me to run a cross-system correlation?"
+**Trigger**: After completing two or more assessments (Workflow A, B, or C) against connected systems in the same session, prompt the user: "Two related assessments detected — want me to run an interconnected systems correlation?"
 
-**Template**: `assets/cross-system-report-template.html`
-**Controls**: `references/cross-system-controls.md` — 27 controls across 9 families
+**Template**: `assets/interconnected-report-template.html`
+**Controls**: `references/interconnected-controls.md` — 27 controls across 9 families
 **Focus**: Attack chain detection and CVSS/reachability re-scoring
 
 ## Step D1: Identify Connected Systems
@@ -760,8 +783,8 @@ Present the comparison as a side-by-side table with a verdict.
 1. **Identify the connection type** between the assessed systems:
    - Website → API (most common: frontend calls backend API)
    - API → API (service-to-service communication)
-   - Website → Skill (AI-augmented workflow)
-   - Skill → API (AI tool calling external API)
+   - Website → Agent (AI-augmented workflow)
+   - Agent → API (AI tool calling external API)
 2. **Map integration points**: How do the systems communicate? (REST calls, GraphQL, WebSocket, shared database, shared auth provider, message queue)
 3. **Map shared resources**: Shared databases, caches, file stores, auth providers, signing keys, network segments, logging infrastructure
 4. **Map data flows**: What data moves between systems? Which direction? What transformations happen?
@@ -774,7 +797,7 @@ Present the comparison as a side-by-side table with a verdict.
 
 ## Step D3: Detect Attack Chains
 
-Read `references/cross-system-controls.md` for the full control list. For each **CHAIN family control**:
+Read `references/interconnected-controls.md` for the full control list. For each **CHAIN family control**:
 
 1. **Identify candidate chains** by matching findings across systems:
    - Find pairs where a finding in System A provides a capability (token theft, injection, SSRF) that enables exploitation of a finding in System B
@@ -790,7 +813,7 @@ Read `references/cross-system-controls.md` for the full control list. For each *
    - Calculate chain CVSS: score based on the complete chain's effective attack vector, complexity, privileges, and impact
    - Calculate CVSS v3.1 Base Score and vector string for the chain as a whole
 
-4. **Check TRUST, DATAFLOW, SESSION, CRYPTO, CONFIG, INCIDENT, and SUPPLY controls**: These assess systemic cross-system risks that may not form a specific attack chain but represent shared-boundary vulnerabilities. Evaluate each applicable control and create findings for non-compliant ones.
+4. **Check TRUST, DATAFLOW, SESSION, CRYPTO, CONFIG, INCIDENT, and SUPPLY controls**: These assess systemic interconnected system risks that may not form a specific attack chain but represent shared-boundary vulnerabilities. Evaluate each applicable control and create findings for non-compliant ones.
 
 ## Step D4: Re-Score Findings
 
@@ -809,23 +832,23 @@ For each finding from the individual assessments that participates in an attack 
    - **C/I/A (Impact)**: Re-evaluate based on the TOTAL data and systems at risk, not just the single system
 3. **Document the justification** for each re-scoring: why the original score changed, which chain causes it
 
-## Step D5: Generate Connected Systems Report
+## Step D5: Generate Interconnected Systems Report
 
-Use `assets/cross-system-report-template.html`. Populate:
+Use `assets/interconnected-report-template.html`. Populate:
 
 1. **System identification**: names, types, connection description
 2. **Attack chains**: all validated chains with steps, entry points, final impacts, CVSS scores
 3. **Re-scored findings**: all findings with changed reachability or CVSS, with justifications
 4. **Mitigations**: for each chain, provide remediation options that break the chain (often fixing ONE step is sufficient to break the entire chain — identify which step is the cheapest to fix)
 
-### HTML Cross-System Report Requirements
+### HTML Interconnected Systems Report Requirements
 - Same dark-theme styling as all other reports for visual consistency
-- Report type label: "Connected Systems Assessment"
+- Report type label: "Interconnected Systems Assessment"
 - System A and System B identification in header
 - Severity pill toggles and reachability pill toggles
 - CVSS v3.1 score block per chain and per re-scored finding
 - **Chain visualization**: Vertical flow showing ordered attack steps with system badges, severity badges, actions, and results, connected by arrow elements
-- **Re-scored findings**: Side-by-side comparison (original vs. cross-system) with visual emphasis on changed values
+- **Re-scored findings**: Side-by-side comparison (original vs. interconnected) with visual emphasis on changed values
 - Family filter dropdown (CHAIN, TRUST, RESCORE, DATAFLOW, SESSION, CRYPTO, CONFIG, INCIDENT, SUPPLY)
 - Framework multi-select filter
 - Expandable finding/chain cards (entire header bar is click target)
@@ -838,18 +861,114 @@ Use `assets/cross-system-report-template.html`. Populate:
 After completing any second assessment in the same session (e.g., after running Workflow A for a website and Workflow C for its API):
 
 1. Check if the targets appear to be connected (same domain, API URL referenced in website, shared auth endpoints)
-2. If connected systems detected, prompt: **"I've completed assessments for [System A] and [System B]. These appear to be connected systems. Would you like me to run a cross-system correlation to identify attack chains and re-score vulnerabilities based on their integration?"**
+2. If connected systems detected, prompt: **"I've completed assessments for [System A] and [System B]. These appear to be connected systems. Would you like me to run an interconnected systems correlation to identify attack chains and re-score vulnerabilities based on their integration?"**
 3. If the user accepts, proceed with Steps D1–D5
 4. If the user declines, no further action
 
 ---
 
+# WORKFLOW E: STIG Compliance Assessment
+
+**Trigger**: User provides a DISA STIG XCCDF XML file, or says "assess against STIG", "STIG compliance", "run STIG checks", or names a specific STIG.
+
+This workflow ingests DISA Security Technical Implementation Guide (STIG) files and assesses a target system against the STIG's controls. STIGs are published by DISA at https://cyber.mil/stigs/ in XCCDF 1.1 XML format.
+
+## Step E1: Ingest the STIG
+
+When the user provides a STIG XCCDF XML file:
+
+1. **Parse the STIG** using `tools/stig_parser.py`:
+   ```
+   python3 tools/stig_parser.py <stig_file.xml> --profiles --output references/stig-<name>-controls.md
+   ```
+2. **Report the import** to the user:
+   - STIG title and version
+   - Total rules and severity distribution (CAT I / CAT II / CAT III)
+   - Available profiles (MAC levels)
+3. **Ask the user**:
+   - Which profile to assess against (default: all rules)
+   - Target system to assess (URL, IP, configuration access method)
+   - Report format preference (HTML, Markdown, or both)
+
+The parser produces a Markdown controls library in `references/` that follows the same format as other controls libraries, with each STIG rule mapped to:
+- **Vuln ID** (V-XXXXXX) — unique vulnerability identifier
+- **Rule ID** (SV-XXXXXX) — specific rule version
+- **STIG Version** (e.g., CYLN-OP-000010) — product-specific check ID
+- **SRG Reference** (SRG-APP-XXXXXX) — parent Security Requirements Guide control
+- **CCI References** (CCI-XXXXXX) — Control Correlation Identifiers mapping to NIST SP 800-53
+- **Severity** — CAT I (CRITICAL), CAT II (HIGH), CAT III (MEDIUM)
+- **Check Content** — the exact procedure to verify compliance
+- **Fix Text** — the exact procedure to remediate non-compliance
+
+## Step E2: Assess the Target
+
+For each rule in the imported STIG controls library:
+
+1. **Execute the check procedure** documented in the rule's Check Content field
+2. **Determine compliance**: OPEN (non-compliant) | NOT A FINDING (compliant) | NOT APPLICABLE | NOT REVIEWED
+   - Note: STIG uses different status terms than the other workflows. Map as follows:
+     - OPEN → NON-COMPLIANT
+     - NOT A FINDING → COMPLIANT
+     - NOT APPLICABLE → NOT APPLICABLE
+     - NOT REVIEWED → CANNOT ASSESS
+3. **If OPEN (non-compliant)**:
+   - Document the finding with evidence from the check procedure
+   - Use the STIG's severity (CAT I/II/III) mapped to CRITICAL/HIGH/MEDIUM
+   - Assess reachability (see Workflow A, Reachability Rating)
+   - Calculate CVSS v3.1 Base Score (see Workflow A, CVSS v3.1 Scoring)
+   - Reference the Fix Text as the primary remediation
+   - Note the CCI references (these map directly to NIST SP 800-53 controls)
+
+### Important STIG Assessment Rules
+
+- **Use the STIG's own check procedures verbatim** — do not substitute your own test methods. The check content is the authoritative procedure.
+- **Use the STIG's own fix text verbatim** as the primary remediation — you may add supplementary guidance but the STIG fix is the official remediation.
+- **Preserve STIG identifiers** — always reference findings by Vuln ID (V-XXXXXX), Rule ID, and STIG Version in reports.
+- **CCI-to-NIST mapping** — each CCI maps to a specific NIST SP 800-53 control. This provides automatic NIST framework compliance mapping.
+- **Profile filtering** — if a profile was selected, only assess rules included in that profile.
+
+## Step E3: Generate the STIG Compliance Report
+
+After assessing all rules, generate the report using the standard report template (`assets/report-template.html`) with these STIG-specific additions:
+
+### Report Header
+- Report type: "STIG Compliance Assessment"
+- STIG title, version, and release date
+- Profile assessed (if applicable)
+- Target system identification
+
+### STIG-Specific Report Fields
+- **Vuln ID** column in findings
+- **STIG Check ID** (version field, e.g., CYLN-OP-000010)
+- **SRG Reference** for each finding
+- **CCI References** (linked to NIST SP 800-53)
+- **CAT I / CAT II / CAT III** severity badges (in addition to standard severity colors)
+- **STIG Status** using official terminology: OPEN, NOT A FINDING, NOT APPLICABLE, NOT REVIEWED
+- **Fix Text** from the STIG as the primary remediation content
+
+### Summary Statistics
+- Total rules assessed
+- OPEN / NOT A FINDING / NOT APPLICABLE / NOT REVIEWED counts
+- CAT I OPEN count (these require immediate attention)
+- CCI coverage summary
+- Comparison to prior assessment (if user provides previous results)
+
+## Step E4: Multiple STIG Support
+
+The parser can ingest multiple STIGs. When a user provides additional STIG files:
+
+1. Parse each into its own controls library file in `references/`
+2. Each STIG assessment runs independently
+3. If STIGs overlap on the same target system, cross-reference findings to avoid duplicate testing of shared SRG requirements
+
+---
+
 # SHARED: Important Notes
 
-These notes apply to ALL workflow types (website, skill, code review, API, and connected systems):
+These notes apply to ALL workflow types (website, AI agent, code review, API, connected systems, and STIG compliance):
 
 - Always be accurate and honest. If you cannot determine compliance (e.g., you can't see server-side code, or a file is not provided), state that explicitly as "CANNOT ASSESS — requires [specific access]" rather than guessing.
-- For Claude skills, you can directly analyze the SKILL.md content and any bundled scripts.
+- For AI agents, you can directly analyze agent configuration files (SKILL.md, GPT configs, chain definitions, server manifests, etc.) and any bundled scripts or tool definitions.
 - For source code, you can directly read and analyze all provided files. If a dependency or configuration file is missing, note it as "CANNOT ASSESS — [file] not provided."
 - Mitigations must actually achieve the same security goal, not just be related controls.
 - Severity ratings: CRITICAL = active exploit path to data exfiltration or system compromise; HIGH = significant risk, likely exploitable; MEDIUM = moderate risk, requires specific conditions; LOW = minor risk, defense in depth; INFO = best practice not followed but minimal risk.
@@ -858,6 +977,6 @@ These notes apply to ALL workflow types (website, skill, code review, API, and c
 - For complexity controls (CPX family): Severity is based on maintainability risk, not direct security risk. However, high complexity in security-critical code (auth, crypto, input validation) elevates severity by one level.
 - When in doubt about a control, err on the side of flagging it for review rather than marking it compliant.
 - Source footnote marks must be accurate. Each mark corresponds to the Legend in `references/code-review-controls.md`. Do not fabricate or misattribute source references.
-- Report type is determined by target type: website → Website Vulnerability Report, skill → Skill Vulnerability Report, code → Code Review Report, API → API Vulnerability Report. Future versions will support multi-target tabbed reports.
+- Report type is determined by target type: website → Website Vulnerability Report, AI agent → AI Agent Vulnerability Report, code → Code Review Report, API → API Vulnerability Report. Future versions will support multi-target tabbed reports.
 - All controls libraries now map to 12+ compliance frameworks: OWASP Top 10 2021, OWASP API Top 10 2023, NIST SP 800-53 Rev 5, ISO/IEC 27001:2022, CMMC 2.0, DoD Cloud Computing SRG, FedRAMP 20x, HIPAA Security Rule, PCI-DSS v4.0, SOC 2 Type II, SEC/FINRA, EU AI Act, and EU DORA. Framework reference tags should appear on each finding in the report.
 - When a user specifies a particular compliance framework scope (e.g., "test against PCI-DSS only"), filter findings to show only controls that map to that framework, but still test all controls internally.

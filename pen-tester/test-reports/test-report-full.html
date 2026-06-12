@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security Assessment Report — api.example.com</title>
+<style>
+:root {
+  --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --code:#0b1220;
+  --ink:#e2e8f0; --muted:#94a3b8; --border:#334155;
+  --crit:#ef4444; --high:#f97316; --med:#eab308; --low:#3b82f6; --info:#64748b;
+  --ok:#22c55e; --warn:#f59e0b; --fp:#8b5cf6; --manual:#fb923c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;font-size:14px}
+
+/* ── Header ── */
+header{position:sticky;top:0;z-index:20;background:#0f172aee;backdrop-filter:blur(6px);border-bottom:1px solid var(--border);padding:12px 20px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
+.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-size:17px;font-weight:600;margin-bottom:2px}
+.hdr-sub{color:var(--muted);font-size:12px}
+.hdr-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.stat-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.pill{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--panel);white-space:nowrap}
+.pill.crit{border-color:var(--crit);color:#fca5a5}
+.pill.high{border-color:var(--high);color:#fed7aa}
+.pill.med {border-color:var(--med);color:#fef08a}
+.pill.low {border-color:var(--low);color:#bfdbfe}
+.pill.ok  {border-color:var(--ok);color:#bbf7d0}
+.pill.warn{border-color:var(--warn);color:#fde68a}
+.pill.fp  {border-color:var(--fp);color:#ddd6fe}
+
+/* ── Buttons ── */
+.btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--panel2);color:var(--ink);cursor:pointer;font-size:12px;font-weight:500;transition:background .12s}
+.btn:hover{background:#334155}
+.btn.primary{background:#0e7490;border-color:#0e7490;color:#fff}
+.btn.primary:hover{background:#0891b2}
+.btn.sm{padding:4px 9px;font-size:11px}
+.btn.confirm {border-color:var(--crit);color:#fca5a5}  .btn.confirm:hover {background:rgba(239,68,68,.12)}
+.btn.compliant{border-color:var(--ok);color:#bbf7d0}   .btn.compliant:hover{background:rgba(34,197,94,.1)}
+.btn.na-btn  {border-color:var(--info);color:#cbd5e1}  .btn.na-btn:hover  {background:rgba(100,116,139,.15)}
+.btn.fp-btn  {border-color:var(--fp);color:#ddd6fe}    .btn.fp-btn:hover  {background:rgba(139,92,246,.12)}
+.btn.undo-btn{border-color:var(--warn);color:#fde68a;font-size:11px} .btn.undo-btn:hover{background:rgba(245,158,11,.1)}
+
+/* ── Filter bar ── */
+.filter-bar{background:var(--panel);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px}
+.filter-bar label{display:flex;align-items:center;gap:5px;white-space:nowrap;color:var(--muted)}
+select,input[type=text]{background:var(--panel2);color:var(--ink);border:1px solid var(--border);padding:4px 8px;border-radius:5px;font-size:12px}
+input[type=text]{width:160px}
+
+/* ── Main ── */
+main{padding:12px 20px 80px;max-width:1100px;margin:0 auto}
+
+/* ── Control cards ── */
+.ctrl{border:1px solid var(--border);border-left:3px solid var(--border);border-radius:8px;margin:8px 0;overflow:hidden;background:var(--panel)}
+.ctrl.nc    {border-left-color:var(--crit)}
+.ctrl.nr    {border-left-color:var(--warn)}
+.ctrl.manual{border-left-color:var(--manual)}
+.ctrl.ok    {border-left-color:var(--ok);opacity:.75}
+.ctrl.fp-c  {border-left-color:var(--fp);opacity:.7}
+.ctrl.na    {border-left-color:var(--info);opacity:.6}
+.ctrl.nt    {border-left-color:var(--manual)}
+
+.ctrl-head{padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;flex-wrap:wrap}
+.ctrl-head:hover{background:var(--panel2)}
+.ctrl-id  {font-family:ui-monospace,monospace;font-size:12px;font-weight:700;white-space:nowrap;color:var(--accent,#38bdf8)}
+.ctrl-name{font-size:13px;font-weight:500;flex:1;min-width:0}
+.badges   {display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-left:auto}
+
+/* ── Badges ── */
+.badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase;white-space:nowrap}
+.badge.CRITICAL    {background:var(--crit);color:#fff}
+.badge.HIGH        {background:var(--high);color:#fff}
+.badge.MEDIUM      {background:var(--med);color:#111}
+.badge.LOW         {background:var(--low);color:#fff}
+.badge.INFORMATIONAL{background:var(--info);color:#fff}
+.badge.s-nc{background:var(--crit);color:#fff}
+.badge.s-nr{background:var(--warn);color:#111}
+.badge.s-nt{background:var(--manual);color:#fff}
+.badge.s-ok{background:var(--ok);color:#111}
+.badge.s-fp{background:var(--fp);color:#fff}
+.badge.s-na{background:var(--info);color:#fff}
+.badge.t-auto  {background:rgba(34,197,94,.12);color:var(--ok);border:1px solid rgba(34,197,94,.3)}
+.badge.t-review{background:rgba(245,158,11,.12);color:var(--warn);border:1px solid rgba(245,158,11,.3)}
+.badge.t-manual{background:rgba(251,146,60,.12);color:var(--manual);border:1px solid rgba(251,146,60,.3)}
+.badge.fam{background:var(--panel2);color:var(--muted);border:1px solid var(--border)}
+
+/* ── Card body ── */
+.ctrl-body{padding:0 14px 14px;border-top:1px solid var(--border);display:none}
+.ctrl.open .ctrl-body{display:block}
+.section{margin-top:12px}
+.s-title{font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.07em;margin-bottom:5px;font-weight:600}
+.evidence-box{background:var(--code);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word;max-height:280px;overflow-y:auto;color:#cbd5e1;line-height:1.65}
+.remediation-box{background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.2);border-radius:6px;padding:10px 12px;font-size:12px;white-space:pre-wrap;word-break:break-word;color:#bbf7d0}
+.meta-row{font-size:12px;color:var(--muted);margin-top:8px;display:flex;gap:16px;flex-wrap:wrap}
+.meta-row b{color:var(--ink);font-weight:500}
+
+/* ── Review / manual banners ── */
+.banner{display:flex;align-items:flex-start;gap:8px;border-radius:6px;padding:10px 12px;margin-top:12px;font-size:12px;line-height:1.55}
+.banner.review{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#fde68a}
+.banner.manual{background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.25);color:#fed7aa}
+.banner.fp-banner{background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.3);color:#ddd6fe}
+.banner.decided{border-radius:6px;padding:7px 10px;margin-top:8px;font-size:12px;display:flex;align-items:center;gap:8px}
+.banner.decided.d-nc{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
+.banner.decided.d-ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#bbf7d0}
+.banner.decided.d-na{background:rgba(100,116,139,.1);border:1px solid rgba(100,116,139,.3);color:#cbd5e1}
+
+/* ── Triage ── */
+.triage{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.triage-label{font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.07em;font-weight:600;margin-bottom:7px}
+.triage-btns{display:flex;gap:7px;flex-wrap:wrap}
+
+/* ── FP Modal ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.overlay.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:460px;padding:20px}
+.modal h3{font-size:15px;margin-bottom:6px}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:10px}
+.modal textarea{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--border);border-radius:6px;padding:9px;font-size:13px;resize:vertical;min-height:80px;font-family:inherit}
+.modal textarea:focus{outline:none;border-color:var(--fp)}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+
+.no-match{text-align:center;color:var(--muted);padding:50px;font-size:14px}
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="hdr-top">
+    <div>
+      <h1>Security Assessment Report</h1>
+      <div class="hdr-sub">api.example.com &nbsp;·&nbsp; 11 controls &nbsp;·&nbsp; All frameworks &nbsp;·&nbsp; 2026-06-07 06:13</div>
+    </div>
+    <div class="hdr-actions">
+      <button class="btn sm" id="expandAll">Expand all</button>
+      <button class="btn sm" id="collapseAll">Collapse all</button>
+      <button class="btn primary" id="saveReport">⬇ Save updated report</button>
+    </div>
+  </div>
+  <div class="stat-pills">
+    <span class="pill crit">🔴 1 Critical</span>
+    <span class="pill high">🟠 2 High</span>
+    <span class="pill med">🟡 1 Medium</span>
+    <span class="pill low">🔵 0 Low</span>
+    <span class="pill ok"   id="pill-compliant">✅ — Compliant</span>
+    <span class="pill warn" id="pill-review">⚠️ — Needs review</span>
+    <span class="pill fp"   id="pill-fp">🛡 — Suppressed</span>
+  </div>
+</header>
+
+<!-- ── Filter bar ── -->
+<div class="filter-bar">
+  <label>Show
+    <select id="fStatus">
+      <option value="active">Non-compliant + Needs review</option>
+      <option value="all">All controls</option>
+      <option value="NON_COMPLIANT">Non-compliant only</option>
+      <option value="NEEDS_REVIEW">Needs review only</option>
+      <option value="NOT_TESTED">Not tested only</option>
+      <option value="COMPLIANT">Compliant</option>
+      <option value="FALSE_POSITIVE">Suppressed (FP)</option>
+      <option value="NOT_APPLICABLE">Not applicable</option>
+    </select>
+  </label>
+  <label>Severity
+    <select id="fSev">
+      <option value="">All</option>
+      <option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option>
+    </select>
+  </label>
+  <label>Tier
+    <select id="fTier">
+      <option value="">All tiers</option>
+      <option value="automatic_confirmation">Automatic</option>
+      <option value="review_required">Review required</option>
+      <option value="manual_confirmation">Manual confirmation</option>
+    </select>
+  </label>
+  <label>Family
+    <select id="fFam"><option value="">All families</option></select>
+  </label>
+  <input type="text" id="fTxt" placeholder="Search ID, name, evidence…">
+</div>
+
+<!-- ── Control list ── -->
+<main id="list"></main>
+
+<!-- ── False-positive justification modal ── -->
+<div class="overlay" id="fp-modal">
+  <div class="modal">
+    <h3>Mark as false positive</h3>
+    <p>Enter a justification. It will be stored in the downloaded report and carried forward automatically on the next scan when you load that report.</p>
+    <textarea id="fp-text" placeholder="Explain why this is a false positive…"></textarea>
+    <div class="modal-actions">
+      <button class="btn" id="fp-cancel">Cancel</button>
+      <button class="btn primary" id="fp-confirm">Confirm false positive</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Controls data (JSON; separate from script for clean replacement on save) ── -->
+<script type="application/json" id="sat-controls-data">
+[
+  {
+    "id": "AUTH-001",
+    "name": "Multi-factor authentication enforcement",
+    "family": "AUTH",
+    "status": "NON_COMPLIANT",
+    "severity": "CRITICAL",
+    "cia": "C, I",
+    "tier": "automatic_confirmation",
+    "evidence": "MFA is not enforced for any user accounts. Scanner confirmed zero MFA policies active via /api/v1/auth/policies endpoint. 47 active user accounts have password-only authentication.",
+    "finding": "MFA not enforced",
+    "remediation": "Enable MFA enforcement in Identity Provider settings. Require TOTP or hardware key for all accounts. Grace period: 14 days before hard block.",
+    "mitigation": "NO",
+    "mitigationDesc": "",
+    "reachability": "DIRECT",
+    "cvss": {
+      "score": 9.1,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    },
+    "frameworks": [
+      "NIST 800-53 IA-2",
+      "ISO 27001 A.9.4.2"
+    ],
+    "source": "auth_scanner"
+  },
+  {
+    "id": "AUTH-002",
+    "name": "Password complexity requirements",
+    "family": "AUTH",
+    "status": "NON_COMPLIANT",
+    "severity": "HIGH",
+    "cia": "C",
+    "tier": "automatic_confirmation",
+    "evidence": "Minimum password length is 6 characters. No complexity rules enforced. Common password list check: disabled. Tested via /api/v1/users endpoint \u2014 12-character minimum required by policy.",
+    "finding": "Weak password policy",
+    "remediation": "Set minimum 12-character password with uppercase, lowercase, digit, and special character requirements. Enable common-password blocklist.",
+    "mitigation": "NO",
+    "mitigationDesc": "",
+    "reachability": "DIRECT",
+    "cvss": {
+      "score": 7.5,
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    },
+    "frameworks": [
+      "NIST 800-53 IA-5"
+    ],
+    "source": "auth_scanner"
+  },
+  {
+    "id": "TLS-001",
+    "name": "TLS 1.2+ enforcement",
+    "family": "CRYPTO",
+    "status": "NON_COMPLIANT",
+    "severity": "HIGH",
+    "cia": "C, I",
+    "tier": "automatic_confirmation",
+    "evidence": "TLS 1.0 accepted on port 443. SSLv3 rejected (good). TLS 1.1 accepted. Server negotiated TLS 1.0 in test handshake with curl --tlsv1.0. PCI DSS 3.2.1 requires TLS 1.2 minimum.",
+    "finding": "Legacy TLS versions accepted",
+    "remediation": "Disable TLS 1.0 and 1.1 in web server config. Set SSLProtocol: TLSv1.2 TLSv1.3 only.",
+    "mitigation": "NO",
+    "mitigationDesc": "",
+    "reachability": "DIRECT",
+    "cvss": {
+      "score": 7.4,
+      "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    },
+    "frameworks": [
+      "PCI DSS 4.2.1"
+    ],
+    "source": "tls_scanner"
+  },
+  {
+    "id": "LOG-003",
+    "name": "Audit log integrity protection",
+    "family": "LOG",
+    "status": "NON_COMPLIANT",
+    "severity": "MEDIUM",
+    "cia": "I",
+    "tier": "automatic_confirmation",
+    "evidence": "Log files writable by application service account (uid=1001). No WORM or append-only filesystem detected. Log forwarding to SIEM: not configured.",
+    "finding": "Logs can be tampered by application process",
+    "remediation": "Configure append-only log files or forward to immutable SIEM. Remove write access from application service account.",
+    "mitigation": "NO",
+    "mitigationDesc": "",
+    "reachability": "INDIRECT",
+    "cvss": null,
+    "frameworks": [
+      "SOC 2 CC7.2"
+    ],
+    "source": "filesystem_scanner"
+  },
+  {
+    "id": "ACC-005",
+    "name": "Privileged access review",
+    "family": "ACCESS",
+    "status": "NEEDS_REVIEW",
+    "severity": "HIGH",
+    "cia": "C, I, A",
+    "tier": "review_required",
+    "evidence": "14 accounts have admin-level permissions. Last access review: 8 months ago (policy requires quarterly). Accounts: admin@corp.com, svc-deploy, svc-backup, svc-monitoring (plus 10 others). Review date logged in ITSM ticket INC-4421.",
+    "finding": "Access review overdue",
+    "remediation": "Conduct privileged access review immediately. Document results. Disable or reprovision stale accounts.",
+    "mitigation": "NO",
+    "mitigationDesc": "",
+    "reachability": "INDIRECT",
+    "cvss": null,
+    "frameworks": [
+      "SOC 2 CC6.3",
+      "ISO 27001 A.9.2.5"
+    ],
+    "source": "iam_scanner"
+  },
+  {
+    "id": "NET-007",
+    "name": "Network segmentation \u2014 DMZ isolation",
+    "family": "NETWORK",
+    "status": "NEEDS_REVIEW",
+    "severity": "MEDIUM",
+    "cia": "C, I",
+    "tier": "review_required",
+    "evidence": "Firewall rules detected: 192.168.1.0/24 (DMZ) has routes to 10.0.0.0/8 (internal) on ports 443, 3306. Scanner cannot determine if these routes are intentional or misconfigured without topology context. Review firewall policy FW-RULE-0042.",
+    "finding": "DMZ-to-internal routes require human review",
+    "remediation": "Verify firewall rules are intentional. Remove any unnecessary DMZ\u2192internal routes. Implement explicit allow-list.",
+    "mitigation": "NO",
+    "mitigationDesc": "",
+    "reachability": "INDIRECT",
+    "cvss": null,
+    "frameworks": [
+      "NIST 800-53 SC-7"
+    ],
+    "source": "network_scanner"
+  },
+  {
+    "id": "PROC-001",
+    "name": "Incident response plan \u2014 annual test",
+    "family": "PROCESS",
+    "status": "NOT_TESTED",
+    "severity": "HIGH",
+    "cia": "C, I, A",
+    "tier": "manual_confirmation",
+    "evidence": "Test procedure:\n1. Request evidence of tabletop exercise or live drill from last 12 months\n2. Confirm exercise included: detection, containment, eradication, recovery steps\n3. Review after-action report or equivalent documentation\n4. Verify contact list is current (< 90 days)\n5. Confirm escalation paths tested including executive notification",
+    "finding": "",
+    "remediation": "Conduct annual IR tabletop exercise. Document results. Update runbook based on lessons learned.",
+    "mitigation": "NO",
+    "mitigationDesc": "",
+    "reachability": "NONE",
+    "cvss": null,
+    "frameworks": [
+      "NIST 800-53 IR-3",
+      "SOC 2 CC9.2"
+    ],
+    "source": "manual"
+  },
+  {
+    "id": "PROC-002",
+    "name": "Security awareness training completion",
+    "family": "PROCESS",
+    "status": "NOT_TESTED",
+    "severity": "MEDIUM",
+    "cia": "C",
+    "tier": "manual_confirmation",
+    "evidence": "Test procedure:\n1. Request training completion report from LMS for all staff\n2. Verify \u2265 95% completion rate for required modules\n3. Confirm training includes: phishing, data handling, acceptable use, incident reporting\n4. Check training is \u2264 12 months old\n5. Verify new hires complete within 30 days of start",
+    "finding": "",
+    "remediation": "Enforce mandatory annual security awareness training. Track completion in LMS. Escalate to manager for non-completions after 30-day grace period.",
+    "mitigation": "NO",
+    "mitigationDesc": "",
+    "reachability": "NONE",
+    "cvss": null,
+    "frameworks": [
+      "ISO 27001 A.7.2.2",
+      "SOC 2 CC1.4"
+    ],
+    "source": "manual"
+  },
+  {
+    "id": "CRYPTO-002",
+    "name": "Data at rest encryption",
+    "family": "CRYPTO",
+    "status": "COMPLIANT",
+    "severity": "HIGH",
+    "cia": "C",
+    "tier": "automatic_confirmation",
+    "evidence": "AES-256 encryption confirmed on all database volumes. AWS RDS encryption enabled. S3 bucket server-side encryption: enabled (SSE-S3). Key management via AWS KMS verified.",
+    "finding": "",
+    "remediation": "",
+    "mitigation": "NO",
+    "mitigationDesc": "",
+    "reachability": "DIRECT",
+    "cvss": null,
+    "frameworks": [
+      "NIST 800-53 SC-28"
+    ],
+    "source": "cloud_scanner"
+  },
+  {
+    "id": "AUTH-010",
+    "name": "Session timeout enforcement",
+    "family": "AUTH",
+    "status": "COMPLIANT",
+    "severity": "MEDIUM",
+    "cia": "C",
+    "tier": "automatic_confirmation",
+    "evidence": "Session idle timeout: 15 minutes (policy: \u2264 30 min). Absolute session limit: 8 hours. Verified via /api/v1/session/config. JWT expiry: 900 seconds. Refresh token rotation: enabled.",
+    "finding": "",
+    "remediation": "",
+    "mitigation": "NO",
+    "mitigationDesc": "",
+    "reachability": "DIRECT",
+    "cvss": null,
+    "frameworks": [],
+    "source": "auth_scanner"
+  },
+  {
+    "id": "STIG-V-001",
+    "name": "FIPS 140-2 cryptographic modules",
+    "family": "CRYPTO",
+    "status": "NOT_APPLICABLE",
+    "severity": "HIGH",
+    "cia": "C, I",
+    "tier": "automatic_confirmation",
+    "evidence": "Not applicable \u2014 system is not a federal system and FIPS 140-2 compliance is not required by contract or regulation.",
+    "finding": "",
+    "remediation": "",
+    "mitigation": "NO",
+    "mitigationDesc": "",
+    "reachability": "NONE",
+    "cvss": null,
+    "frameworks": [
+      "FISMA"
+    ],
+    "source": "manual"
+  }
+]
+</script>
+
+<script>
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+const CONTROLS = JSON.parse(document.getElementById('sat-controls-data').textContent);
+
+const REPORT_ID = "3c705331";
+const lsKey = id => 'sat_' + REPORT_ID + '_' + id;
+
+// ── Decision store ────────────────────────────────────────────────────────────
+// decisions[controlId] = {status, mitigationDesc}
+const decisions = {};
+
+// Seed: controls already marked as FP by Python (carried from prior report)
+CONTROLS.forEach(c => {
+  if (c.mitigation === 'YES') {
+    decisions[c.id] = {
+      status: 'FALSE_POSITIVE',
+      mitigationDesc: c.mitigationDesc || 'Carried forward from previous assessment report'
+    };
+  }
+});
+
+// Override with any decisions saved in localStorage for this report
+CONTROLS.forEach(c => {
+  const raw = localStorage.getItem(lsKey(c.id));
+  if (raw) {
+    try { decisions[c.id] = JSON.parse(raw); } catch(e) {}
+  }
+});
+
+function saveDecision(id, status, mitigationDesc) {
+  decisions[id] = { status, mitigationDesc: mitigationDesc || '' };
+  localStorage.setItem(lsKey(id), JSON.stringify(decisions[id]));
+}
+
+function clearDecision(id) {
+  delete decisions[id];
+  localStorage.removeItem(lsKey(id));
+}
+
+// Effective status: localStorage decision takes priority over initial status
+function effStatus(c) {
+  return decisions[c.id]?.status || c.status;
+}
+
+// ── Populate family filter ────────────────────────────────────────────────────
+const fams = [...new Set(CONTROLS.map(c => c.family))].sort();
+const fFamEl = document.getElementById('fFam');
+fams.forEach(f => {
+  const o = document.createElement('option');
+  o.value = o.textContent = f;
+  fFamEl.appendChild(o);
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"]/g,
+    c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function statusLabel(s) {
+  return {
+    NON_COMPLIANT: 'Non-compliant', NEEDS_REVIEW: 'Needs review',
+    NOT_TESTED: 'Not tested', COMPLIANT: 'Compliant',
+    FALSE_POSITIVE: 'Suppressed', NOT_APPLICABLE: 'N/A',
+  }[s] || s;
+}
+
+function statusBadgeClass(s) {
+  return { NON_COMPLIANT:'s-nc', NEEDS_REVIEW:'s-nr', NOT_TESTED:'s-nt',
+           COMPLIANT:'s-ok', FALSE_POSITIVE:'s-fp', NOT_APPLICABLE:'s-na' }[s] || '';
+}
+
+function cardClass(c) {
+  const s = effStatus(c);
+  if (s === 'NON_COMPLIANT')  return 'nc';
+  if (s === 'NEEDS_REVIEW')   return c.tier === 'manual_confirmation' ? 'manual' : 'nr';
+  if (s === 'NOT_TESTED')     return 'manual';
+  if (s === 'COMPLIANT')      return 'ok';
+  if (s === 'FALSE_POSITIVE') return 'fp-c';
+  if (s === 'NOT_APPLICABLE') return 'na';
+  return 'nr';
+}
+
+function tierBadge(tier) {
+  if (tier === 'review_required')   return '<span class="badge t-review">Review required</span>';
+  if (tier === 'manual_confirmation') return '<span class="badge t-manual">Manual confirm</span>';
+  return '<span class="badge t-auto">Automatic</span>';
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  const fStatus = document.getElementById('fStatus').value;
+  const fSev    = document.getElementById('fSev').value;
+  const fTier   = document.getElementById('fTier').value;
+  const fFam    = document.getElementById('fFam').value;
+  const txt     = document.getElementById('fTxt').value.trim().toLowerCase();
+  const listEl  = document.getElementById('list');
+  listEl.innerHTML = '';
+
+  let shown = 0;
+  for (const c of CONTROLS) {
+    const eff = effStatus(c);
+
+    // Status filter
+    if (fStatus === 'active') {
+      if (!['NON_COMPLIANT','NEEDS_REVIEW','NOT_TESTED'].includes(eff)) continue;
+    } else if (fStatus !== 'all') {
+      if (eff !== fStatus) continue;
+    }
+
+    if (fSev  && c.severity !== fSev)  continue;
+    if (fTier && c.tier !== fTier)     continue;
+    if (fFam  && c.family !== fFam)    continue;
+    if (txt) {
+      const hay = (c.id + ' ' + c.name + ' ' + (c.evidence || '') + ' ' + c.family).toLowerCase();
+      if (!hay.includes(txt)) continue;
+    }
+
+    shown++;
+    listEl.appendChild(buildCard(c));
+  }
+
+  if (!shown) {
+    const d = document.createElement('div');
+    d.className = 'no-match';
+    d.textContent = 'No controls match the current filters.';
+    listEl.appendChild(d);
+  }
+
+  // Auto-expand review and manual cards
+  listEl.querySelectorAll('.ctrl.nr, .ctrl.manual, .ctrl.nt').forEach(el => {
+    el.classList.add('open');
+  });
+
+  updatePills();
+}
+
+function buildCard(c) {
+  const eff = effStatus(c);
+  const dec = decisions[c.id];
+
+  // ── Head ──
+  const cc = cardClass(c);
+  const sl = statusLabel(eff);
+  const sbc = statusBadgeClass(eff);
+
+  // ── Review / manual banner ──
+  let bannerHtml = '';
+  if (eff === 'FALSE_POSITIVE') {
+    const just = dec?.mitigationDesc || c.mitigationDesc || '';
+    bannerHtml = `<div class="banner fp-banner">🛡 <div><b>Suppressed as false positive</b><br><span style="color:var(--muted)">${esc(just)}</span></div></div>`;
+  } else if (!dec) {
+    if (c.tier === 'manual_confirmation' || eff === 'NOT_TESTED') {
+      bannerHtml = `<div class="banner manual">📋 <div><b>Manual assessment required</b> — no automated scanner covers this control. Work through the test procedure below and record your determination.</div></div>`;
+    } else if (c.tier === 'review_required' && eff === 'NEEDS_REVIEW') {
+      bannerHtml = `<div class="banner review">⚠️ <div><b>Manual review required</b> — the scanner collected evidence but could not determine pass/fail automatically. Review the evidence and record your determination.</div></div>`;
+    }
+  }
+
+  // ── Decision banner (if already decided) ──
+  let decBannerHtml = '';
+  if (dec && eff !== 'FALSE_POSITIVE') {
+    const labels = { NON_COMPLIANT:'✓ Confirmed as a finding', COMPLIANT:'✓ Marked compliant', NOT_APPLICABLE:'✓ Marked not applicable' };
+    const cls    = { NON_COMPLIANT:'d-nc', COMPLIANT:'d-ok', NOT_APPLICABLE:'d-na' }[eff] || '';
+    const undoBtn = `<button class="btn undo-btn" data-act="undo" data-id="${esc(c.id)}" style="margin-left:auto">↩ Undo</button>`;
+    decBannerHtml = `<div class="banner decided ${cls}">${labels[eff] || sl}${undoBtn}</div>`;
+  }
+
+  // ── Evidence ──
+  const evidenceHtml = c.evidence ? `
+    <div class="section">
+      <div class="s-title">${c.tier === 'manual_confirmation' || eff === 'NOT_TESTED' ? 'Test procedure / checklist' : 'Evidence'}</div>
+      <div class="evidence-box">${esc(c.evidence)}</div>
+    </div>` : '';
+
+  // ── Remediation ──
+  const remediationHtml = c.remediation && eff !== 'COMPLIANT' && eff !== 'FALSE_POSITIVE' ? `
+    <div class="section">
+      <div class="s-title">Remediation</div>
+      <div class="remediation-box">${esc(c.remediation)}</div>
+    </div>` : '';
+
+  // ── Meta ──
+  const metaHtml = `
+    <div class="meta-row">
+      <span><b>Family</b> ${esc(c.family)}</span>
+      <span><b>CIA</b> ${esc(c.cia)}</span>
+      ${c.cvss ? `<span><b>CVSS</b> ${c.cvss.score.toFixed(1)}</span>` : ''}
+      ${c.source ? `<span><b>Source</b> ${esc(c.source)}</span>` : ''}
+    </div>`;
+
+  // ── Triage buttons ──
+  let triageHtml = '';
+  if (eff === 'FALSE_POSITIVE') {
+    triageHtml = `
+      <div class="triage">
+        <button class="btn undo-btn" data-act="undo" data-id="${esc(c.id)}">↩ Remove false positive suppression</button>
+      </div>`;
+  } else if (['NON_COMPLIANT','NEEDS_REVIEW','NOT_TESTED'].includes(eff) || dec) {
+    const label = (c.tier === 'manual_confirmation' || eff === 'NOT_TESTED') ? 'Fail' : 'Confirm finding';
+    triageHtml = `
+      <div class="triage">
+        <div class="triage-label">${dec ? 'Change determination' : 'Your determination'}</div>
+        <div class="triage-btns">
+          <button class="btn confirm"   data-act="decide" data-status="NON_COMPLIANT"  data-id="${esc(c.id)}">${esc(label)}</button>
+          <button class="btn compliant" data-act="decide" data-status="COMPLIANT"      data-id="${esc(c.id)}">Pass / Compliant</button>
+          <button class="btn na-btn"    data-act="decide" data-status="NOT_APPLICABLE" data-id="${esc(c.id)}">Not applicable</button>
+          <button class="btn fp-btn"    data-act="fp"                                  data-id="${esc(c.id)}">False positive…</button>
+        </div>
+      </div>`;
+  }
+
+  const el = document.createElement('div');
+  el.className = 'ctrl ' + cc;
+  el.dataset.id = c.id;
+  el.innerHTML = `
+    <div class="ctrl-head">
+      <span class="ctrl-id">${esc(c.id)}</span>
+      <span class="ctrl-name">${esc(c.name)}</span>
+      <div class="badges">
+        <span class="badge ${esc(c.severity)}">${esc(c.severity)}</span>
+        <span class="badge ${sbc}">${sl}</span>
+        ${tierBadge(c.tier)}
+        <span class="badge fam">${esc(c.family)}</span>
+      </div>
+    </div>
+    <div class="ctrl-body">
+      ${bannerHtml}
+      ${decBannerHtml}
+      ${metaHtml}
+      ${evidenceHtml}
+      ${remediationHtml}
+      ${triageHtml}
+    </div>`;
+  return el;
+}
+
+// ── Pills ─────────────────────────────────────────────────────────────────────
+function updatePills() {
+  const compliant  = CONTROLS.filter(c => effStatus(c) === 'COMPLIANT').length;
+  const needReview = CONTROLS.filter(c => {
+    const eff = effStatus(c);
+    return (eff === 'NEEDS_REVIEW' || eff === 'NOT_TESTED') && !decisions[c.id];
+  }).length;
+  const fp = CONTROLS.filter(c => effStatus(c) === 'FALSE_POSITIVE').length;
+  document.getElementById('pill-compliant').textContent = '✅ ' + compliant + ' Compliant';
+  document.getElementById('pill-review').textContent    = '⚠️ ' + needReview + ' Needs review';
+  document.getElementById('pill-fp').textContent        = '🛡 ' + fp + ' Suppressed';
+}
+
+// ── Events ────────────────────────────────────────────────────────────────────
+const listEl = document.getElementById('list');
+let fpTargetId = null;
+
+listEl.addEventListener('click', e => {
+  // Button actions
+  const btn = e.target.closest('[data-act]');
+  if (btn) {
+    const act = btn.dataset.act;
+    const id  = btn.dataset.id;
+    if (act === 'decide') {
+      saveDecision(id, btn.dataset.status, '');
+      render();
+    } else if (act === 'fp') {
+      fpTargetId = id;
+      document.getElementById('fp-text').value = '';
+      document.getElementById('fp-modal').classList.add('show');
+    } else if (act === 'undo') {
+      clearDecision(id);
+      render();
+    }
+    return;
+  }
+
+  // Click on header → toggle expand
+  const head = e.target.closest('.ctrl-head');
+  if (head) {
+    const card = head.closest('.ctrl');
+    if (card) card.classList.toggle('open');
+  }
+});
+
+// FP modal
+document.getElementById('fp-confirm').addEventListener('click', () => {
+  const just = document.getElementById('fp-text').value.trim();
+  if (!just) { document.getElementById('fp-text').focus(); return; }
+  saveDecision(fpTargetId, 'FALSE_POSITIVE', just);
+  document.getElementById('fp-modal').classList.remove('show');
+  fpTargetId = null;
+  render();
+});
+
+document.getElementById('fp-cancel').addEventListener('click', () => {
+  document.getElementById('fp-modal').classList.remove('show');
+  fpTargetId = null;
+});
+
+document.getElementById('fp-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('fp-modal')) {
+    document.getElementById('fp-modal').classList.remove('show');
+    fpTargetId = null;
+  }
+});
+
+// Filter controls
+['fStatus','fSev','fTier','fFam'].forEach(id =>
+  document.getElementById(id).addEventListener('change', render)
+);
+document.getElementById('fTxt').addEventListener('input', render);
+document.getElementById('expandAll').addEventListener('click',   () => listEl.querySelectorAll('.ctrl').forEach(el => el.classList.add('open')));
+document.getElementById('collapseAll').addEventListener('click', () => listEl.querySelectorAll('.ctrl').forEach(el => el.classList.remove('open')));
+
+// ── Save updated report ───────────────────────────────────────────────────────
+// Bakes current decisions into the CONTROLS JSON, downloads a new HTML file.
+// extract_fps_from_report() in reporter.py reads the sat-controls-data tag
+// to find which controls have mitigation === 'YES' for FP carryover.
+document.getElementById('saveReport').addEventListener('click', () => {
+  const updated = CONTROLS.map(c => {
+    const d = decisions[c.id];
+    if (!d) return c;
+    return Object.assign({}, c, {
+      status:        d.status,
+      mitigation:    d.status === 'FALSE_POSITIVE' ? 'YES' : 'NO',
+      mitigationDesc: d.mitigationDesc || ''
+    });
+  });
+
+  // Temporarily update the data tag so outerHTML includes updated JSON
+  const dataEl = document.getElementById('sat-controls-data');
+  const orig   = dataEl.textContent;
+  dataEl.textContent = JSON.stringify(updated);
+  const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  dataEl.textContent = orig;  // restore
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const a    = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'assessment-report-updated.html';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+
+  const btn = document.getElementById('saveReport');
+  btn.textContent = '✓ Saved!';
+  setTimeout(() => btn.textContent = '⬇ Save updated report', 2000);
+});
+
+// ── Go ────────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
