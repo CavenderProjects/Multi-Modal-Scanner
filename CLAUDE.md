@@ -18,13 +18,6 @@ And if they are about to push changes:
 .\manage.ps1 push -Repo both       -m "description"   # changes that apply to both
 ```
 
-Also remind them that `standalone/controls.py` has a pending commit to the Standalone repo (framework fields added to `_known` set) that was never pushed:
-```powershell
-cd "C:\Users\slagb\OneDrive\Documents\Claude\Projects\Revised pen tester\pen-tester\standalone"
-git add controls.py
-git commit -m "fix: exclude framework reference fields from review_procedure"
-git push
-```
 
 ## Repo Structure
 - **Multi-Modal-Scanner** (root): tracks `assets/`, `references/`, `SKILL.md`, `manage.ps1`
