@@ -1,102 +1,91 @@
 HOW TO START A NEW SESSION
 ==========================
 
-You have 2 handoff files in your project folder ("Revised pen tester"):
+Context is now handled automatically via CLAUDE.md in the project folder.
+PRIMARY handoff document: PROJECT_HANDOFF.md (generated June 12, 2026 — comprehensive).
+HANDOFF_SUPPLEMENT.md sections 7 and 9 are stale; sections 8 and 16 are inlined
+into PROJECT_HANDOFF.md. Treat PROJECT_HANDOFF.md as the authoritative source.
 
-  1. Project_Handoff_Document.docx  (32 KB — formal handoff, 43 nuance items)
-  2. HANDOFF_SUPPLEMENT.md          (448 lines — design specs, bug fixes, verification plan)
+
+STEP 1: Check repo status
+---------------------------
+Before anything else, run from the project root:
+
+  cd "C:\Users\slagb\OneDrive\Documents\Claude\Projects\Revised pen tester"
+  .\manage.ps1 status
+
+This shows uncommitted changes and last 3 commits for both repos.
+Push any pending changes before starting new work.
 
 
-STEP 1: Open Claude desktop app (Cowork mode)
+STEP 2: Open Claude desktop app (Cowork mode)
 ----------------------------------------------
 - Open Claude desktop app
 - Make sure you're in Cowork mode
+- Select the "Revised pen tester" folder as your working directory:
+  C:\Users\slagb\OneDrive\Documents\Claude\Projects\Revised pen tester
 
 
-STEP 2: Select your project folder
-------------------------------------
-- Select the "Revised pen tester" folder as your working directory
-- This is the same folder you've been using:
-  C:\users\slagb\OneDrive\Documents\Claude\Projects\Revised pen tester
-
-
-STEP 3: Upload both handoff files
------------------------------------
-- Attach BOTH files to your first message:
-
-  File 1: Project_Handoff_Document.docx
-  File 2: HANDOFF_SUPPLEMENT.md
-
-- Both files are in your "Revised pen tester" folder
-
-
-STEP 4: Paste this prompt as your first message
+STEP 3: Paste this prompt as your first message
 -------------------------------------------------
-Copy everything between the === lines and paste it as your first message
-along with the two attached files:
+Copy everything between the === lines:
 
 ===BEGIN PROMPT===
-I'm continuing a multi-session project. The attached documents are a comprehensive handoff covering the full project state, architecture, decisions, bugs, and nuance.
+I'm continuing a multi-session project. CLAUDE.md has the session parameters.
+Read PROJECT_HANDOFF.md (in the project folder) — this is the primary handoff
+document as of June 12, 2026. It includes how to work with me, open bugs,
+current state, and all critical nuance. HANDOFF_SUPPLEMENT.md is secondary;
+sections 7 and 9 are stale.
 
-PROJECT: Security Assessment Tool — a Claude Code skill (pen-tester) and a standalone PyQt6 Windows desktop application that performs the same security assessments with no AI dependency.
+PROJECT: Security Assessment Tool — a Claude Code skill (pen-tester) and a
+standalone PyQt6 Windows desktop application that performs the same security
+assessments with no AI dependency (no Claude API in the standalone — ever).
 
 CRITICAL CONTEXT:
-- The working directory is pen-tester/ (NOT pen-test-triage-update/ which is the stale git repo)
-- There are 6 known bugs that need fixing before anything else — see HANDOFF_SUPPLEMENT.md section 11 for the complete list
 - Tier names are: "automatic confirmation", "review required", "manual confirmation" — never shorten these
 - The control family is AGENT (not SKILL) — this was renamed
 - The user has 20 years of GRC and security management experience — don't over-explain security concepts
-- Accuracy and honesty are the most important qualities — confirm everything is correct before stating it
-- Read section 8 of the supplement ("How to work with this user") before responding — it will save us both time
+- Accuracy and honesty are the most important qualities — confirm everything before stating it
 
-Read the attached handoff documents fully before responding. Then tell me:
-1. The 6 bugs you need to fix first (with file and line numbers)
+Read PROJECT_HANDOFF.md fully, then tell me:
+1. Any open bugs listed in the Open Questions section (with file and line numbers)
 2. What you understand the current state to be (one paragraph)
-3. Any questions you have before starting work
+3. Any questions before starting work
 
-The project folder is "Revised pen tester" — you should have access to all files.
+The project folder is "Revised pen tester" — you have access to all files.
 ===END PROMPT===
 
 
-STEP 5: Wait for Claude to respond
-------------------------------------
+STEP 4: Verify Claude understood the state
+--------------------------------------------
 Claude should respond with:
-- A list of 6 bugs with exact file paths and line numbers
-- A one-paragraph summary of the project state
+- Open bugs with exact file paths and line numbers
+- A one-paragraph summary of current project state
 - Any clarifying questions
 
-If Claude lists fewer than 6 bugs, says "SKILL" instead of "AGENT",
-or suggests using AI in the standalone app — it didn't read the
-handoff properly. Tell it to re-read the supplement.
+If Claude says "SKILL" instead of "AGENT", or suggests using AI in the
+standalone app — it didn't read PROJECT_HANDOFF.md properly. Tell it to re-read.
 
 
-STEP 6: Direct Claude to fix the bugs
----------------------------------------
-Once Claude proves it understood the state, say:
+STEP 5: Direct Claude to fix any open bugs
+--------------------------------------------
+If bugs are listed, say:
 
-  "Fix all 6 bugs"
+  "Fix all bugs"
 
-Claude should fix them in the source files directly. After fixes,
-tell it to run the verification plan:
-
-  "Run the verification plan from supplement section 13"
+Then proceed to Step 6 to verify fixes.
 
 
-STEP 7: After bugs are fixed
-------------------------------
-The app should work end-to-end. Test it yourself:
-
+STEP 6: Test the app
+----------------------
   cd pen-tester\standalone
   python main.py
-
-Then continue with whatever you want to build next.
 
 
 NOTES
 ------
 - Use Opus model for bug fixes and architectural decisions
 - Switch to Sonnet for adding features, regenerating reports, updating docs
-- The supplement section 8 tells Claude how you communicate — this prevents
-  it from asking unnecessary clarifying questions or over-explaining
-- If Claude seems confused about which directory to edit, remind it:
-  "pen-tester/ is the working copy, NOT pen-test-triage-update/"
+- PROJECT_HANDOFF.md "How to work with this user" section describes communication style
+- Repo management: use manage.ps1 (scanner, standalone, or both)
+  .\manage.ps1 push -Repo both -m "description"
