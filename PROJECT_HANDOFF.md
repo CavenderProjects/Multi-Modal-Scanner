@@ -122,7 +122,7 @@ Changes applied to all four:
 
 **Bash sandbox for git operations.** The sandbox mount creates `.git/index.lock` files that block git commands. Every `git add/commit/push` must be run in the user's PowerShell, not via the bash tool. Do not attempt git operations via `mcp__workspace__bash`.
 
-**`manage.ps1` execution.** PowerShell script execution is disabled on the user's machine (`ExecutionPolicy` restriction). To permanently fix: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`. Until then, use these raw git equivalents:
+**`manage.ps1` execution.** ~~PowerShell script execution was disabled (`ExecutionPolicy` restriction)~~ — **FIXED (Round 25).** `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` has been run; `manage.ps1` now works normally. Raw git equivalents below are kept for reference only:
 
 ```powershell
 # manage.ps1 status
@@ -226,38 +226,13 @@ Shared concern (changes may need both repos):
 
 ### Immediate
 
-1. Run the delete commands to clean up redundant files (all confirmed safe):
-   ```powershell
-   cd "C:\Users\slagb\OneDrive\Documents\Claude\Projects\Revised pen tester"
-   # Directories
-   Remove-Item -Recurse -Force pen-test-triage-update
-   Remove-Item -Recurse -Force node_modules
-   # Root loose files
-   Remove-Item -Force test-check.txt, pen-tester-SKILL.md, zipCE33a
-   Remove-Item -Force package.json, package-lock.json
-   Remove-Item -Force ".~lock.pen-tester-controls-catalogue.xlsx#"
-   # Historical/demo HTML artifacts
-   Remove-Item -Force "Sample API Vulnerability Report.html"
-   Remove-Item -Force "Sample Code Review Report.html"
-   Remove-Item -Force "Sample Connected Systems Report.html"
-   Remove-Item -Force "Sample Skill Vulnerability Report.html"
-   Remove-Item -Force "Sample Website Vulnerability Report.html"
-   Remove-Item -Force "interactive-remediation-report.html"
-   Remove-Item -Force "pen-tester-self-assessment.html", "pen-tester-self-assessment.md"
-   Remove-Item -Force "pen-tester-vs-vanilla-comparison.html"
-   Remove-Item -Force "security-assessment-report.html", "security-assessment-report.md"
-   Remove-Item -Force "Project_Handoff_Document.docx"
-   ```
-   Note: If any file isn't found, it was already deleted. To suppress "file not found" errors, append `-ErrorAction SilentlyContinue` to each `Remove-Item` line — those flags are NOT included above.
+1. ~~Run the delete commands to clean up redundant files~~ — **DONE (Round 25).** Files moved to `C:\to-delete-in-30\` via Move-Item; redundant files also removed from git history in commit `6e5a2f0`.
 
-2. Enable PowerShell script execution so manage.ps1 works:
-   ```powershell
-   Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
-   ```
+2. ~~Enable PowerShell script execution~~ — **DONE.** `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` confirmed executed. `manage.ps1` runs without restriction.
 
 3. Test STIG import end-to-end (verifies Bug 3 and Bug 5). Expected: dialog opens, parse preview shows title/rules/CAT distribution, import writes `.md` to `pen-tester/references/`.
 
-4. Test the standalone app end-to-end against each target type. Expected result counts (from HANDOFF_SUPPLEMENT section 13): code scanner ~44 findings, API scanner ~12 findings, agent scanner ~9 findings. Test inputs are in `pen-tester/standalone/test_targets/` (local only, gitignored): `code_sample/app.py`, `api_sample/openapi.yaml`, `agent_sample/SKILL.md`.
+4. Test the standalone app end-to-end against each target type. Expected result counts (from HANDOFF_SUPPLEMENT section 13): code scanner ~44 findings, API scanner ~12 findings, agent scanner ~9 findings. Test inputs are in `pen-tester/standalone/test_targets/` (local only, gitignored): `code_sample/app.py`, `api_sample/openapi.yaml`, `agent_sample/SKILL.md`. **Also verify code scanner now shows Compliant results (Round 25 fix).**
 
 5. Review `pen-tester-standalone` and `Pen tester with advice` folders (mount parent Projects folder in Cowork first).
 
