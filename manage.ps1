@@ -1,4 +1,4 @@
-# manage.ps1 — Git management for the pen-tester project
+# manage.ps1 -- Git management for the pen-tester project
 #
 # USAGE:
 #   .\manage.ps1 status                          # show both repos
@@ -9,21 +9,21 @@
 # FILE OWNERSHIP (which repo tracks what):
 #
 #   Multi-Modal-Scanner (Claude-based scanner)
-#     pen-tester/assets/*.html          — report templates
-#     pen-tester/references/*.md        — control libraries
-#     pen-tester/SKILL.md               — Claude agent skill definition
+#     pen-tester/assets/*.html          -- report templates
+#     pen-tester/references/*.md        -- control libraries
+#     pen-tester/SKILL.md               -- Claude agent skill definition
 #
 #   Multi-Modal-Scanner_Standalone (Python scanner)
-#     pen-tester/standalone/*.py        — scanner engine, reporter, controls parser
-#     pen-tester/standalone/gui/        — desktop GUI
+#     pen-tester/standalone/*.py        -- scanner engine, reporter, controls parser
+#     pen-tester/standalone/gui/        -- desktop GUI
 #
 #   SHARED CONCERN (changes may apply to both):
-#     standalone/controls.py            — parser logic affects template output
-#     references/*.md                   — read at runtime by Standalone; tracked
-#                                         in Multi-Modal-Scanner only. Standalone
-#                                         reads from the local filesystem so local
-#                                         changes are always available, but the
-#                                         Standalone GitHub repo won't have them.
+#     standalone/controls.py            -- parser logic affects template output
+#     references/*.md                   -- read at runtime by Standalone; tracked
+#                                          in Multi-Modal-Scanner only. Standalone
+#                                          reads from the local filesystem so local
+#                                          changes are always available, but the
+#                                          Standalone GitHub repo won't have them.
 
 param(
     [Parameter(Position=0)]
@@ -39,16 +39,12 @@ param(
 $ROOT       = Split-Path -Parent $MyInvocation.MyCommand.Path
 $STANDALONE = "$ROOT\pen-tester\standalone"
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# -- Helpers ------------------------------------------------------------------
 
 function Show-RepoStatus {
     param([string]$Label, [string]$Color, [string]$Path)
-    $width = 44
-    $bar   = "═" * $width
-    Write-Host "`n╔$bar╗" -ForegroundColor $Color
-    $pad = " " * [Math]::Max(0, $width - $Label.Length)
-    Write-Host "║  $Label$pad║" -ForegroundColor $Color
-    Write-Host "╚$bar╝" -ForegroundColor $Color
+    Write-Host ""
+    Write-Host "=== $Label ===" -ForegroundColor $Color
     Push-Location $Path
     $status = git status --short 2>&1
     if ($status) {
@@ -63,7 +59,8 @@ function Show-RepoStatus {
 
 function Invoke-Push {
     param([string]$Label, [string]$Color, [string]$Path, [string]$Message)
-    Write-Host "`n[$Label] Staging and committing..." -ForegroundColor $Color
+    Write-Host ""
+    Write-Host "[$Label] Staging and committing..." -ForegroundColor $Color
     Push-Location $Path
     git add -A
     $result = git commit -m $Message 2>&1
@@ -79,21 +76,22 @@ function Invoke-Push {
     Pop-Location
 }
 
-# ── Commands ──────────────────────────────────────────────────────────────────
+# -- Commands -----------------------------------------------------------------
 
 switch ($Command) {
 
     "status" {
         Show-RepoStatus "Multi-Modal-Scanner  (Claude / templates / libraries)" "Cyan"   $ROOT
         Show-RepoStatus "Standalone Python Scanner"                              "Yellow" $STANDALONE
-        Write-Host "`n  Shared-concern files (may need both repos updated):" -ForegroundColor Magenta
-        Write-Host "    standalone/controls.py  — parser logic; commit to Standalone" -ForegroundColor DarkGray
-        Write-Host "    references/*.md         — tracked in Scanner; read at runtime by Standalone" -ForegroundColor DarkGray
+        Write-Host ""
+        Write-Host "  Shared-concern files (may need both repos updated):" -ForegroundColor Magenta
+        Write-Host "    standalone/controls.py  -- parser logic; commit to Standalone" -ForegroundColor DarkGray
+        Write-Host "    references/*.md         -- tracked in Scanner; read at runtime by Standalone" -ForegroundColor DarkGray
     }
 
     "push" {
         if (-not $m) {
-            Write-Host "Error: commit message required.  Usage: .\manage.ps1 push -Repo both -m `"your message`"" -ForegroundColor Red
+            Write-Host "Error: commit message required.  Usage: .\manage.ps1 push -Repo both -m 'your message'" -ForegroundColor Red
             exit 1
         }
         if (-not $Repo) {
