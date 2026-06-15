@@ -1,5 +1,5 @@
 # Project Handoff — Multi-Modal Vulnerability Scanner
-*Generated: June 12, 2026 — last updated June 14, 2026 (Round 25) — Claude reads this automatically when the folder is mounted in Cowork*
+*Generated: June 12, 2026 — last updated June 15, 2026 (Round 25) — Claude reads this automatically when the folder is mounted in Cowork*
 
 ---
 
@@ -242,7 +242,7 @@ Shared concern (changes may need both repos):
 - PyInstaller packaging (Phase 10 of original 10-phase plan — only phase not yet complete). Confirm exact rebuild process for `pen-tester.skill` zip artifact (likely: zip the `pen-tester/` directory and rename to `.skill`) and document it here before packaging.
 - Code cleanup batch (standalone repo): remove `ScanResult.elapsed_seconds` field and all scanner assignments to it; remove `HAS_BS4`/`BeautifulSoup` import block from `scanners.py`; remove `beautifulsoup4` from `requirements.txt`; remove `detect_languages()` from `detector.py` (line 122); fix `os-software-controls.md` header ("5 families" → "6 families"); add `fix_text` extraction to `_parse_control_section()`.
 - Resolve AGENT-007/010 inconsistency (Open Question 12): either move both to `review_required` tier or remove their scan logic from `agent_scanner.py`.
-- Add Windows 11 to `_OS_EOL` dict in `os_scanner.py`. Verify current EOL dates from the Microsoft Lifecycle page before committing (dates vary by edition: Home/Pro vs Enterprise/Education vs IoT). As of June 2026: Windows 11 22H2 Home/Pro reached EOL October 2024; Enterprise/Education runs longer.
+- ~~Add Windows 11 to `_OS_EOL` dict~~ — **DONE (Round 25).** All six Win11 versions added using Enterprise/Education dates (same convention as Win10 entries). Win11 version detection mirrors Win10's `display_version` pattern. `win11-22h2` and `win11-23h2` are already past EOL as of June 2026 and will produce NON_COMPLIANT.
 - ~~Capture exact pyyaml version~~ — **PyYAML 6.0.3** confirmed installed. `requirements.txt` entry `pyyaml>=6.0` covers it; no change needed.
 - Consider externalizing `VULN_PATTERNS` in `code_scanner.py` to a JSON/YAML file for runtime updates without rebuilding
 - Consider `config.py` with `PENTESTER_ROOT` env var to allow moving standalone to a sibling directory cleanly
@@ -299,7 +299,7 @@ When new fields are added to control library `.md` files, add the lowercase key 
 
 **`CONTROL_LIBRARIES` dict in `controls.py` hardcodes the control count for every library.** Each entry includes a `"count"` value (e.g. `"count": 67` for `website_agent`). If controls are added or removed from any `.md` library, the corresponding count in this dict must also be updated in `controls.py`. Not updating it won't crash the app but will produce incorrect counts in any UI that displays library statistics. This applies to all five library entries in the dict (`website_agent`, `api`, `code_review`, `interconnected`, `os_software`), not just `website_agent`. STIG controls are not in `CONTROL_LIBRARIES` — they use a separate `parse_stig_controls(md_path)` function.
 
-**`requirements.txt` has only four dependencies:** `PyQt6>=6.6.0`, `requests>=2.31.0`, `beautifulsoup4>=4.12.0`, `pyyaml>=6.0`. Relevant for Phase 10 (PyInstaller packaging) — the dependency footprint is small.
+**`requirements.txt` has only four dependencies:** `PyQt6>=6.6.0`, `requests>=2.31.0`, `beautifulsoup4>=4.12.0`, `pyyaml>=6.0`. Relevant for Phase 10 (PyInstaller packaging) — the dependency footprint is small. Note: `beautifulsoup4` is a dead dependency (the `HAS_BS4` import block in `scanners.py` is never used) and is slated for removal in the code cleanup batch — see Next Steps → Longer term.
 
 **Two separate carryforward mechanisms — DB-based and report-based — are independent.**
 
@@ -569,7 +569,7 @@ The `decisions` table is designed to be the carryforward source — `DecisionsDB
 
 **`prior_report_data` is applied to ALL targets in a multi-target scan.** The same prior report dict (loaded once via "Load previous report") is passed to every `AssessmentEngine` instance (line ~902: `prior_report_data=self.prior_report_data`). If the prior report was for Target A and the scan includes Target A + Target B, Target B also gets the FP carryforward from Target A's prior report — even if the FPs don't apply. This is a known behavior, not a bug.
 
-**What the user will likely do in the next session:** (1) run the delete commands to clean up root files, (2) run `python main.py`, (3) scan a test target end-to-end, (4) check the generated report, (5) then move to PyInstaller packaging or new features.
+**What the user will likely do in the next session:** (1) run `python main.py` and verify Code Review scan shows Compliant results (Round 25 fix), (2) test STIG import end-to-end, (3) test other scan types (API, Agent, OS), (4) then move to code cleanup batch or PyInstaller packaging.
 
 **The Claude Code skill supports 6 assessment types; the Standalone supports 7.** `pen-tester/SKILL.md` defines: Website, AI Agent, Source Code, API, STIG, and Connected Systems (Interconnected). OS & Software assessment is **Standalone-only** — it requires local machine access that Claude Code cannot provide. Do not try to add OS assessment to the skill.
 
@@ -665,7 +665,7 @@ In the **Standalone app**: there is no separate "Connected Systems" target type 
 **Full `_RISKY_SERVICES_LINUX` service list** (verified from source — these are the Linux daemon names checked via `systemctl` or `service` enumeration):
 `telnetd` (Telnet daemon), `vsftpd` (FTP), `proftpd` (ProFTPD), `tftpd` (TFTP), `rshd` (RSH — cleartext), `rexecd` (Rexec — cleartext), `snmpd` (SNMP — check v1/v2), `xinetd` (inetd super-server). Service detection on Linux uses `systemctl list-units --type=service --state=running --plain --no-legend`. If `systemctl` fails (non-systemd systems, or any exception), returns an empty list — no fallback. This means risky service detection is silently skipped on non-systemd Linux.
 
-**`_OS_EOL` dict OS coverage summary** (verified from source): Windows 7/8/8.1; Windows 10 (version-dependent via display_version: 1909, 20H2, 21H1, 21H2, 22H2); Windows Server 2008/2012/2016/2019/2022; Ubuntu 16.04–24.04; Debian 9–12; CentOS 6/7/8; RHEL 7/8; macOS 10.15/11/12. **Not in dict**: Windows 11, Windows Server 2025, macOS 13 (Ventura)/14 (Sonoma)/15 (Sequoia) — all produce NEEDS_REVIEW. As of June 2026, `win10-22h2` (EOL 2025-10-14) and `ubuntu 20.04` (EOL 2025-04-30) will show NON_COMPLIANT for any host still running those versions.
+**`_OS_EOL` dict OS coverage summary** (verified from source): Windows 7/8/8.1; Windows 10 (version-dependent via display_version: 1909, 20H2, 21H1, 21H2, 22H2); Windows 11 (version-dependent via display_version: 21H2, 22H2, 23H2, 24H2, 25H2, 26H1 — added Round 25, Enterprise/Education dates); Windows Server 2008/2012/2016/2019/2022; Ubuntu 16.04–24.04; Debian 9–12; CentOS 6/7/8; RHEL 7/8; macOS 10.15/11/12. **Not in dict**: Windows Server 2025, macOS 13 (Ventura)/14 (Sonoma)/15 (Sequoia) — produce NEEDS_REVIEW. As of June 2026, `win11-22h2` (EOL 2025-10-14), `win11-23h2` (EOL 2026-11-10 — within 6 months, so NEEDS_REVIEW), `win10-22h2` (EOL 2025-10-14), and `ubuntu 20.04` (EOL 2025-04-30) will trigger findings on hosts running those versions.
 
 **`PATCH-001` Windows update check has a 45-second timeout.** `_get_pending_windows_updates()` runs a PowerShell COM object query (`New-Object -ComObject Microsoft.Update.Session`) with `timeout=45`. If the query fails or returns `'ERROR'`, PATCH-001 returns NEEDS_REVIEW (not NON_COMPLIANT). This is the longest-running step in an OS scan and may require elevation to get accurate results.
 

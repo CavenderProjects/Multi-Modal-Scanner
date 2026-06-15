@@ -36,7 +36,7 @@ Copy everything between the === lines:
 ===BEGIN PROMPT===
 I'm continuing a multi-session project. CLAUDE.md has the session parameters.
 Read PROJECT_HANDOFF.md (in the project folder) — this is the primary handoff
-document as of June 12, 2026. It includes how to work with me, open bugs,
+document as of June 15, 2026. It includes how to work with me, open bugs,
 current state, and all critical nuance. HANDOFF_SUPPLEMENT.md is secondary;
 sections 7 and 9 are stale.
 
