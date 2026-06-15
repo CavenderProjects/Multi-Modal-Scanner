@@ -1,5 +1,5 @@
 # Project Handoff — Multi-Modal Vulnerability Scanner
-*Generated: June 12, 2026 — last updated June 14, 2026 (Round 23 review) — Claude reads this automatically when the folder is mounted in Cowork*
+*Generated: June 12, 2026 — last updated June 14, 2026 (Round 25) — Claude reads this automatically when the folder is mounted in Cowork*
 
 ---
 
@@ -52,6 +52,8 @@ Changes applied to all four:
 
 **`manage.ps1`** — New file at project root. Provides `status` and `push -Repo scanner|standalone|both -m "msg"` commands for managing dual-repo workflow. Committed to Multi-Modal-Scanner.
 
+**`pen-tester/standalone/code_scanner.py` — COMPLIANT result emission fixed (Round 25).** The scanner previously only emitted NON_COMPLIANT results. When no vulnerability pattern matched, controls were silently absent, causing engine.py's fallback to produce NEEDS_REVIEW instead of COMPLIANT. Fix: added `_CPX_UNIVERSAL` (CPX-STRUCT-004, CPX-STRUCT-001, CPX-METRIC-001, CPX-STRUCT-003) and `_CPX_BY_LANG` constants to define which controls are checked per language, plus a `_build_compliant_results(detected_langs, noncompliant_ids)` helper that emits COMPLIANT for every checked control_id that had no NON_COMPLIANT finding. Called at the end of both `scan_directory()` (directory scan) and the single-file path in `scan_target()`. engine.py's `result_by_ctrl` dedup ensures NON_COMPLIANT always wins if any file had a violation. Pushed as commit `16e31f9`.
+
 **`CLAUDE.md`** — Created at project root. Contains session-start reminder (run manage.ps1 status), repo structure, and pending commit reminder. Auto-loaded by Cowork at session start.
 
 **`HOW_TO_START_NEW_SESSION.txt`** — Updated to remove outdated references (pen-test-triage-update, mandatory handoff file uploads, fixed bug count), added manage.ps1 step.
@@ -65,7 +67,7 @@ Changes applied to all four:
 - `pen-test-triage-update` submodule remote URL updated from `pen-test-triage.git` → `Multi-Modal-Scanner.git`
 - Merge conflict resolved (kept remote versions, which had all recent template changes)
 - Multi-Modal-Scanner pushed at `fbb4148`
-- Multi-Modal-Scanner_Standalone pushed at `ecd4c08`
+- Multi-Modal-Scanner_Standalone pushed at `16e31f9` (Round 25: code_scanner COMPLIANT fix)
 
 **Redundancy audit completed.** Files confirmed safe to delete have NOT been deleted yet — user needs to run the PowerShell commands listed in Next Steps → Immediate item 1.
 
@@ -266,7 +268,7 @@ Shared concern (changes may need both repos):
 - Code cleanup batch (standalone repo): remove `ScanResult.elapsed_seconds` field and all scanner assignments to it; remove `HAS_BS4`/`BeautifulSoup` import block from `scanners.py`; remove `beautifulsoup4` from `requirements.txt`; remove `detect_languages()` from `detector.py` (line 122); fix `os-software-controls.md` header ("5 families" → "6 families"); add `fix_text` extraction to `_parse_control_section()`.
 - Resolve AGENT-007/010 inconsistency (Open Question 12): either move both to `review_required` tier or remove their scan logic from `agent_scanner.py`.
 - Add Windows 11 to `_OS_EOL` dict in `os_scanner.py`. Verify current EOL dates from the Microsoft Lifecycle page before committing (dates vary by edition: Home/Pro vs Enterprise/Education vs IoT). As of June 2026: Windows 11 22H2 Home/Pro reached EOL October 2024; Enterprise/Education runs longer.
-- Capture exact pyyaml version: run `pip show pyyaml` from `pen-tester/standalone/` and update supplement §10 / `requirements.txt` with the pinned version.
+- ~~Capture exact pyyaml version~~ — **PyYAML 6.0.3** confirmed installed. `requirements.txt` entry `pyyaml>=6.0` covers it; no change needed.
 - Consider externalizing `VULN_PATTERNS` in `code_scanner.py` to a JSON/YAML file for runtime updates without rebuilding
 - Consider `config.py` with `PENTESTER_ROOT` env var to allow moving standalone to a sibling directory cleanly
 - Rename root folder "Revised pen tester" → "Multi-Modal-Scanner" if desired
@@ -737,7 +739,7 @@ SVCEXPOSE-001 exact outcomes:
 | `scanners.py` | `run_all_scanners(target, target_type)` | **Website scanner** — despite the generic name, handles website HTTP scanning only |
 | `agent_scanner.py` | `scan_agent_config(filepath)` → imported as `scan_agent` | **AI Agent scanner** — static config analysis (parses SKILL.md, GPT configs, LangChain defs, MCP manifests); tests AGENT-001 through AGENT-011 controls; no live HTTP requests |
 | `api_scanner.py` | `scan_spec(filepath)` → imported as `scan_api` | **API scanner — static analysis of OpenAPI/Swagger spec files** (YAML or JSON); does NOT make live HTTP requests; target must be a file path to the spec |
-| `code_scanner.py` | `scan_target(target)` → imported as `scan_code`; routes to `scan_file()` or `scan_directory()` | Source code scanner — VULN_PATTERNS dict + LANG_EXTENSIONS map for language detection |
+| `code_scanner.py` | `scan_target(target)` → imported as `scan_code`; routes to `scan_file()` or `scan_directory()` | Source code scanner — VULN_PATTERNS dict + LANG_EXTENSIONS map for language detection. Emits both NON_COMPLIANT (on pattern match) and COMPLIANT (for every checked control with no violation) via `_build_compliant_results()`. |
 | `os_scanner.py` | `scan_os_target(target)` → imported as `scan_os` | OS & Software scanner — enumerates local machine OS version, installed software, running services; queries NVD API for CVEs |
 | `controls.py` | `load_all_controls(selected_sets, stig_paths)` | Parses `.md` control libraries into Python objects; `_known` set gates what becomes `review_procedure` |
 | `reporter.py` | `generate_html_report(engine, path)` and variants | Generates HTML reports from `AssessmentResult` list; finds templates via relative path to `../assets/` |
