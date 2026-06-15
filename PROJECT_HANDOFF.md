@@ -1,5 +1,5 @@
 # Project Handoff — Multi-Modal Vulnerability Scanner
-*Generated: June 12, 2026 — last updated June 15, 2026 (Round 25) — Claude reads this automatically when the folder is mounted in Cowork*
+*Generated: June 12, 2026 — last updated June 15, 2026 (Round 26) — Claude reads this automatically when the folder is mounted in Cowork*
 
 ---
 
@@ -67,7 +67,7 @@ Changes applied to all four:
 - `pen-test-triage-update` submodule remote URL updated from `pen-test-triage.git` → `Multi-Modal-Scanner.git`
 - Merge conflict resolved (kept remote versions, which had all recent template changes)
 - Multi-Modal-Scanner pushed at `fbb4148`
-- Multi-Modal-Scanner_Standalone pushed at `16e31f9` (Round 25: code_scanner COMPLIANT fix)
+- Multi-Modal-Scanner_Standalone pushed at `16e31f9` (Round 25: code_scanner COMPLIANT fix) — Round 26 changes not yet pushed (new test_targets files)
 
 **Redundancy audit completed.** Files confirmed safe to delete have NOT been deleted yet — user needs to run the PowerShell commands listed in Next Steps → Immediate item 1.
 
@@ -233,6 +233,8 @@ Shared concern (changes may need both repos):
 3. Test STIG import end-to-end (verifies Bug 3 and Bug 5). Expected: dialog opens, parse preview shows title/rules/CAT distribution, import writes `.md` to `pen-tester/references/`.
 
 4. Test the standalone app end-to-end against each target type. Expected result counts (from HANDOFF_SUPPLEMENT section 13): code scanner ~44 findings, API scanner ~12 findings, agent scanner ~9 findings. Test inputs are in `pen-tester/standalone/test_targets/` (local only, gitignored): `code_sample/app.py`, `api_sample/openapi.yaml`, `agent_sample/SKILL.md`. **Also verify code scanner now shows Compliant results (Round 25 fix).**
+
+   Multi-language directory test (Round 26): enter `test_targets\code_sample\vulnbank_backend` — scans Python, Java, Go, and PHP together. Expect 30+ NON_COMPLIANT findings plus COMPLIANT results for every clean control. Files: `app.py`, `UserService.java`, `transfer.go`, `payment.php`.
 
 5. Review `pen-tester-standalone` and `Pen tester with advice` folders (mount parent Projects folder in Cowork first).
 
@@ -569,7 +571,7 @@ The `decisions` table is designed to be the carryforward source — `DecisionsDB
 
 **`prior_report_data` is applied to ALL targets in a multi-target scan.** The same prior report dict (loaded once via "Load previous report") is passed to every `AssessmentEngine` instance (line ~902: `prior_report_data=self.prior_report_data`). If the prior report was for Target A and the scan includes Target A + Target B, Target B also gets the FP carryforward from Target A's prior report — even if the FPs don't apply. This is a known behavior, not a bug.
 
-**What the user will likely do in the next session:** (1) run `python main.py` and verify Code Review scan shows Compliant results (Round 25 fix), (2) test STIG import end-to-end, (3) test other scan types (API, Agent, OS), (4) then move to code cleanup batch or PyInstaller packaging.
+**What the user will likely do in the next session:** (1) run `python main.py` and verify Code Review scan shows Compliant results (Round 25 fix), (2) test multi-language directory scan with `test_targets\code_sample\vulnbank_backend` (Round 26 addition — Python/Java/Go/PHP), (3) test STIG import end-to-end, (4) test other scan types (API, Agent, OS), (5) then move to code cleanup batch or PyInstaller packaging.
 
 **The Claude Code skill supports 6 assessment types; the Standalone supports 7.** `pen-tester/SKILL.md` defines: Website, AI Agent, Source Code, API, STIG, and Connected Systems (Interconnected). OS & Software assessment is **Standalone-only** — it requires local machine access that Claude Code cannot provide. Do not try to add OS assessment to the skill.
 

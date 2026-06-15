@@ -22,11 +22,16 @@ STEP 2: Open Claude desktop app (Cowork mode)
 ----------------------------------------------
 - Open Claude desktop app
 - Make sure you're in Cowork mode
-- Select the "Revised pen tester" folder as your working directory:
+- *** NEXT SESSION: Open the PARENT Projects folder, not "Revised pen tester" ***
+  Select:  C:\Users\slagb\OneDrive\Documents\Claude\Projects
+  Reason:  Allows review of pen-tester-standalone and Pen tester with advice
+           siblings (Next Steps item 5). Claude.md and PROJECT_HANDOFF.md are
+           still at Revised pen tester\ and will be found automatically.
+- Normal sessions (no sibling review needed): select "Revised pen tester":
   C:\Users\slagb\OneDrive\Documents\Claude\Projects\Revised pen tester
-- To change the mounted folder mid-session: click the folder icon next to
-  the folder name in the top-right of the Cowork file sidebar
-  (visible in the breadcrumb bar as the small folder icon beside "Revised pen tester")
+- NOTE: The folder icon in the Cowork sidebar opens Explorer for browsing only —
+  it does NOT change the connected folder. To change folders, start a new session
+  and select the desired folder at session start.
 
 
 STEP 3: Paste this prompt as your first message

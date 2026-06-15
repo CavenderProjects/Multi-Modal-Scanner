@@ -148,7 +148,7 @@ main{padding:12px 20px 80px;max-width:1100px;margin:0 auto}
 .req-details summary:hover{color:var(--ink)}
 .req-details[open] summary{color:var(--ink)}
 /* ── Framework not-relevant label ── */
-.fw-nr-label{flex:1;text-align:center;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);opacity:.75;pointer-events:none;align-self:center}
+.fw-nr-label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#f97316;background:rgba(249,115,22,.13);border:1px solid rgba(249,115,22,.35);border-radius:4px;padding:2px 10px;white-space:nowrap;align-self:center}
 .fw-id-badge{font-size:11px;font-weight:600;color:var(--accent);background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.3);border-radius:4px;padding:2px 6px;white-space:nowrap;align-self:center}
 /* ── Framework dropdown ── */
 #fwDrop{background:var(--panel2);color:var(--ink);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;max-width:160px}
@@ -180,6 +180,7 @@ main{padding:12px 20px 80px;max-width:1100px;margin:0 auto}
           <option value="SEC/FINRA">SEC/FINRA</option>
           <option value="EU DORA">EU DORA</option>
           <option value="EU AI Act">EU AI Act</option>
+          <option value="Code Complexity">Code Complexity</option>
         </select>
       </label>
       <button class="btn sm" id="expandAll">Expand all</button>
@@ -351,7 +352,8 @@ const _EXT_LANG = {
   '.c':'C/C++','.cpp':'C/C++','.cc':'C/C++','.h':'C/C++',
   '.cs':'C#','.go':'Go','.php':'Php'
 };
-function detectLanguage() {
+// Returns all detected languages ranked by occurrence, not just the top one.
+function detectLanguages() {
   const counts = {};
   for (const c of CONTROLS) {
     const ev = (c.evidence || '') + ' ' + (c.finding || '');
@@ -361,15 +363,16 @@ function detectLanguage() {
       if (m) counts[lang] = (counts[lang] || 0) + m.length;
     }
   }
-  const entries = Object.entries(counts);
-  return entries.length ? entries.sort((a,b) => b[1]-a[1])[0][0] : null;
+  return Object.entries(counts).sort((a,b) => b[1]-a[1]).map(([l]) => l);
 }
-const DETECTED_LANG = detectLanguage();
+const DETECTED_LANGS = detectLanguages();
 
-// ── Review steps — filter to detected language section ────────────────────
+// ── Review steps — filter to detected languages only ─────────────────────
 const _LANG_KEYS = ['Python','Js/Ts','Rust','Java','C/C++','C#','Go','Php'];
-function filterReviewSteps(text, lang) {
-  if (!lang || !text) return text;
+// langs: array of language strings. Keeps sections for all listed languages;
+// drops sections for languages not present in the assessed files.
+function filterReviewSteps(text, langs) {
+  if (!langs || !langs.length || !text) return text;
   const lines = text.split('\n');
   const out = [];
   let inMine = false, inOther = false;
@@ -377,8 +380,8 @@ function filterReviewSteps(text, lang) {
     const t = line.trimStart();
     const hit = _LANG_KEYS.find(k => t.startsWith(k + ':'));
     if (hit) {
-      if (hit === lang) { inMine = true; inOther = false; out.push(line); }
-      else              { inMine = false; inOther = true; }
+      if (langs.includes(hit)) { inMine = true; inOther = false; out.push(line); }
+      else                     { inMine = false; inOther = true; }
     } else if (inMine)  { out.push(line); }
     else if (!inOther)  { out.push(line); }
   }
@@ -581,6 +584,12 @@ const FW_MAP = {
     'INPUT':['Art. 15','Adversarial Robustness'],
     'COMP':['Art. 9','Risk Management'],'DEV-DEP':['Art. 9','Risk Management'],
   },
+  'Code Complexity': {
+    'CPX-STRUCT':  ['Structure',      'Structural Complexity'],
+    'CPX-METRIC':  ['Metric',         'Measurable Complexity'],
+    'CPX-MAINTAIN':['Maintainability','Maintainability Practices'],
+    'CPX':         ['Complexity',     'Code Complexity'],
+  },
 };
 
 function getFwInfo(c, fw) {
@@ -682,9 +691,13 @@ function render() {
     listEl.appendChild(d);
   }
 
-  // Auto-expand review and manual cards
+  // Auto-expand review and manual cards — but never auto-expand cards that are
+  // not relevant to the currently selected framework (Change 5).
+  const _activeFw = document.getElementById('fwDrop').value;
   listEl.querySelectorAll('.ctrl.nr, .ctrl.manual, .ctrl.nt').forEach(el => {
-    el.classList.add('open');
+    if (!_activeFw || el.dataset.fwRelevant !== 'false') {
+      el.classList.add('open');
+    }
   });
 
   updatePills();
@@ -735,20 +748,30 @@ function buildCard(c) {
     ? `<p style="margin:0 0 10px 0;font-size:12px;font-weight:600;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:6px">${esc(_fwInfo.id)} — ${esc(_fwInfo.label)}</p>`
     : '';
 
-  // ── What To Confirm (all NEEDS_REVIEW findings) ──
+  // ── What To Confirm / Test Procedure ──────────────────────────────────────
   const _rawReviewText = c.review_steps || ('Manually verify that ' + (c.name || 'this control') + ' requirements are met.');
-  const _reviewText = filterReviewSteps(_rawReviewText, DETECTED_LANG);
+  const _reviewText = filterReviewSteps(_rawReviewText, DETECTED_LANGS);
   const _reviewContext = (eff === 'NEEDS_REVIEW' && c.tier === 'automatic_confirmation')
     ? '<p style="margin:0 0 8px 0;padding:6px 8px;background:rgba(250,173,20,.12);border-left:3px solid var(--warn);border-radius:3px;font-size:12px;color:var(--warn)">⚠️ The scanner found indirect evidence (see above). Confirm whether this control is specifically violated before triaging.</p>'
     : '';
-  const _langNote = (DETECTED_LANG && _rawReviewText !== _reviewText)
-    ? `<p style="margin:0 0 6px 0;font-size:11px;color:var(--muted)">Showing ${DETECTED_LANG} steps · <a href="#" style="color:var(--muted)" onclick="this.closest('.evidence-box').querySelector('.all-steps').style.display='block';this.parentNode.style.display='none';return false">Show all languages</a></p><div class="all-steps" style="display:none">${esc(_rawReviewText)}</div>`
+  // Language note — only shown when steps were filtered to a subset of languages
+  const _langNote = (DETECTED_LANGS.length && _rawReviewText !== _reviewText)
+    ? `<p style="margin:0 0 6px 0;font-size:11px;color:var(--muted)">Showing ${DETECTED_LANGS.join(', ')} steps · <a href="#" style="color:var(--muted)" onclick="this.closest('.evidence-box').querySelector('.all-steps').style.display='block';this.parentNode.style.display='none';return false">Show all languages</a></p><div class="all-steps" style="display:none">${esc(_rawReviewText)}</div>`
     : '';
+  // NEEDS_REVIEW: "What to confirm" collapsible (open by default)
   const reviewProcHtml = eff === 'NEEDS_REVIEW' ? `
     <div class="section">
       <details class="rp-details" open>
         <summary>✅ What to confirm</summary>
         <div class="evidence-box" style="margin-top:6px">${_fwNote}${_reviewContext}${_langNote}${esc(_reviewText)}</div>
+      </details>
+    </div>` : '';
+  // Manual / NOT_TESTED: dedicated "Test procedure" collapsible
+  const testProcHtml = (eff === 'NOT_TESTED' || c.tier === 'manual_confirmation') && c.review_steps ? `
+    <div class="section">
+      <details class="rp-details" open>
+        <summary>📋 Test procedure</summary>
+        <div class="evidence-box" style="margin-top:6px">${_fwNote}${_langNote}${esc(filterReviewSteps(c.review_steps, DETECTED_LANGS))}</div>
       </details>
     </div>` : '';
 
@@ -806,6 +829,7 @@ function buildCard(c) {
   const el = document.createElement('div');
   el.className = 'ctrl ' + cc;
   el.dataset.id = c.id;
+  el.dataset.fwRelevant = (_fw && !_fwInfo) ? 'false' : 'true';
   const _fwHead = _fw
     ? (_fwInfo
         ? `<span class="fw-id-badge">${esc(_fwInfo.id)} — ${esc(_fwInfo.label)}</span>`
@@ -831,6 +855,7 @@ function buildCard(c) {
       ${metaHtml}
       ${evidenceHtml}
       ${reviewProcHtml}
+      ${testProcHtml}
       ${remediationHtml}
       ${triageHtml}
       ${notesHtml}
