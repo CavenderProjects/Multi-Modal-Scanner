@@ -9,7 +9,7 @@
     --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --ink:#e2e8f0; --muted:#94a3b8;
     --accent:#38bdf8; --accent2:#0ea5e9;
     --crit:#ef4444; --high:#f97316; --med:#eab308; --low:#3b82f6; --info:#64748b;
-    --ok:#22c55e; --border:#334155; --code:#0b1220;
+    --ok:#22c55e; --border:#334155; --code:#0b1220; --fp:#ec4899;
     --cat1-bg:rgba(239,68,68,0.15); --cat1-border:#ef4444; --cat1-text:#fca5a5;
     --cat2-bg:rgba(234,179,8,0.15);  --cat2-border:#eab308; --cat2-text:#fef08a;
     --cat3-bg:rgba(59,130,246,0.15); --cat3-border:#3b82f6; --cat3-text:#bfdbfe;
@@ -25,7 +25,6 @@
   .pill{padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:var(--panel)}
   .pill.toggle{cursor:pointer;transition:all 0.2s;user-select:none}
   .pill.toggle:hover{transform:scale(1.05)}
-  .pill.toggle.off{opacity:0.35;filter:grayscale(0.7)}
   .pill.cat1{border-color:var(--cat1-border);color:var(--cat1-text)}
   .pill.cat2{border-color:var(--cat2-border);color:var(--cat2-text)}
   .pill.cat3{border-color:var(--cat3-border);color:var(--cat3-text)}
@@ -36,24 +35,20 @@
   .btn:hover{background:var(--panel2)}
   .btn.primary{background:var(--accent2);border-color:var(--accent2);color:#fff}
   .btn.primary:hover{background:var(--accent)}
+  .btn.sm{padding:4px 10px;font-size:12px;border-radius:6px}
   .filters{padding:10px 22px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px}
   .filters label{display:flex;align-items:center;gap:6px}
   select,input[type=text]{background:var(--panel2);color:var(--ink);border:1px solid var(--border);padding:6px 10px;border-radius:6px;font-size:13px}
   main{padding:14px 22px 80px}
-
-  /* Summary cards */
   .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:22px}
   .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
   .card-label{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600}
   .card-value{font-size:28px;font-weight:800;line-height:1.1;margin-top:4px}
-  .card-value.open{color:var(--crit)}
   .card-value.cat1{color:var(--cat1-text)}
   .card-value.cat2{color:var(--cat2-text)}
   .card-value.cat3{color:var(--cat3-text)}
   .card-value.naf{color:var(--ok)}
   .card-value.nr{color:var(--muted)}
-
-  /* Rule rows */
   .rule{background:var(--panel);border:1px solid var(--border);border-radius:10px;margin:8px 0;overflow:hidden}
   .rule-head{padding:11px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;flex-wrap:wrap}
   .rule-head:hover{background:var(--panel2)}
@@ -70,7 +65,6 @@
   .status-badge.Not-Reviewed{background:rgba(148,163,184,0.1);color:var(--nr-color);border:1px solid rgba(148,163,184,0.2)}
   .chevron{margin-left:auto;font-size:12px;color:var(--muted);transition:transform 0.2s;flex-shrink:0}
   .rule.open .chevron{transform:rotate(180deg)}
-
   .rule-body{display:none;border-top:1px solid var(--border);padding:14px 16px}
   .rule.open .rule-body{display:block}
   .meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:12px}
@@ -83,8 +77,36 @@
   .text-block.fix{border-left:3px solid var(--ok)}
   .text-block.evidence{border-left:3px solid var(--accent);font-family:ui-monospace,monospace;font-size:12px}
   .text-block.statement{border-left:3px solid var(--info)}
-  .fp-note{background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.3);border-radius:6px;padding:8px 12px;font-size:12px;color:#f9a8d4;margin-top:6px}
-
+  .status-actions{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px;align-items:center;border-top:1px solid var(--border);padding-top:12px}
+  .status-actions .lbl{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin-right:2px}
+  .sact{padding:4px 12px;font-size:12px;border-radius:6px;border:1px solid var(--border);background:var(--panel2);color:var(--muted);cursor:pointer;transition:all 0.15s}
+  .sact:hover{background:var(--panel);color:var(--ink)}
+  .sact.active-open{background:rgba(239,68,68,0.2);color:var(--open-color);border-color:rgba(239,68,68,0.5);font-weight:700}
+  .sact.active-naf{background:rgba(34,197,94,0.15);color:var(--naf-color);border-color:rgba(34,197,94,0.4);font-weight:700}
+  .sact.active-na{background:rgba(100,116,139,0.2);color:var(--na-color);border-color:rgba(100,116,139,0.4);font-weight:700}
+  .sact.active-nr{background:rgba(148,163,184,0.1);color:var(--nr-color);border-color:rgba(148,163,184,0.3);font-weight:700}
+  .sact.fp-btn{color:var(--fp);border-color:rgba(236,72,153,0.3)}
+  .sact.fp-btn:hover{background:rgba(236,72,153,0.1)}
+  .sact.active-fp{background:rgba(236,72,153,0.15);color:var(--fp);border-color:rgba(236,72,153,0.5);font-weight:700}
+  .fp-banner{display:flex;align-items:flex-start;gap:10px;background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.3);border-radius:6px;padding:10px 12px;font-size:13px;color:#f9a8d4;margin-top:8px}
+  .notes-section{width:100%;display:flex;flex-direction:column;align-items:flex-start;margin-top:8px}
+  .notes-toggle{color:var(--muted);border-color:transparent;background:transparent;font-size:11px;padding:3px 8px}
+  .notes-toggle:hover{background:var(--panel2);border-color:var(--border);color:var(--ink)}
+  .notes-toggle.has-note{color:#7dd3fc;border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.06)}
+  .notes-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#38bdf8;margin-left:4px;vertical-align:middle}
+  .notes-ta{display:none;width:100%;margin-top:8px;background:var(--panel2);color:var(--ink);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:12px;font-family:inherit;resize:vertical;min-height:72px;line-height:1.55}
+  .notes-ta:focus{outline:none;border-color:#38bdf8}
+  .notes-section.open .notes-ta{display:block}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;align-items:center;justify-content:center}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+  .modal h3{margin:0 0 8px;font-size:16px;color:var(--fp)}
+  .modal p{margin:0 0 14px;font-size:13px;color:var(--muted)}
+  .modal textarea{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--border);border-radius:6px;padding:9px;font-size:13px;resize:vertical;min-height:80px;font-family:inherit}
+  .modal textarea:focus{outline:none;border-color:var(--fp)}
+  .modal-btns{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+  .btn.fp-confirm{background:rgba(236,72,153,0.2);border-color:var(--fp);color:var(--fp)}
+  .btn.fp-confirm:hover{background:rgba(236,72,153,0.35)}
   @media(max-width:600px){.rule-name{width:100%}.stats{font-size:11px}}
 </style>
 </head>
@@ -93,10 +115,11 @@
 <header>
   <div class="topbar">
     <div>
-      <h1>🛡️ STIG Compliance Assessment</h1>
+      <h1>&#x1F6E1;&#xFE0F; STIG Compliance Assessment</h1>
       <div class="sub" id="headerSub">Loading...</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn primary" id="saveReport">&#x2B07; Save updated report</button>
       <button class="btn" id="expandAll">Expand all</button>
       <button class="btn" id="collapseAll">Collapse all</button>
     </div>
@@ -133,162 +156,286 @@
   <div id="ruleList"></div>
 </main>
 
-<script>
-// Data injected by reporter.py above this script tag
+<div class="modal-overlay" id="fpModal">
+  <div class="modal">
+    <h3>Mark as false positive</h3>
+    <p>Enter a justification. It will be stored in the saved report and carried forward automatically on the next scan when you load that report.</p>
+    <textarea id="fp-text" placeholder="Explain why this is a false positive or not applicable to this environment..."></textarea>
+    <div class="modal-btns">
+      <button class="btn" id="fp-cancel">Cancel</button>
+      <button class="btn fp-confirm" id="fp-confirm">Confirm false positive</button>
+    </div>
+  </div>
+</div>
 
-function catClass(cat){
+<!-- SAT-CONTROLS-PLACEHOLDER -->
+
+<script>
+const CONTROLS = JSON.parse(document.getElementById('sat-controls-data').textContent);
+
+// decisions: {id: {stigStatus, isFalsePositive, fpJustification}}
+const decisions = {};
+CONTROLS.forEach(c => {
+  if (c.isFalsePositive || (c.stigStatus && c.stigStatus !== 'Not Reviewed')) {
+    decisions[c.id] = {
+      stigStatus:      c.isFalsePositive ? 'Not a Finding' : c.stigStatus,
+      isFalsePositive: !!c.isFalsePositive,
+      fpJustification: c.fpJustification || '',
+    };
+  }
+});
+
+// notes: {id: string}
+const notes = {};
+CONTROLS.forEach(c => { if (c.userNotes) notes[c.id] = c.userNotes; });
+
+function effectiveStatus(c) {
+  const d = decisions[c.id];
+  return (d && d.stigStatus) || c.stigStatus || 'Not Reviewed';
+}
+function catClass(cat) {
   return cat === 'CAT I' ? 'CAT-I' : cat === 'CAT II' ? 'CAT-II' : 'CAT-III';
 }
-
-function statusClass(s){
-  return s.replace(/\s+/g, '-');
-}
-
-function esc(s){
+function statusClass(s) { return s.replace(/\s+/g, '-'); }
+function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function renderSummary(){
-  const m = STIG_META;
-  const open = m.openCat1 + m.openCat2 + m.openCat3;
+function computeStats() {
+  let cat1=0,cat2=0,cat3=0,naf=0,na=0,nr=0;
+  CONTROLS.forEach(c => {
+    const st = effectiveStatus(c);
+    if      (st === 'Open')            { if (c.catLevel==='CAT I') cat1++; else if (c.catLevel==='CAT II') cat2++; else cat3++; }
+    else if (st === 'Not a Finding')   naf++;
+    else if (st === 'Not Applicable')  na++;
+    else                               nr++;
+  });
+  return {cat1,cat2,cat3,naf,na,nr};
+}
+
+function renderSummary() {
+  const m = STIG_META, s = computeStats();
   document.getElementById('headerSub').textContent =
-    `${esc(m.target)} · ${m.totalRules} rules · ${m.date} · ${m.tester}`;
+    m.target + ' · ' + m.totalRules + ' rules · ' + m.date + ' · ' + m.tester;
+  document.getElementById('summaryGrid').innerHTML = [
+    {label:'Total rules',  value:m.totalRules,cls:''},
+    {label:'Open CAT I',   value:s.cat1,      cls:'cat1'},
+    {label:'Open CAT II',  value:s.cat2,      cls:'cat2'},
+    {label:'Open CAT III', value:s.cat3,      cls:'cat3'},
+    {label:'Not a Finding',value:s.naf,       cls:'naf'},
+    {label:'Not Reviewed', value:s.nr,        cls:'nr'},
+  ].map(c=>'<div class="card"><div class="card-label">'+esc(c.label)+'</div><div class="card-value '+c.cls+'">'+c.value+'</div></div>').join('');
 
-  const cards = [
-    {label:'Total rules', value: m.totalRules, cls:''},
-    {label:'Open CAT I',  value: m.openCat1,   cls:'cat1'},
-    {label:'Open CAT II', value: m.openCat2,   cls:'cat2'},
-    {label:'Open CAT III',value: m.openCat3,   cls:'cat3'},
-    {label:'Not a Finding',value:m.nafCount,   cls:'naf'},
-    {label:'Not Reviewed', value:m.nrCount,    cls:'nr'},
-  ];
-  document.getElementById('summaryGrid').innerHTML = cards.map(c=>
-    `<div class="card"><div class="card-label">${c.label}</div><div class="card-value ${c.cls}">${c.value}</div></div>`
-  ).join('');
+  document.getElementById('statPills').innerHTML =
+    '<span class="pill cat1 toggle" data-cat="CAT I">🔴 CAT I Open: '+s.cat1+'</span>'+
+    '<span class="pill cat2 toggle" data-cat="CAT II">🟡 CAT II Open: '+s.cat2+'</span>'+
+    '<span class="pill cat3 toggle" data-cat="CAT III">🔵 CAT III Open: '+s.cat3+'</span>'+
+    '<span class="pill naf toggle" data-status="Not a Finding">✅ Not a Finding: '+s.naf+'</span>'+
+    '<span class="pill na toggle" data-status="Not Applicable">— Not Applicable: '+s.na+'</span>'+
+    '<span class="pill nr toggle" data-status="Not Reviewed">⬜ Not Reviewed: '+s.nr+'</span>';
 
-  // Severity filter pills
-  document.getElementById('statPills').innerHTML = `
-    <span class="pill cat1 toggle" data-cat="CAT I">🔴 CAT I Open: ${m.openCat1}</span>
-    <span class="pill cat2 toggle" data-cat="CAT II">🟡 CAT II Open: ${m.openCat2}</span>
-    <span class="pill cat3 toggle" data-cat="CAT III">🔵 CAT III Open: ${m.openCat3}</span>
-    <span class="pill naf toggle" data-status="Not a Finding">✅ Not a Finding: ${m.nafCount}</span>
-    <span class="pill na toggle" data-status="Not Applicable">— Not Applicable: ${m.naCount}</span>
-    <span class="pill nr toggle" data-status="Not Reviewed">⬜ Not Reviewed: ${m.nrCount}</span>
-  `;
-
-  // Pill toggles drive the CAT/status filters
   document.querySelectorAll('#statPills .toggle').forEach(pill => {
     pill.addEventListener('click', () => {
-      const cat = pill.dataset.cat;
-      const status = pill.dataset.status;
-      if(cat){
-        const sel = document.getElementById('fCat');
-        sel.value = (sel.value === cat) ? '' : cat;
-      } else if(status){
-        const sel = document.getElementById('fStatus');
-        sel.value = (sel.value === status) ? '' : status;
-      }
+      const cat=pill.dataset.cat, status=pill.dataset.status;
+      if (cat)    { const sel=document.getElementById('fCat');    sel.value=(sel.value===cat)?'':cat; }
+      else if (status) { const sel=document.getElementById('fStatus'); sel.value=(sel.value===status)?'':status; }
       applyFilters();
     });
   });
 }
 
-function buildRuleHTML(c){
-  const catCls = catClass(c.catLevel);
-  const stCls  = statusClass(c.stigStatus);
+function buildRuleHTML(c) {
+  const catCls=catClass(c.catLevel), st=effectiveStatus(c), stCls=statusClass(st);
+  const d=decisions[c.id]||{}, note=notes[c.id]||'';
 
-  const cciChips = (c.ccis||[]).map(cc=>
-    `<span class="cci-chip">${esc(cc)}</span>`
-  ).join('');
-
-  const metaChips = [
-    c.vulnId ? `<span class="meta-chip"><b>Vuln ID</b> ${esc(c.vulnId)}</span>` : '',
-    c.ruleId ? `<span class="meta-chip"><b>Rule</b> ${esc(c.ruleId)}</span>` : '',
-    c.srg    ? `<span class="meta-chip"><b>SRG</b> ${esc(c.srg)}</span>` : '',
+  const cciChips=(c.ccis||[]).map(cc=>'<span class="cci-chip">'+esc(cc)+'</span>').join('');
+  const metaChips=[
+    c.vulnId?'<span class="meta-chip"><b>Vuln ID</b> '+esc(c.vulnId)+'</span>':'',
+    c.ruleId?'<span class="meta-chip"><b>Rule</b> '+esc(c.ruleId)+'</span>':'',
+    c.srg   ?'<span class="meta-chip"><b>SRG</b> '+esc(c.srg)+'</span>':'',
     cciChips,
   ].filter(Boolean).join('');
 
-  const evidenceBlock = c.evidence
-    ? `<div class="section-label">Scanner evidence</div>
-       <div class="text-block evidence">${esc(c.evidence)}</div>`
-    : '';
+  const statementBlock=c.statement  ?'<div class="section-label">Control statement</div><div class="text-block statement">'+esc(c.statement)+'</div>':'';
+  const evidenceBlock =c.evidence   ?'<div class="section-label">Scanner evidence</div><div class="text-block evidence">'+esc(c.evidence)+'</div>':'';
+  const checkBlock    =c.checkContent?'<div class="section-label">Check procedure</div><div class="text-block check">'+esc(c.checkContent)+'</div>':'';
+  const fixBlock      =c.fixText    ?'<div class="section-label">Fix text</div><div class="text-block fix">'+esc(c.fixText)+'</div>':'';
 
-  const fpNote = c.isFalsePositive
-    ? `<div class="fp-note">⚠️ Marked as false positive — ${esc(c.fpJustification)}</div>`
-    : '';
+  const fpBanner=d.isFalsePositive
+    ?'<div class="fp-banner">🛡 <div><b>Marked as false positive</b><br><span style="color:var(--muted)">'+esc(d.fpJustification)+'</span></div></div>':'';
 
-  const statementBlock = c.statement
-    ? `<div class="section-label">Control statement</div>
-       <div class="text-block statement">${esc(c.statement)}</div>`
-    : '';
+  const activeMap={'Open':'active-open','Not a Finding':'active-naf','Not Applicable':'active-na','Not Reviewed':'active-nr'};
+  function sactBtn(label, status) {
+    const active=(!d.isFalsePositive && st===status)?' '+activeMap[status]:'';
+    return '<button class="sact'+active+'" data-act="stig-status" data-status="'+status+'" data-id="'+esc(c.id)+'">'+label+'</button>';
+  }
+  const fpBtnCls=d.isFalsePositive?'sact fp-btn active-fp':'sact fp-btn';
+  const fpBtnLbl=d.isFalsePositive?'↩ Remove FP':'🛡 False positive';
+  const statusActions='<div class="status-actions"><span class="lbl">Mark as</span>'+
+    sactBtn('Open','Open')+
+    sactBtn('Not a Finding','Not a Finding')+
+    sactBtn('Not Applicable','Not Applicable')+
+    sactBtn('Not Reviewed','Not Reviewed')+
+    '<button class="'+fpBtnCls+'" data-act="stig-fp" data-id="'+esc(c.id)+'">'+fpBtnLbl+'</button>'+
+    '</div>';
 
-  const checkBlock = c.checkContent
-    ? `<div class="section-label">Check procedure</div>
-       <div class="text-block check">${esc(c.checkContent)}</div>`
-    : '';
+  const hasNote=!!note;
+  const notesHtml='<div class="notes-section'+(hasNote?' open':'')+'">'+
+    '<button class="btn sm notes-toggle'+(hasNote?' has-note':'')+'" data-act="notes" data-id="'+esc(c.id)+'">'+
+    '📝 Notes'+(hasNote?'<span class="notes-dot"></span>':'')+
+    '</button>'+
+    '<textarea class="notes-ta" data-id="'+esc(c.id)+'" placeholder="Add assessment notes, observations, or references…">'+esc(note)+'</textarea>'+
+    '</div>';
 
-  const fixBlock = c.fixText
-    ? `<div class="section-label">Fix text</div>
-       <div class="text-block fix">${esc(c.fixText)}</div>`
-    : '';
-
-  return `
-<div class="rule" data-id="${esc(c.id)}" data-cat="${esc(c.catLevel)}" data-status="${esc(c.stigStatus)}"
-     data-search="${esc(c.vulnId+' '+c.ruleId+' '+c.name+' '+c.srg).toLowerCase()}">
-  <div class="rule-head">
-    <span class="rule-id">${esc(c.vulnId||c.id)}</span>
-    <span class="cat-badge ${catCls}">${esc(c.catLevel)}</span>
-    <span class="rule-name">${esc(c.name)}</span>
-    <span class="status-badge ${stCls}">${esc(c.stigStatus)}</span>
-    <span class="chevron">▾</span>
-  </div>
-  <div class="rule-body">
-    <div class="meta-row">${metaChips}</div>
-    ${statementBlock}
-    ${evidenceBlock}
-    ${checkBlock}
-    ${fixBlock}
-    ${fpNote}
-  </div>
-</div>`;
+  return '<div class="rule" data-id="'+esc(c.id)+'" data-cat="'+esc(c.catLevel)+'" data-status="'+esc(st)+'" data-search="'+esc((c.vulnId+' '+c.ruleId+' '+c.name+' '+(c.srg||'')).toLowerCase())+'">'+
+    '<div class="rule-head">'+
+      '<span class="rule-id">'+esc(c.vulnId||c.id)+'</span>'+
+      '<span class="cat-badge '+catCls+'">'+esc(c.catLevel)+'</span>'+
+      '<span class="rule-name">'+esc(c.name)+'</span>'+
+      '<span class="status-badge '+stCls+'">'+esc(st)+'</span>'+
+      '<span class="chevron">▾</span>'+
+    '</div>'+
+    '<div class="rule-body">'+
+      '<div class="meta-row">'+metaChips+'</div>'+
+      statementBlock+evidenceBlock+checkBlock+fixBlock+fpBanner+
+      statusActions+notesHtml+
+    '</div>'+
+  '</div>';
 }
 
-function renderRules(rules){
+function renderRules(rules) {
   document.getElementById('ruleList').innerHTML = rules.map(buildRuleHTML).join('');
-  document.getElementById('matchCount').textContent = `${rules.length} rules`;
-  // Attach expand/collapse
-  document.querySelectorAll('.rule-head').forEach(head => {
-    head.addEventListener('click', () => head.parentElement.classList.toggle('open'));
-  });
+  document.getElementById('matchCount').textContent = rules.length+' rules';
+  document.querySelectorAll('.rule-head').forEach(h =>
+    h.addEventListener('click', () => h.parentElement.classList.toggle('open')));
 }
 
-function applyFilters(){
-  const cat    = document.getElementById('fCat').value;
-  const status = document.getElementById('fStatus').value;
-  const search = document.getElementById('fSearch').value.toLowerCase().trim();
-
-  const visible = CONTROLS.filter(c => {
-    if(cat    && c.catLevel   !== cat)    return false;
-    if(status && c.stigStatus !== status) return false;
-    if(search && !(c.vulnId+' '+c.ruleId+' '+c.name+' '+c.srg+' '+c.statement).toLowerCase().includes(search)) return false;
+function applyFilters() {
+  const cat=document.getElementById('fCat').value;
+  const status=document.getElementById('fStatus').value;
+  const search=document.getElementById('fSearch').value.toLowerCase().trim();
+  const visible=CONTROLS.filter(c => {
+    if (cat && c.catLevel!==cat) return false;
+    if (status && effectiveStatus(c)!==status) return false;
+    if (search && !(c.vulnId+' '+c.ruleId+' '+c.name+' '+(c.srg||'')+' '+(c.statement||'')).toLowerCase().includes(search)) return false;
     return true;
   });
   renderRules(visible);
 }
 
-// Init
+function updateRuleCard(id) {
+  const el=document.querySelector('.rule[data-id="'+id+'"]');
+  if (!el) return;
+  const c=CONTROLS.find(x=>x.id===id);
+  if (!c) return;
+  const wasOpen=el.classList.contains('open');
+  const tmp=document.createElement('div');
+  tmp.innerHTML=buildRuleHTML(c);
+  const newEl=tmp.firstElementChild;
+  if (wasOpen) newEl.classList.add('open');
+  el.replaceWith(newEl);
+  newEl.querySelector('.rule-head').addEventListener('click',()=>newEl.classList.toggle('open'));
+  newEl.dataset.status=effectiveStatus(c);
+}
+
+let fpTargetId=null;
+
+document.getElementById('ruleList').addEventListener('click', e => {
+  const btn=e.target.closest('[data-act]');
+  if (!btn) return;
+  e.stopPropagation();
+  const act=btn.dataset.act, id=btn.dataset.id;
+
+  if (act==='stig-status') {
+    if (!decisions[id]) decisions[id]={stigStatus:'Not Reviewed',isFalsePositive:false,fpJustification:''};
+    decisions[id].stigStatus=btn.dataset.status;
+    decisions[id].isFalsePositive=false;
+    decisions[id].fpJustification='';
+    updateRuleCard(id); renderSummary();
+
+  } else if (act==='stig-fp') {
+    if ((decisions[id]||{}).isFalsePositive) {
+      decisions[id].isFalsePositive=false;
+      decisions[id].fpJustification='';
+      decisions[id].stigStatus='Not Reviewed';
+      updateRuleCard(id); renderSummary();
+    } else {
+      fpTargetId=id;
+      document.getElementById('fp-text').value='';
+      document.getElementById('fpModal').classList.add('open');
+    }
+
+  } else if (act==='notes') {
+    const section=btn.closest('.notes-section');
+    section.classList.toggle('open');
+    if (section.classList.contains('open')) section.querySelector('.notes-ta').focus();
+  }
+});
+
+document.getElementById('fp-cancel').addEventListener('click',()=>{
+  document.getElementById('fpModal').classList.remove('open'); fpTargetId=null;
+});
+document.getElementById('fp-confirm').addEventListener('click',()=>{
+  const just=document.getElementById('fp-text').value.trim();
+  if (!just) { document.getElementById('fp-text').focus(); return; }
+  if (!decisions[fpTargetId]) decisions[fpTargetId]={stigStatus:'Not Reviewed',isFalsePositive:false,fpJustification:''};
+  decisions[fpTargetId].isFalsePositive=true;
+  decisions[fpTargetId].fpJustification=just;
+  decisions[fpTargetId].stigStatus='Not a Finding';
+  document.getElementById('fpModal').classList.remove('open');
+  updateRuleCard(fpTargetId); renderSummary(); fpTargetId=null;
+});
+document.getElementById('fpModal').addEventListener('click',e=>{
+  if (e.target===document.getElementById('fpModal')) document.getElementById('fpModal').classList.remove('open');
+});
+
+document.getElementById('ruleList').addEventListener('input', e=>{
+  const ta=e.target.closest('.notes-ta');
+  if (!ta) return;
+  const id=ta.dataset.id, text=ta.value;
+  if (text) notes[id]=text; else delete notes[id];
+  const toggle=ta.closest('.notes-section').querySelector('.notes-toggle');
+  if (text) { toggle.classList.add('has-note'); toggle.innerHTML='📝 Notes<span class="notes-dot"></span>'; }
+  else      { toggle.classList.remove('has-note'); toggle.textContent='📝 Notes'; }
+});
+
+// Bakes decisions into sat-controls-data tag and downloads updated HTML.
+// Python reads stigStatus, isFalsePositive, fpJustification, userNotes for carryforward.
+document.getElementById('saveReport').addEventListener('click',()=>{
+  const updated=CONTROLS.map(c=>{
+    const d=decisions[c.id], n=notes[c.id];
+    const base=Object.assign({},c);
+    if (d) { base.stigStatus=d.stigStatus; base.isFalsePositive=d.isFalsePositive; base.fpJustification=d.fpJustification||''; }
+    if (n) base.userNotes=n; else delete base.userNotes;
+    return base;
+  });
+  const dataEl=document.getElementById('sat-controls-data');
+  const orig=dataEl.textContent;
+  dataEl.textContent=JSON.stringify(updated);
+  const html='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  dataEl.textContent=orig;
+  const blob=new Blob([html],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  const base=(window.location.pathname.split('/').pop()||'stig-assessment').replace(/\.html$/i,'');
+  const now=new Date();
+  const ts=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')
+           +'_'+String(now.getHours()).padStart(2,'0')+'-'+String(now.getMinutes()).padStart(2,'0');
+  a.download=base+'_'+ts+'_saved.html';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  const btn=document.getElementById('saveReport');
+  btn.textContent='✓ Saved!';
+  setTimeout(()=>{ btn.textContent='⬇ Save updated report'; },2000);
+});
+
+['fCat','fStatus'].forEach(id=>document.getElementById(id).addEventListener('change',applyFilters));
+document.getElementById('fSearch').addEventListener('input',applyFilters);
+document.getElementById('expandAll').addEventListener('click',()=>document.querySelectorAll('.rule').forEach(r=>r.classList.add('open')));
+document.getElementById('collapseAll').addEventListener('click',()=>document.querySelectorAll('.rule').forEach(r=>r.classList.remove('open')));
+
 renderSummary();
 applyFilters();
-
-// Filters
-['fCat','fStatus'].forEach(id => document.getElementById(id).addEventListener('change', applyFilters));
-document.getElementById('fSearch').addEventListener('input', applyFilters);
-
-// Expand/collapse all
-document.getElementById('expandAll').addEventListener('click', () =>
-  document.querySelectorAll('.rule').forEach(r => r.classList.add('open')));
-document.getElementById('collapseAll').addEventListener('click', () =>
-  document.querySelectorAll('.rule').forEach(r => r.classList.remove('open')));
 </script>
 </body>
 </html>
