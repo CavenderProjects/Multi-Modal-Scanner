@@ -358,7 +358,8 @@ function detectLanguages() {
   for (const c of CONTROLS) {
     const ev = (c.evidence || '') + ' ' + (c.finding || '');
     for (const [ext, lang] of Object.entries(_EXT_LANG)) {
-      const re = new RegExp('\\' + ext.replace('.','[.]') + '(?=[:,(\\s]|$)', 'gi');
+      // [.]ext creates a character class matching only a literal dot — no leading \\ needed.
+      const re = new RegExp(ext.replace('.','[.]') + '(?=[:,(\\s]|$)', 'gi');
       const m = ev.match(re);
       if (m) counts[lang] = (counts[lang] || 0) + m.length;
     }
