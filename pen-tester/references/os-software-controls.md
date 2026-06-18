@@ -2,7 +2,7 @@
 
 **Assessment type**: OS & Software Security Assessment
 **Scope**: Local machine OS patch level, installed software CVE exposure, running services, and endpoint hardening
-**Control count**: 12 controls across 5 families
+**Control count**: 12 controls across 6 families
 
 ---
 
