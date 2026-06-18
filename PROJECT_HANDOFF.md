@@ -62,6 +62,8 @@ Changes applied to all four:
 1. **CAT severity round-trip** (`reporter.py` `_sev_to_cat`): was `CRITICAL/HIGH → CAT I` causing all CAT II findings to display as CAT I. Fixed to `CRITICAL → CAT I`, `HIGH → CAT II`, `MEDIUM/LOW → CAT III` — correctly reversing `stig_parser.py`'s `SEVERITY_MAP`.
 2. **Prior carryforward** (`reporter.py`): `_parse_controls_from_html` now matches `var CONTROLS =` (STIG template format) in addition to `const CONTROLS =`. `extract_prior_data_from_report` now reads both non-STIG field names (`mitigation`/`mitigationDesc`/`note`) and STIG field names (`isFalsePositive`/`fpJustification`/`userNotes`). Prior FPs and notes from STIG reports now carry forward correctly.
 3. **Profile selection** (`main.py` `_import_stig`): now reads `dialog.profile_combo.currentIndex()`. Index 0 = all rules; index 1+ filters `parsed['rules']` to those whose `vuln_id` or `rule_id` is in the selected profile's `selected_rules`, and recomputes stats. Push: `.\manage.ps1 push -Repo standalone -m "Round 29: fix STIG CAT severity round-trip, prior carryforward, profile selection"`.
+4. **STIG data injection** (`reporter.py` `_generate_stig_html_report`): switched from inline `var CONTROLS = ...` JS global to two-part injection: `STIG_META` still injected via `</head>` replacement; `CONTROLS` data now injected as `<script type="application/json" id="sat-controls-data">` tag replacing `<!-- SAT-CONTROLS-PLACEHOLDER -->`. This makes STIG saved reports parseable by `_parse_controls_from_html()` using the same path as non-STIG reports.
+5. **STIG `stigStatus` carryforward** (`reporter.py` + `engine.py`): `extract_prior_data_from_report()` now reads `stigStatus` from saved STIG reports and stores it as `stig_status` in the result dict. Engine.py applies it after the FP/notes carryforward block: for `library == 'stig'` controls still in `NEEDS_REVIEW`/`NOT_STARTED`, maps prior `stig_status` → internal status (`Open→NON_COMPLIANT`, `Not a Finding→COMPLIANT`, `Not Applicable→NOT_APPLICABLE`, `Not Reviewed→NEEDS_REVIEW`).
 
 **`pen-tester/standalone/code_scanner.py` — COMPLIANT result emission fixed (Round 25).** The scanner previously only emitted NON_COMPLIANT results. When no vulnerability pattern matched, controls were silently absent, causing engine.py's fallback to produce NEEDS_REVIEW instead of COMPLIANT. Fix: added `_CPX_UNIVERSAL` (CPX-STRUCT-004, CPX-STRUCT-001, CPX-METRIC-001, CPX-STRUCT-003) and `_CPX_BY_LANG` constants to define which controls are checked per language, plus a `_build_compliant_results(detected_langs, noncompliant_ids)` helper that emits COMPLIANT for every checked control_id that had no NON_COMPLIANT finding. Called at the end of both `scan_directory()` (directory scan) and the single-file path in `scan_target()`. engine.py's `result_by_ctrl` dedup ensures NON_COMPLIANT always wins if any file had a violation. Pushed as commit `16e31f9`.
 
@@ -94,7 +96,7 @@ Changes applied to all four:
 
 **Bug 3 (STIG parser path):** Supplement described this as going up two dirs incorrectly. Verified in current code: `os.path.dirname(os.path.dirname(os.path.abspath(__file__)))` from `pen-tester/standalone/main.py` correctly resolves to `pen-tester/` → `pen-tester/tools/`. The path appears correct. May have been fixed in a prior session. Verify by actually running the STIG import dialog.
 
-**Bug 5 (STIG report template):** `stig-report-template.html` exists (294 lines, 25 STIG-related references). Has not been verified to produce a correct STIG-format report end-to-end. Needs a test run with a real STIG XCCDF file.
+**Bug 5 (STIG report template):** `stig-report-template.html` was fully rewritten (Round 29) with interactive triage controls. Has not been verified end-to-end with a real STIG XCCDF file — the rewrite may have introduced regressions. Needs a test run.
 
 ---
 
@@ -215,7 +217,7 @@ Shared concern (changes may need both repos):
 
 4. **Bug 3 verification** — STIG parser path appears correct in code but hasn't been tested end-to-end with a real STIG XML file. Confirm by running the STIG import dialog.
 
-5. **Bug 5 verification** — `stig-report-template.html` exists with STIG references but hasn't been verified to produce a correct CAT I/II/III checklist report.
+5. **Bug 5 verification** — `stig-report-template.html` was fully rewritten (Round 29). Has not been verified end-to-end with a real STIG XCCDF file post-rewrite. Confirm full triage flow: import STIG → run assessment → open HTML → mark rules → save → reload as prior report → verify carryforward.
 
 6. ~~**Controls count audit**~~ — RESOLVED.
 
@@ -289,7 +291,7 @@ Shared concern (changes may need both repos):
 
 **The user is the product owner and architect.** They make design decisions. Do not present options when they have already decided something. Do not override tier names, control family names, or GUI specs. Implement exactly what is specified.
 
-**`stig-report-template.html` was NOT updated this session.** The four templates that received FW_MAP, fmtEvidence, detectLanguage, framework dropdown, etc. are: `report-template.html`, `api-report-template.html`, `code-review-report-template.html`, `interconnected-report-template.html`. The STIG template (`pen-tester/assets/stig-report-template.html`, 294 lines) was intentionally left out — it has a different structure (CAT I/II/III format) and wasn't part of this session's scope.
+**`stig-report-template.html` was fully rewritten in Round 29 (Task #11).** The four non-STIG templates (`report-template.html`, `api-report-template.html`, `code-review-report-template.html`, `interconnected-report-template.html`) received FW_MAP, fmtEvidence, detectLanguage, framework dropdown, etc. The STIG template (`pen-tester/assets/stig-report-template.html`) has a different structure (CAT I/II/III format) and did NOT receive those features. Its Round 29 rewrite added interactive triage: status buttons (Open / Not a Finding / Not Applicable / Not Reviewed / False Positive), FP modal, notes textarea, Save button, and dynamic CAT summary that recomputes as the user marks rules. Data injection uses `<!-- SAT-CONTROLS-PLACEHOLDER -->` → `sat-controls-data` JSON tag (same format as non-STIG reports). The old STIG template (294 lines, inline `var CONTROLS`) no longer exists.
 
 **FW_MAP lives in all four templates independently.** There is no shared JS file. If a new compliance framework needs to be added, or an existing mapping corrected, the change must be manually applied to all four templates. This is the most likely source of drift.
 
@@ -329,15 +331,16 @@ When new fields are added to control library `.md` files, add the lowercase key 
 
 **`FindingsDB` is partially written during scan but never read back in the GUI.** `_run_next_target()` in `main.py` calls `engine.start_scan()` at line 905 before starting `ScanWorker` — `scan_id` is always non-None during a scan, so `FindingsDB.save()` is never blocked by a null scan_id guard. `FindingsDB.save()` is called in three places in `engine.py`: (1) at line ~226 in `run_automatic_tier()` for auto-tier controls, (2) inside `apply_review_decision()`, (3) inside `apply_manual_decision()`. Since `apply_review_decision()` and `apply_manual_decision()` are never called from `main.py`, only auto-tier control results are actually written to the `findings` table. Important: NOT all auto-tier controls are saved. When an auto-tier control is promoted to `review_required` (scanner returns `NEEDS_REVIEW`), `continue` at engine.py line ~177 skips the rest of the loop body including `FindingsDB.save()` — promoted controls are NOT saved. Auto-tier controls with no scanner match DO get saved (status=`NEEDS_REVIEW`, short fallback message). Review-tier and manual-tier results are never persisted. `FindingsDB.get_for_scan()` exists but is never called from `main.py` or `reporter.py` — the findings table is an incomplete audit log not surfaced in the UI. Reports are generated from `engine.all_results` (in-memory), not from the DB. **`findings` has no UNIQUE constraint on `(scan_id, control_id)`** — if `apply_review_decision()` or `apply_manual_decision()` are eventually wired up, they call `FindingsDB.save()` for controls already saved in the auto loop, producing duplicate rows. `get_for_scan()` would then return two rows for such controls.
 
-**Prior report import uses `extract_prior_data_from_report()` in `reporter.py`, not `extract_fps_from_report()`.** `extract_fps_from_report()` exists but is deprecated — its docstring says "Prefer `extract_prior_data_from_report` for new callers." `extract_prior_data_from_report(html_path) -> dict` reads the `sat-controls-data` JSON tag and returns broader prior state (decisions, notes, FPs). Returns `{}` on any error (file not found, malformed JSON, non-tool report). `extract_fps_from_report(html_path) -> set` is a thin wrapper that calls `extract_prior_data_from_report` and returns only the FP set. Always use `extract_prior_data_from_report` in new code.
+**Prior report import uses `extract_prior_data_from_report()` in `reporter.py`, not `extract_fps_from_report()`.** `extract_fps_from_report()` exists but is deprecated — its docstring says "Prefer `extract_prior_data_from_report` for new callers." `extract_prior_data_from_report(html_path) -> dict` reads the `sat-controls-data` JSON tag and returns broader prior state (decisions, notes, FPs, STIG status). Returns `{}` on any error (file not found, malformed JSON, non-tool report). `extract_fps_from_report(html_path) -> set` is a thin wrapper that calls `extract_prior_data_from_report` and returns only the FP set. Always use `extract_prior_data_from_report` in new code.
 
-**`extract_prior_data_from_report()` returns a sparse dict** — only controls where `mitigation == 'YES'` (FP) OR a non-empty `note` are included. Controls that are neither FP nor annotated are absent from the returned dict. A control absent from the dict means "no prior FP/note data" — it does NOT mean "was compliant" or "was non-compliant".
+**`extract_prior_data_from_report()` returns a sparse dict** — only controls where `mitigation == 'YES'` (FP), a non-empty `note`, OR a non-empty `stig_status` are included. Controls that meet none of those conditions are absent from the returned dict. A control absent from the dict means "no prior data" — it does NOT mean "was compliant" or "was non-compliant". The returned dict values have keys: `is_fp` (bool), `justification` (str), `note` (str), `stig_status` (str — empty for non-STIG controls).
 
-**`_parse_controls_from_html()` supports two formats** (backward compatibility):
-1. New format: `<script type="application/json" id="sat-controls-data">` tag — current format used by all **non-STIG** generated reports
-2. Legacy format: `const CONTROLS = ` inline JS variable — older report format, still readable
+**`_parse_controls_from_html()` supports three formats** (backward compatibility):
+1. New format: `<script type="application/json" id="sat-controls-data">` tag — current format used by **all** generated reports (both STIG and non-STIG, as of Round 29)
+2. Legacy format: `const CONTROLS = ` inline JS variable — older non-STIG report format, still readable
+3. Legacy STIG format: `var CONTROLS = ` inline JS variable — older STIG report format, still readable (added Round 29)
 
-This means users with reports generated by an earlier version of the tool can still load them via "Load previous report". If neither tag is found, returns `None` and `extract_prior_data_from_report()` returns `{}`.
+This means users with reports generated by an earlier version of the tool can still load them via "Load previous report". If none of the three formats is found, returns `None` and `extract_prior_data_from_report()` returns `{}`.
 
 ~~**STIG reports were NOT parseable by `_parse_controls_from_html()`**~~ — **FIXED (Round 29).** `_parse_controls_from_html()` now iterates over both `'const CONTROLS = '` and `'var CONTROLS = '` prefixes, so `var CONTROLS` in the STIG template is matched. Additionally, `extract_prior_data_from_report()` now checks both field naming conventions: non-STIG (`mitigation == 'YES'`, `mitigationDesc`, `note`) and STIG (`isFalsePositive`, `fpJustification`, `userNotes`). Prior FPs and notes from STIG reports now carry forward correctly.
 
@@ -795,9 +798,13 @@ CSV is generated unconditionally for every scan regardless of selection. Multi-t
 
 **Template selection by target type** (`get_template_path()` in `reporter.py`): `interconnected` → `interconnected-report-template.html`; `code`/`code_review` → `code-review-report-template.html`; `api` → `api-report-template.html`; `os`/`os_software` → `report-template.html`; `agent` → `report-template.html` (falls through to default). The `agent` target type does NOT have its own template — it shares `report-template.html` with website and OS scans. However, `_report_title()` does return a distinct string for agents: `target_type == 'agent'` → `"Agent Security Assessment"` (while OS → `"OS & Software Security Assessment"`, API → `"API Security Assessment"`, code → `"Code Review Security Assessment"`). Template selection uses `selected_sets` if available, falling back to `target_type`.
 
-**STIG data is injected differently from normal HTML reports.** `_generate_stig_html_report()` does NOT use `{{PLACEHOLDER}}` substitution. Instead, it builds a `<script>` block containing two JavaScript variables — `STIG_META` (target, date, tester, counts) and `CONTROLS` (full stig_data array) — and injects it via `template.replace('</head>', data_script + '\n</head>')`. The STIG template is expected to read these JS globals at runtime. This means `{{REPORT_TITLE}}` etc. are NOT substituted in the STIG report — the template must use the JS vars directly.
+**STIG data is injected in two separate passes (updated Round 29).** `_generate_stig_html_report()` still does NOT use `{{REPORT_TITLE}}`-style substitution — the STIG template reads JS/JSON vars directly. The two injections are:
+1. `STIG_META` — injected as `<script>var STIG_META = {...};</script>` via `template.replace('</head>', meta_script + '\n</head>')` (same mechanism as before)
+2. CONTROLS array — injected as `<script type="application/json" id="sat-controls-data">{json}</script>` by replacing `<!-- SAT-CONTROLS-PLACEHOLDER -->` in the template. This makes STIG reports parseable by `_parse_controls_from_html()` on load-prior-report, and the template reads controls via `JSON.parse(document.getElementById('sat-controls-data').textContent)`. **This is the same format used by non-STIG reports** — STIG carryforward now works identically.
 
 **STIG CAT level mapping** (`_sev_to_cat()` in `reporter.py`): CRITICAL → CAT I, HIGH → CAT II, MEDIUM/LOW → CAT III, unknown → CAT II (default fallback). This correctly reverses `stig_parser.py`'s `SEVERITY_MAP` (`high→CRITICAL`, `medium→HIGH`, `low→MEDIUM`). Fixed Round 29 — prior mapping was `CRITICAL/HIGH → CAT I` which elevated all CAT II findings to CAT I. Used only in `_generate_stig_html_report()` to compute `catLevel` for each finding entry.
+
+**STIG triage status carryforward** (added Round 29 — `engine.py` + `reporter.py`): When a saved STIG HTML report is loaded via "Load previous report", `extract_prior_data_from_report()` reads the `stigStatus` field from each control in `sat-controls-data` and stores it as `stig_status` in `prior_report_data`. During the next scan, `engine.py` applies these saved decisions after the FP/notes carryforward block. For every control where `ar.control.library == 'stig'` and `ar.status` is still `NEEDS_REVIEW` or `NOT_STARTED`, the prior `stig_status` is mapped to internal status: `'Open' → 'NON_COMPLIANT'`, `'Not a Finding' → 'COMPLIANT'`, `'Not Applicable' → 'NOT_APPLICABLE'`, `'Not Reviewed' → 'NEEDS_REVIEW'` (no-op). Only controls still awaiting review have their status overridden — controls already set by scanner logic are left alone. Combined with the FP/notes carryforward that runs before this block, a loaded STIG prior report now restores all three categories of saved state: FP marks, user notes, and manual triage decisions.
 
 **STIG internal → display status mapping** (verified from `_generate_stig_html_report()` reporter.py lines 250–258):
 - `COMPLIANT` → "Not a Finding"
@@ -1154,21 +1161,24 @@ The template above applies to `controls-library.md` (website/agent). **`code-rev
 Multi-Modal-Scanner     https://github.com/CavenderProjects/Multi-Modal-Scanner
                         last commit: fbb4148  "Resolve merge conflicts - keep remote versions"
                         branch: main
-                        UNCOMMITTED CHANGES: PROJECT_HANDOFF.md, HOW_TO_START_NEW_SESSION.txt
-                        (modified across multiple sessions — not yet committed or pushed)
+                        UNCOMMITTED CHANGES (Round 29):
+                          pen-tester/assets/stig-report-template.html  (full rewrite — interactive triage)
+                          PROJECT_HANDOFF.md  (updated through Round 29)
+                          HOW_TO_START_NEW_SESSION.txt  (updated in prior rounds)
 
 Multi-Modal-Scanner_Standalone  https://github.com/CavenderProjects/Multi-Modal-Scanner_Standalone
                                 last commit: ecd4c08  "corrected formatting for manual review findings, updated README"
-                                branch: main, up to date with origin
+                                branch: main
+                                UNCOMMITTED CHANGES (Round 29):
+                                  pen-tester/standalone/reporter.py  (STIG injection + stig_status carryforward)
+                                  pen-tester/standalone/engine.py    (STIG triage status carryforward block)
+                                  pen-tester/standalone/main.py      (STIG profile selection fix)
 ```
 
-**To commit the handoff document before starting next session:**
+**To push all Round 29 changes:**
 ```powershell
 cd "C:\Users\slagb\OneDrive\Documents\Claude\Projects\Revised pen tester"
-Remove-Item .git\index.lock -Force  # only if needed — clears stale lock from bash sandbox
-git add PROJECT_HANDOFF.md HOW_TO_START_NEW_SESSION.txt
-git commit -m "Rounds 13-24 handoff — Round 24: fix_text omission confirmed oversight (not intentional); SEC-AUTH-001 pattern confirmed abandoned (manual_confirmation + broken regex); AGENT-007/010 dropped results flagged as inconsistency (Open Question 12); STIG prior carryforward fix path documented; detect_languages() confirmed dead at detector.py line 122; elapsed_seconds decision: remove; HAS_BS4 decision: remove + drop beautifulsoup4 from requirements.txt; _abort_scan fix approach documented; combined mode double-count fix approach documented; os-software-controls.md header bug confirmed unfixed; Windows 11 EOL guidance added to longer term; pyyaml version capture added; pen-tester.skill rebuild process to be confirmed; generate_handoff.js confirmed absent from root"
-git push
+.\manage.ps1 push -Repo both -m "Round 29: STIG interactive triage, CAT fix, carryforward fix, profile selection, KeyError fix"
 ```
 
 Run `.\manage.ps1 status` to verify current state before starting new work.
